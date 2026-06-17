@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, doc, updateDoc, deleteDoc, addDoc, query, orderBy } from "firebase/firestore";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -278,13 +278,13 @@ function ShowroomContent() {
               />
             </div>
             
-            <div className="w-full bg-white/95 px-1 py-0.5 rounded-md shadow-sm flex flex-col items-center z-10 border border-slate-100 mt-auto min-h-[22px] md:min-h-0">
-              <p className="text-[6.5px] md:text-[8.5px] font-black text-secondary uppercase whitespace-nowrap overflow-hidden text-center leading-none tracking-tighter w-full">
+            <div className="w-full bg-white/95 px-1 py-1 rounded-lg shadow-sm flex flex-col items-center z-10 border border-slate-100 mt-auto min-h-[32px] md:min-h-0 justify-center">
+              <p className="text-[7.5px] md:text-[9.5px] font-black text-secondary uppercase whitespace-nowrap overflow-hidden text-center leading-tight tracking-tighter w-full px-1">
                 {vehicle.modelo}
               </p>
-              <div className="flex gap-1 items-center mt-0.5 leading-none">
-                <span className="text-[5.5px] md:text-[7.5px] font-mono font-bold text-slate-500">{vehicle.vin7 || vehicle.vin?.slice(-7)}</span>
-                <span className="text-[5.5px] md:text-[7.5px] font-black text-primary">{vehicle.colorCodigo}</span>
+              <div className="flex gap-1.5 items-center leading-none mt-0.5">
+                <span className="text-[6.5px] md:text-[8.5px] font-mono font-bold text-slate-500">{vehicle.vin7 || vehicle.vin?.slice(-7)}</span>
+                <span className="text-[6.5px] md:text-[8.5px] font-black text-primary">{vehicle.colorCodigo}</span>
               </div>
             </div>
           </div>
