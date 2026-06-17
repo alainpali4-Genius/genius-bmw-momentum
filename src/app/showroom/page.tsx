@@ -67,9 +67,9 @@ function BmwSilhouette({ type, colorHex, rotacion = 0, className }: { type: stri
 
   return (
     <div className={cn("transition-all duration-500 flex items-center justify-center h-full w-full", className)} style={{ transform: `rotate(${rotacion}deg)` }}>
-      <svg viewBox="0 0 100 180" className="w-full h-full filter drop-shadow-md">
+      <svg viewBox="0 0 100 180" className="w-full h-full filter drop-shadow-sm">
         <path d={paths[type] || paths.SUV} fill="rgba(0,0,0,0.15)" transform="translate(2,2)" />
-        <path d={paths[type] || paths.SUV} fill={colorHex} stroke="rgba(0,0,0,0.3)" strokeWidth="1.2" />
+        <path d={paths[type] || paths.SUV} fill={colorHex} stroke="rgba(0,0,0,0.2)" strokeWidth="1" />
       </svg>
     </div>
   );
@@ -119,7 +119,6 @@ function ShowroomContent() {
   const handleUpdateVehicle = (vehicleId: string, updates: any) => {
     const docRef = doc(db, "vehiculos", vehicleId);
     const vehicle = vehiculos.find(v => v.id === vehicleId);
-    
     const payload = { ...updates, updatedAt: new Date().toISOString() };
     
     updateDoc(docRef, payload).catch((err) => {
@@ -225,7 +224,6 @@ function ShowroomContent() {
     const colorHex = colorObj?.hex || '#F5F5F5'; 
     const rotacion = FIXED_ORIENTATIONS[id] !== undefined ? FIXED_ORIENTATIONS[id] : 90;
     
-    // Función para determinar si el fondo es claro u oscuro para legibilidad
     const isDarkColor = (hex: string) => {
       const r = parseInt(hex.slice(1, 3), 16);
       const g = parseInt(hex.slice(3, 5), 16);
@@ -234,8 +232,8 @@ function ShowroomContent() {
       return brightness < 128;
     };
 
-    const textColorClass = isDarkColor(colorHex) ? "text-white" : "text-secondary";
-    const subTextColorClass = isDarkColor(colorHex) ? "text-white/70" : "text-slate-500";
+    const textColorClass = isDarkColor(colorHex) ? "text-white" : "text-slate-900";
+    const subTextColorClass = isDarkColor(colorHex) ? "text-white/60" : "text-slate-500";
 
     const isP13 = id === "P13";
     const isP14 = id === "P14";
@@ -248,7 +246,6 @@ function ShowroomContent() {
             if (!vehicle) {
               handleUpdateVehicle(movingVehicleId, { ubicacion: id, estado: 'Exposicion' });
               setMovingVehicleId(null);
-              toast({ title: "Vehículo Ubicado", description: `Asignado a plaza ${id}` });
             } else if (isMovingSelf) {
               setMovingVehicleId(null);
             } else {
@@ -259,46 +256,46 @@ function ShowroomContent() {
           }
         }}
         className={cn(
-          "relative flex flex-col items-center justify-center transition-all h-full w-full rounded-xl border overflow-hidden",
-          vehicle ? "border-transparent cursor-pointer" : "border-dashed border-slate-200 bg-slate-50/10",
-          isMovingTarget && "border-primary/50 bg-primary/5 cursor-pointer hover:bg-primary/10",
-          isP13 && !vehicle && "bg-blue-50/5 border-blue-100 border-solid",
-          isP14 && "border-accent/40 bg-accent/5",
-          (isSelected || isMovingSelf) && "z-20 ring-2 ring-primary bg-white shadow-xl",
-          isMovingSelf && "animate-pulse border-primary"
+          "relative flex flex-col items-center justify-center transition-all h-full w-full rounded-xl border group overflow-hidden",
+          vehicle ? "border-transparent cursor-pointer" : "border-slate-100 bg-white/50",
+          isMovingTarget && "border-primary/50 bg-primary/5 cursor-pointer ring-2 ring-primary/20",
+          isP14 && "bg-accent/5 border-accent/10",
+          (isSelected || isMovingSelf) && "z-20 ring-4 ring-primary/30 bg-white shadow-2xl",
+          isMovingSelf && "animate-pulse"
         )}
       >
-        <div className="absolute top-1 left-1.5 flex flex-col z-10 pointer-events-none">
-          <span className={cn("text-[8px] md:text-[9px] font-black uppercase tracking-widest", isP14 ? "text-accent" : "text-slate-400")}>{id}</span>
-          {isP13 && <Zap className="w-2.5 h-2.5 text-blue-500 mt-0.5" />}
+        <div className="absolute top-1.5 left-2 flex flex-col z-10 pointer-events-none">
+          <span className={cn("text-[9px] font-black uppercase tracking-[0.2em]", isP14 ? "text-accent" : "text-slate-300")}>{id}</span>
+          {isP13 && <Zap className="w-2.5 h-2.5 text-blue-400 mt-0.5" />}
         </div>
         
         {isP14 && !vehicle && (
-          <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-            <span className="text-2xl font-black italic tracking-tighter text-accent">///M</span>
+          <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+            <span className="text-3xl font-black italic tracking-tighter text-accent">///M</span>
           </div>
         )}
 
         {vehicle ? (
-          <div className="relative w-full h-full flex items-center justify-center p-1">
-            <BmwSilhouette 
-              type={vehicle.bodyType || 'SUV'} 
-              colorHex={colorHex} 
-              rotacion={rotacion} 
-              className={cn("scale-[1.8] md:scale-[3.5]", (isSelected || isMovingSelf) && "filter drop-shadow-[0_0_15px_rgba(0,0,0,0.4)]")} 
-            />
+          <div className="relative w-full h-full flex items-center justify-center">
+            <div className={cn("absolute inset-2 flex items-center justify-center transition-transform duration-500", isSelected && "scale-110")}>
+              <BmwSilhouette 
+                type={vehicle.bodyType || 'SUV'} 
+                colorHex={colorHex} 
+                rotacion={rotacion} 
+                className={cn("scale-[0.8] md:scale-[1.6]", isSelected && "drop-shadow-2xl")} 
+              />
+            </div>
             
-            {/* Información integrada sobre el coche */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 text-center px-1">
-              <div className={cn("w-full bg-black/5 backdrop-blur-[1px] rounded px-1 py-0.5 md:py-1", isDarkColor(colorHex) ? "bg-white/5" : "bg-black/5")}>
-                <p className={cn("text-[6px] md:text-[10px] font-black uppercase leading-tight tracking-tighter truncate w-full", textColorClass)}>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 text-center px-2">
+              <div className={cn("w-full max-w-[80%] backdrop-blur-sm rounded-lg p-1 space-y-0.5", isDarkColor(colorHex) ? "bg-black/10" : "bg-white/10")}>
+                <p className={cn("text-[7px] md:text-[10px] font-black uppercase leading-none tracking-tight truncate", textColorClass)}>
                   {vehicle.modelo}
                 </p>
-                <div className="flex gap-1 items-center justify-center leading-none mt-0.5">
-                  <span className={cn("text-[5px] md:text-[8px] font-mono font-bold", subTextColorClass)}>
+                <div className="flex gap-1.5 items-center justify-center leading-none">
+                  <span className={cn("text-[6px] md:text-[8px] font-mono font-bold", subTextColorClass)}>
                     {vehicle.vin7 || vehicle.vin?.slice(-7)}
                   </span>
-                  <span className={cn("text-[5px] md:text-[8px] font-black", textColorClass)}>
+                  <span className={cn("text-[6px] md:text-[8px] font-black", textColorClass)}>
                     {vehicle.colorCodigo}
                   </span>
                 </div>
@@ -306,8 +303,8 @@ function ShowroomContent() {
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center opacity-10">
-             {movingVehicleId ? <Move className="w-4 h-4 text-primary animate-bounce" /> : <PlusCircle className="w-4 h-4 text-slate-200" />}
+          <div className="flex flex-col items-center justify-center opacity-10 group-hover:opacity-30 transition-opacity">
+             {movingVehicleId ? <Move className="w-5 h-5 text-primary animate-bounce" /> : <PlusCircle className="w-5 h-5 text-slate-400" />}
           </div>
         )}
       </div>
@@ -315,137 +312,143 @@ function ShowroomContent() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#f4f7fa] overflow-hidden">
-      <div className="bg-white border-b px-4 py-2 shrink-0 z-50 shadow-sm flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <div className="flex flex-col h-full bg-[#f8fafc] overflow-hidden">
+      <div className="bg-white border-b px-6 py-3 shrink-0 z-50 shadow-sm flex items-center justify-between">
+        <div className="flex items-center gap-6">
           <div className="flex flex-col">
-            <h1 className="text-base font-black text-secondary italic uppercase leading-none">PLANO <span className="text-primary not-italic">VN</span></h1>
-            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mt-0.5">MOMENTUM NAVARRA</p>
+            <h1 className="text-xl font-black text-secondary italic uppercase leading-none tracking-tighter">PLANO <span className="text-primary not-italic">VN</span></h1>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mt-1">MOMENTUM NAVARRA</p>
           </div>
           {movingVehicleId && (
-            <Badge className="bg-primary text-white animate-pulse px-3 py-1 rounded-full font-black uppercase text-[8px] gap-2 border-none">
-              <Move className="w-3 h-3" /> UBICAR DESTINO
-              <button onClick={() => setMovingVehicleId(null)} className="ml-1 bg-white/20 hover:bg-white/30 rounded-full p-0.5 transition-colors"><X className="w-2.5 h-2.5" /></button>
+            <Badge className="bg-primary text-white animate-pulse px-4 py-1.5 rounded-full font-black uppercase text-[9px] gap-2 border-none shadow-lg shadow-primary/20">
+              <Move className="w-3.5 h-3.5" /> SELECCIONA PLAZA DE DESTINO
+              <button onClick={() => setMovingVehicleId(null)} className="ml-2 bg-white/20 hover:bg-white/30 rounded-full p-0.5 transition-colors"><X className="w-3 h-3" /></button>
             </Badge>
           )}
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setIsStockSheetOpen(true)} className="h-8 rounded-lg font-black uppercase text-[8px] px-3 border-slate-200 shadow-sm">
-            <Package className="w-3.5 h-3.5 mr-1.5 text-primary" /> STOCK ({pendingStock.length})
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => setIsStockSheetOpen(true)} className="h-10 rounded-xl font-black uppercase text-[10px] px-5 border-slate-200 shadow-sm hover:bg-slate-50 transition-all">
+            <Package className="w-4 h-4 mr-2 text-primary" /> STOCK ({pendingStock.length})
           </Button>
-          <Button onClick={() => setIsAddingNew(true)} className="h-8 bg-secondary hover:bg-secondary/90 rounded-lg font-black uppercase text-[8px] px-3 border-none text-white shadow-sm">
-            <Plus className="w-3.5 h-3.5 mr-1.5" /> NUEVO
+          <Button onClick={() => setIsAddingNew(true)} className="h-10 bg-secondary hover:bg-secondary/90 rounded-xl font-black uppercase text-[10px] px-5 border-none text-white shadow-lg transition-all active:scale-95">
+            <Plus className="w-4 h-4 mr-2" /> NUEVO ACTIVO
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden relative p-1 md:p-2">
+      <div className="flex-1 overflow-hidden relative p-4 md:p-6 lg:p-8">
         {loadingVehiculos ? (
-          <div className="flex justify-center items-center h-full"><Loader2 className="animate-spin text-primary w-8 h-8" /></div>
+          <div className="flex justify-center items-center h-full"><Loader2 className="animate-spin text-primary w-10 h-10" /></div>
         ) : (
-          <div className="h-full w-full max-w-[1400px] mx-auto flex gap-1 md:gap-3">
-            <div className="flex-[6] flex flex-col gap-1 md:gap-2 h-full">
-              <div className="flex-1 grid grid-cols-4 gap-1 md:gap-2">{["P1", "P2", "P3", "P4"].map(id => renderPlaza(id))}</div>
-              <div className="flex-1 grid grid-cols-4 gap-1 md:gap-2">{["P5", "P6", "P7", "P8"].map(id => renderPlaza(id))}</div>
-              <div className="h-6 md:h-10 shrink-0 grid grid-cols-4 gap-1 md:gap-2">
+          <div className="h-full w-full max-w-[1600px] mx-auto flex gap-4 lg:gap-8">
+            <div className="flex-[8] flex flex-col gap-4 lg:gap-6 h-full">
+              <div className="flex-1 grid grid-cols-4 gap-4 lg:gap-6">{["P1", "P2", "P3", "P4"].map(id => renderPlaza(id))}</div>
+              <div className="flex-1 grid grid-cols-4 gap-4 lg:gap-6">{["P5", "P6", "P7", "P8"].map(id => renderPlaza(id))}</div>
+              <div className="h-12 md:h-16 shrink-0 grid grid-cols-4 gap-4 lg:gap-6">
                 {[1, 2, 3, 4].map(num => (
-                  <div key={`m-${num}`} className="bg-[#F5E9DA] border border-[#D2B48C] rounded-lg flex items-center justify-center shadow-sm">
-                    <Monitor className="w-2.5 h-2.5 md:w-3 md:h-3 text-[#8B4513] mr-1" />
-                    <span className="text-[6px] md:text-[7px] font-black uppercase tracking-widest text-[#8B4513]">M-{num}</span>
+                  <div key={`m-${num}`} className="bg-[#fef9f2] border-2 border-[#f3e3d3] border-dashed rounded-2xl flex items-center justify-center opacity-60">
+                    <Monitor className="w-4 h-4 text-[#d4a373] mr-2" />
+                    <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-[#d4a373]">MESA COMERCIAL {num}</span>
                   </div>
                 ))}
               </div>
-              <div className="flex-1 grid grid-cols-4 gap-1 md:gap-2">{["P9", "P10", "P11", "P12"].map(id => renderPlaza(id))}</div>
-              <div className="flex-1 grid grid-cols-4 gap-1 md:gap-2">
+              <div className="flex-1 grid grid-cols-4 gap-4 lg:gap-6">{["P9", "P10", "P11", "P12"].map(id => renderPlaza(id))}</div>
+              <div className="flex-1 grid grid-cols-4 gap-4 lg:gap-6">
                 <div className="col-span-1" />
                 <div className="col-span-1">{renderPlaza("P14")}</div>
                 <div className="col-span-1">{renderPlaza("P15")}</div>
                 <div className="col-span-1" />
               </div>
             </div>
-            <div className="w-2 md:w-6 flex flex-col items-center py-4 opacity-10 shrink-0">
-               {[1,2,3,4,5,6].map(i => <Footprints key={i} className="w-2 md:w-2.5 h-2 md:h-2.5 rotate-90 my-auto text-slate-600" />)}
+            
+            <div className="w-16 flex flex-col items-center py-10 opacity-5 shrink-0 select-none">
+               {[1,2,3,4,5,6,7,8].map(i => <Footprints key={i} className="w-6 h-6 rotate-90 my-auto text-slate-900" />)}
             </div>
-            <div className="w-12 md:w-24 flex flex-col justify-center h-full py-[15%]">
-               <div className="h-[25%]">{renderPlaza("P13")}</div>
+
+            <div className="w-24 md:w-32 flex flex-col justify-center h-full py-[10%]">
+               <div className="h-[20%]">{renderPlaza("P13")}</div>
             </div>
           </div>
         )}
       </div>
 
       <Sheet open={!!selectedVehicle} onOpenChange={(open) => !open && setSelectedVehicle(null)}>
-        <SheetContent side="bottom" className="p-0 rounded-t-[2.5rem] border-none h-[75vh] bg-white overflow-hidden shadow-2xl">
+        <SheetContent side="bottom" className="p-0 rounded-t-[3rem] border-none h-[80vh] bg-white overflow-hidden shadow-2xl">
           {selectedVehicle && (
             <div className="flex flex-col h-full">
-              <div className="p-6 bg-secondary text-white shrink-0 relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full translate-x-32 -translate-y-32 blur-3xl" />
+              <div className="p-8 bg-secondary text-white shrink-0 relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full translate-x-32 -translate-y-32 blur-3xl" />
                 <div className="flex justify-between items-start relative z-10">
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      <Badge className="bg-primary text-white text-[8px] font-black uppercase px-3 py-1 rounded-full border-none">
+                      <Badge className="bg-primary text-white text-[10px] font-black uppercase px-4 py-1.5 rounded-full border-none shadow-lg">
                         {selectedVehicle.estado}
                       </Badge>
-                      <Badge variant="outline" className="border-white/20 text-white/60 text-[8px] font-mono">
-                        {selectedVehicle.vin7 || selectedVehicle.vin?.slice(-7)}
+                      <Badge variant="outline" className="border-white/20 text-white/80 text-[10px] font-mono px-3">
+                        {selectedVehicle.vin}
                       </Badge>
                     </div>
-                    <h2 className="text-2xl font-black uppercase italic leading-none tracking-tighter">{selectedVehicle.modelo}</h2>
-                    <p className="text-white/40 text-[8px] font-bold uppercase tracking-widest">{selectedVehicle.colorExterior}</p>
+                    <h2 className="text-4xl font-black uppercase italic leading-none tracking-tighter">{selectedVehicle.modelo}</h2>
+                    <p className="text-white/40 text-[10px] font-black uppercase tracking-widest">{selectedVehicle.colorExterior} • {selectedVehicle.motor}</p>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" onClick={() => handleDeleteVehicle(selectedVehicle.id, `${selectedVehicle.modelo} (${selectedVehicle.vin7})`)} className="text-white hover:bg-red-500 hover:text-white rounded-full h-10 w-10">
-                      <Trash2 className="w-5 h-5" />
+                  <div className="flex gap-3">
+                    <Button variant="ghost" onClick={() => handleDeleteVehicle(selectedVehicle.id, `${selectedVehicle.modelo} (${selectedVehicle.vin7})`)} className="text-white/40 hover:bg-red-600 hover:text-white rounded-2xl h-12 w-12 transition-all">
+                      <Trash2 className="w-6 h-6" />
                     </Button>
-                    <Button variant="ghost" onClick={() => setSelectedVehicle(null)} className="text-white hover:bg-white/10 rounded-full h-10 w-10"><X className="w-6 h-6" /></Button>
+                    <Button variant="ghost" onClick={() => setSelectedVehicle(null)} className="text-white/40 hover:bg-white/10 rounded-2xl h-12 w-12 transition-all"><X className="w-8 h-8" /></Button>
                   </div>
                 </div>
               </div>
 
-              <div className="flex-1 p-6 space-y-8 overflow-y-auto bg-slate-50/20">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-6">
-                    <div className="space-y-2">
-                      <Label className="text-[9px] font-black uppercase text-slate-400 tracking-widest px-1">Cambiar Estado</Label>
+              <div className="flex-1 p-8 space-y-10 overflow-y-auto bg-slate-50/30">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                  <div className="space-y-8">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Cambiar Estado Operativo</Label>
                       <Select value={selectedVehicle.estado} onValueChange={(val) => handleUpdateVehicle(selectedVehicle.id, { estado: val })}>
-                        <SelectTrigger className="h-12 bg-white border-slate-100 font-black text-xs uppercase rounded-xl shadow-sm">
+                        <SelectTrigger className="h-14 bg-white border-slate-100 font-black text-sm uppercase rounded-2xl shadow-sm px-6">
                           <SelectValue />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-none shadow-2xl">{ESTADOS.map(e => <SelectItem key={e} value={e}>{e.toUpperCase()}</SelectItem>)}</SelectContent>
+                        <SelectContent className="rounded-2xl border-none shadow-2xl">{ESTADOS.map(e => <SelectItem key={e} value={e}>{e.toUpperCase()}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     
-                    <div className="space-y-3">
-                      <Label className="text-[9px] font-black uppercase text-slate-400 tracking-widest px-1">Acciones Logísticas Rápidas</Label>
-                      <div className="grid grid-cols-2 gap-2">
-                        <Button onClick={() => handleUpdateVehicle(selectedVehicle.id, { ubicacion: 'Terraza', estado: 'Stock' })} variant="outline" className="h-11 rounded-xl text-[9px] font-black uppercase border-slate-100 hover:bg-slate-50">TERRAZA</Button>
-                        <Button onClick={() => handleUpdateVehicle(selectedVehicle.id, { ubicacion: 'Entreplanta', estado: 'Stock' })} variant="outline" className="h-11 rounded-xl text-[9px] font-black uppercase border-slate-100 hover:bg-slate-50">ENTREPLANTA</Button>
-                        <Button onClick={() => handleUpdateVehicle(selectedVehicle.id, { ubicacion: 'Cedido', estado: 'Cedido' })} variant="outline" className="h-11 rounded-xl text-[9px] font-black uppercase border-slate-100 hover:bg-blue-50">CEDIDO</Button>
-                        <Button onClick={() => handleUpdateVehicle(selectedVehicle.id, { ubicacion: 'Entregado', estado: 'Entregado' })} variant="outline" className="h-11 rounded-xl text-[9px] font-black uppercase border-slate-100 hover:bg-emerald-50">ENTREGADO</Button>
+                    <div className="space-y-4">
+                      <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Acciones Logísticas Rápidas</Label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <Button onClick={() => handleUpdateVehicle(selectedVehicle.id, { ubicacion: 'Terraza', estado: 'Stock' })} variant="outline" className="h-14 rounded-2xl text-[10px] font-black uppercase border-slate-100 bg-white hover:bg-slate-50 shadow-sm transition-all">MOVER A TERRAZA</Button>
+                        <Button onClick={() => handleUpdateVehicle(selectedVehicle.id, { ubicacion: 'Entreplanta', estado: 'Stock' })} variant="outline" className="h-14 rounded-2xl text-[10px] font-black uppercase border-slate-100 bg-white hover:bg-slate-50 shadow-sm transition-all">MOVER A ENTREPLANTA</Button>
+                        <Button onClick={() => handleUpdateVehicle(selectedVehicle.id, { ubicacion: 'Cedido', estado: 'Cedido' })} variant="outline" className="h-14 rounded-2xl text-[10px] font-black uppercase border-slate-100 bg-white hover:bg-blue-50 shadow-sm transition-all">CEDER VEHÍCULO</Button>
+                        <Button onClick={() => handleUpdateVehicle(selectedVehicle.id, { ubicacion: 'Entregado', estado: 'Entregado' })} variant="outline" className="h-14 rounded-2xl text-[10px] font-black uppercase border-slate-100 bg-white hover:bg-emerald-50 shadow-sm transition-all">MARCAR ENTREGADO</Button>
                       </div>
                     </div>
 
                     <Button 
                       onClick={() => { setMovingVehicleId(selectedVehicle.id); setSelectedVehicle(null); }} 
-                      className="w-full h-14 bg-primary text-white rounded-xl font-black uppercase text-[10px] shadow-xl border-none gap-2 mt-4"
+                      className="w-full h-16 bg-primary text-white rounded-2xl font-black uppercase text-[11px] shadow-xl shadow-primary/20 border-none gap-3 mt-4 transition-all active:scale-95"
                     >
-                      <Move className="w-4 h-4" /> REUBICAR EN PLANO
+                      <Move className="w-5 h-5" /> REUBICAR EN PLANO EXPOSICIÓN
                     </Button>
                   </div>
                   
-                  <div className="space-y-4">
-                     <Label className="text-[9px] font-black uppercase text-slate-400 tracking-widest px-1">Ficha Técnica Stock</Label>
+                  <div className="space-y-6">
+                     <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Detalles de Inventario</Label>
                      <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                           <p className="text-[7px] font-black text-slate-400 uppercase mb-1">Ubicación Actual</p>
-                           <Badge className="bg-secondary text-white text-[9px] font-black uppercase rounded-lg px-3 py-1 border-none shadow-sm">{selectedVehicle.ubicacion}</Badge>
+                        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                           <p className="text-[8px] font-black text-slate-400 uppercase mb-2 tracking-[0.2em]">Ubicación Actual</p>
+                           <Badge className="bg-secondary text-white text-[11px] font-black uppercase rounded-xl px-4 py-1.5 border-none shadow-sm">{selectedVehicle.ubicacion}</Badge>
                         </div>
-                        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                           <p className="text-[7px] font-black text-slate-400 uppercase mb-1">Motorización</p>
-                           <p className="text-[10px] font-black text-secondary uppercase leading-none">{selectedVehicle.motor}</p>
+                        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
+                           <p className="text-[8px] font-black text-slate-400 uppercase mb-2 tracking-[0.2em]">Motorización</p>
+                           <p className="text-sm font-black text-secondary uppercase leading-none">{selectedVehicle.motor}</p>
                         </div>
-                        <div className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm col-span-2">
-                           <p className="text-[7px] font-black text-slate-400 uppercase mb-1">Bastidor Completo</p>
-                           <p className="text-[10px] font-mono font-bold text-secondary">{selectedVehicle.vin}</p>
+                        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm col-span-2">
+                           <p className="text-[8px] font-black text-slate-400 uppercase mb-2 tracking-[0.2em]">Número de Bastidor Completo</p>
+                           <p className="text-base font-mono font-bold text-secondary tracking-tight">{selectedVehicle.vin}</p>
+                        </div>
+                        <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm col-span-2">
+                           <p className="text-[8px] font-black text-slate-400 uppercase mb-2 tracking-[0.2em]">Fecha de Entrada en Stock</p>
+                           <p className="text-sm font-black text-secondary uppercase leading-none">{selectedVehicle.fechaEntrada || 'Sin fecha'}</p>
                         </div>
                      </div>
                   </div>
@@ -457,16 +460,16 @@ function ShowroomContent() {
       </Sheet>
 
       <Sheet open={isStockSheetOpen} onOpenChange={setIsStockSheetOpen}>
-        <SheetContent side="right" className="w-[300px] md:w-[400px] p-0 border-none bg-white shadow-2xl">
-          <SheetHeader className="p-6 bg-slate-50 border-b">
-            <SheetTitle className="text-lg font-black uppercase italic tracking-tighter text-secondary">STOCK VN</SheetTitle>
-            <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Activos sin plaza asignada</p>
+        <SheetContent side="right" className="w-[350px] md:w-[450px] p-0 border-none bg-white shadow-2xl">
+          <SheetHeader className="p-8 bg-slate-50 border-b">
+            <SheetTitle className="text-2xl font-black uppercase italic tracking-tighter text-secondary">STOCK VN PENDIENTE</SheetTitle>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Activos fuera del plano de exposición</p>
           </SheetHeader>
-          <div className="p-4 space-y-3 overflow-y-auto h-[calc(100vh-120px)]">
+          <div className="p-6 space-y-4 overflow-y-auto h-[calc(100vh-140px)]">
             {pendingStock.length === 0 ? (
-              <div className="p-10 text-center space-y-4">
-                <Package className="w-10 h-10 text-slate-200 mx-auto" />
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Exposición al completo</p>
+              <div className="p-16 text-center space-y-4">
+                <Package className="w-16 h-16 text-slate-100 mx-auto" />
+                <p className="text-[11px] font-black text-slate-300 uppercase tracking-widest">Exposición al completo</p>
               </div>
             ) : (
               pendingStock.map((car) => {
@@ -479,18 +482,18 @@ function ShowroomContent() {
                       setIsStockSheetOpen(false);
                       toast({ title: "Modo Ubicación", description: `Selecciona una plaza para el ${car.modelo}` });
                     }}
-                    className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm hover:border-primary/30 cursor-pointer transition-all group relative overflow-hidden"
+                    className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:border-primary/50 hover:shadow-lg cursor-pointer transition-all group relative overflow-hidden"
                   >
-                    <div className="absolute left-0 top-0 bottom-0 w-1" style={{ backgroundColor: colorObj?.hex || '#F5F5F5' }} />
-                    <div className="flex justify-between items-start ml-2">
-                      <div className="space-y-1">
-                        <h4 className="font-black text-secondary text-[10px] uppercase leading-none group-hover:text-primary">{car.modelo}</h4>
-                        <div className="flex flex-col gap-0.5">
-                          <p className="text-[8px] font-mono font-bold text-slate-400 uppercase">{car.vin7 || car.vin?.slice(-7)}</p>
-                          <p className="text-[8px] font-black text-slate-500 uppercase tracking-tight">{car.colorExterior}</p>
+                    <div className="absolute left-0 top-0 bottom-0 w-1.5" style={{ backgroundColor: colorObj?.hex || '#F5F5F5' }} />
+                    <div className="flex justify-between items-start ml-3">
+                      <div className="space-y-2">
+                        <h4 className="font-black text-secondary text-xs uppercase leading-none group-hover:text-primary transition-colors">{car.modelo}</h4>
+                        <div className="flex flex-col gap-1">
+                          <p className="text-[10px] font-mono font-bold text-slate-400 uppercase">{car.vin7 || car.vin?.slice(-7)}</p>
+                          <p className="text-[9px] font-black text-slate-500 uppercase tracking-tight">{car.colorExterior}</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-[7px] font-black uppercase bg-slate-50">{car.ubicacion}</Badge>
+                      <Badge variant="outline" className="text-[8px] font-black uppercase bg-slate-50 border-slate-100 px-3 py-1">{car.ubicacion}</Badge>
                     </div>
                   </div>
                 );
@@ -501,37 +504,37 @@ function ShowroomContent() {
       </Sheet>
 
       <Dialog open={isAddingNew} onOpenChange={setIsAddingNew}>
-        <DialogContent className="max-w-md p-0 overflow-hidden border-none rounded-3xl shadow-2xl">
-          <div className="p-5 bg-secondary text-white"><h2 className="text-base font-black uppercase italic tracking-tight">REGISTRO DE STOCK</h2></div>
-          <div className="p-5 space-y-4 bg-white">
+        <DialogContent className="max-w-md p-0 overflow-hidden border-none rounded-[2.5rem] shadow-2xl">
+          <div className="p-6 bg-secondary text-white"><h2 className="text-xl font-black uppercase italic tracking-tighter">REGISTRO DE STOCK</h2></div>
+          <div className="p-8 space-y-6 bg-white">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Modelo</Label>
-                <Input value={formData.modelo} onChange={e => setFormData({...formData, modelo: e.target.value})} className="h-9 bg-slate-50 border-none font-bold uppercase text-[10px] rounded-lg" />
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 px-2 tracking-widest">Modelo</Label>
+                <Input value={formData.modelo} onChange={e => setFormData({...formData, modelo: e.target.value})} className="h-12 bg-slate-50 border-none font-bold uppercase text-xs rounded-xl focus:ring-2 focus:ring-primary/20" placeholder="EJ: X3 XDRIVE20D" />
               </div>
-              <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Bastidor</Label>
-                <Input value={formData.vin} onChange={e => setFormData({...formData, vin: e.target.value})} className="h-9 bg-slate-50 border-none font-mono text-[10px] uppercase rounded-lg" />
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 px-2 tracking-widest">Bastidor</Label>
+                <Input value={formData.vin} onChange={e => setFormData({...formData, vin: e.target.value})} className="h-12 bg-slate-50 border-none font-mono text-xs uppercase rounded-xl focus:ring-2 focus:ring-primary/20" placeholder="VIN COMPLETO" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Ubicación</Label>
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 px-2 tracking-widest">Ubicación</Label>
                 <Select value={formData.ubicacion} onValueChange={v => setFormData({...formData, ubicacion: v})}>
-                  <SelectTrigger className="h-9 bg-slate-50 border-none text-[10px] uppercase font-black rounded-lg"><SelectValue /></SelectTrigger>
-                  <SelectContent className="rounded-xl border-none shadow-xl">
+                  <SelectTrigger className="h-12 bg-slate-50 border-none text-xs uppercase font-black rounded-xl focus:ring-2 focus:ring-primary/20"><SelectValue /></SelectTrigger>
+                  <SelectContent className="rounded-2xl border-none shadow-2xl">
                     {SHOWROOM_PLAZAS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                     <Separator className="my-2" />
                     {OTHER_LOCATIONS.map(p => <SelectItem key={p} value={p}>{p.toUpperCase()}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Color BMW</Label>
+              <div className="space-y-2"><Label className="text-[10px] font-black uppercase text-slate-400 px-2 tracking-widest">Color BMW</Label>
                 <Select value={formData.colorBMW} onValueChange={v => setFormData({...formData, colorBMW: v})}>
-                  <SelectTrigger className="h-9 bg-slate-50 border-none text-[10px] uppercase font-black rounded-lg"><SelectValue /></SelectTrigger>
-                  <SelectContent className="rounded-xl border-none shadow-xl">{BMW_COLORS.map(c => <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>)}</SelectContent>
+                  <SelectTrigger className="h-12 bg-slate-50 border-none text-xs uppercase font-black rounded-xl focus:ring-2 focus:ring-primary/20"><SelectValue /></SelectTrigger>
+                  <SelectContent className="rounded-2xl border-none shadow-2xl max-h-[300px]">{BMW_COLORS.map(c => <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
-            <Button onClick={handleQuickAdd} className="w-full h-11 bg-primary text-white rounded-xl font-black uppercase text-[9px] shadow-lg mt-1 transition-all active:scale-95">
-              <Save className="mr-2 w-3.5 h-3.5" /> GUARDAR EN STOCK
+            <Button onClick={handleQuickAdd} className="w-full h-14 bg-primary text-white rounded-2xl font-black uppercase text-[11px] shadow-xl shadow-primary/20 mt-2 transition-all active:scale-95">
+              <Save className="mr-3 w-5 h-5" /> GUARDAR EN INVENTARIO
             </Button>
           </div>
         </DialogContent>
