@@ -7,19 +7,19 @@ Sistema de gestión logística VN y exposición premium para Momentum Navarra.
 Utiliza este comando en tu terminal para aplicar cambios y actualizar GitHub/Vercel en un solo paso:
 
 ```bash
-git add . && git commit -m "Update: Balance visual final y optimización de showroom" && git push origin main
+git add . && git commit -m "Update: Fix entregas y prevención de duplicados VIN" && git push origin main
 ```
 
 ---
 
 ## 🎨 Diseño Premium Blindado
-- **Showroom**: Información integrada sobre siluetas con contraste inteligente.
-- **Plano VN**: Siluetas de vehículos con información legible tanto en móvil como en escritorio.
-- **Inventario IA**: Escáner de bastidor con compresión automática en el cliente para evitar el error 413 (>1MB).
+- **Showroom**: Etiquetas integradas sobre siluetas con contraste inteligente (Legible en móvil y PC).
+- **Inventario IA**: Escáner de bastidor con compresión automática (<1MB) para evitar errores 413.
+- **Seguridad de Datos**: Prevención de duplicados de VIN en todo el sistema.
 
 ## 📦 Gestión de Stock
-- **Excel**: Soporte para importación masiva de archivos .xlsx y .xls con prevención de duplicados.
-- **Persistencia**: Sincronización en tiempo real con Firebase Firestore.
+- **Excel**: Soporte para importación masiva con detección de duplicados.
+- **Entregas**: Gestión completa de actas, recogidas de renting y actualización de stock.
 
 ## 🚀 Despliegue
 Para asegurar que los cambios se reflejen en Vercel:
