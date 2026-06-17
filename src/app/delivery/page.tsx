@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { 
   Calendar as CalendarIcon, 
   Clock, 
@@ -26,6 +26,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
+import { Separator } from "@/components/ui/separator"
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -33,7 +34,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu"
 import { useFirestore, useCollection } from "@/firebase"
-import { collection, query, orderBy, addDoc, doc, deleteDoc, updateDoc, serverTimestamp } from "firebase/firestore"
+import { collection, query, orderBy, addDoc, doc, deleteDoc, updateDoc } from "firebase/firestore"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -57,13 +58,21 @@ export default function DeliveryManagement() {
   const [formData, setFormData] = useState({
     vehiculoId: "",
     cliente: "",
-    fecha: format(new Date(), "yyyy-MM-dd"),
+    fecha: "",
     hora: "10:00",
     asesor: "",
     actaEnviada: false,
     recogidaRenting: false,
     recogidaRentingInfo: ""
   });
+
+  // Evitar errores de hidratación inicializando la fecha en el cliente
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      fecha: format(new Date(), "yyyy-MM-dd")
+    }));
+  }, []);
 
   const entregas = (entregasRaw || []) as any[];
   const vehiculos = (vehiculosRaw || []) as any[];
@@ -79,20 +88,21 @@ export default function DeliveryManagement() {
     }
 
     if (searchTerm) {
+      const s = searchTerm.toLowerCase();
       list = list.filter(d => 
-        d.cliente?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        d.vehiculoInfo?.toLowerCase().includes(searchTerm.toLowerCase())
+        d.cliente?.toLowerCase().includes(s) ||
+        d.vehiculoInfo?.toLowerCase().includes(s)
       );
     }
     return list;
   }, [entregas, activeTab, searchTerm]);
 
   const stats = useMemo(() => {
-    const today = format(new Date(), "yyyy-MM-dd");
-    const hoyCount = entregas.filter(d => d.fecha === today).length;
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+    const hoyCount = entregas.filter(d => d.fecha === todayStr).length;
     const pendientesCount = entregas.filter(d => d.estado !== 'Entregado').length;
-    const completadasSemana = entregas.filter(d => d.estado === 'Entregado').length; // Simplificado
-    return { hoyCount, pendientesCount, completadasSemana };
+    const completadas = entregas.filter(d => d.estado === 'Entregado').length;
+    return { hoyCount, pendientesCount, completadas };
   }, [entregas]);
 
   const handleAddDelivery = async () => {
@@ -112,7 +122,6 @@ export default function DeliveryManagement() {
 
     try {
       await addDoc(collection(db, "entregas"), payload);
-      // Opcional: Actualizar estado del vehículo a "Preparacion Entrega"
       if (vehicle) {
         await updateDoc(doc(db, "vehiculos", vehicle.id), { estado: "Preparacion Entrega" });
       }
@@ -167,11 +176,11 @@ export default function DeliveryManagement() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-8 pb-24">
+    <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-8 pb-24 h-full overflow-y-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 shrink-0">
         <div>
-          <h1 className="text-3xl font-black tracking-tighter text-secondary uppercase italic">GESTIÓN DE <span className="text-primary not-italic">ENTREGAS</span></h1>
+          <h1 className="text-3xl font-black tracking-tighter text-secondary uppercase italic leading-none">GESTIÓN DE <span className="text-primary not-italic">ENTREGAS</span></h1>
           <p className="text-muted-foreground mt-1 text-[10px] font-black uppercase tracking-widest">Planificación logística Momentum Navarra</p>
         </div>
         <div className="flex gap-2">
@@ -232,7 +241,7 @@ export default function DeliveryManagement() {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
         <Card className="premium-card border-none shadow-sm rounded-2xl bg-white">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -264,7 +273,7 @@ export default function DeliveryManagement() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Completadas</p>
-                <p className="text-3xl font-black mt-1 text-emerald-600">{stats.completadasSemana}</p>
+                <p className="text-3xl font-black mt-1 text-emerald-600">{stats.completadas}</p>
               </div>
               <div className="w-12 h-12 bg-emerald-50 rounded-2xl flex items-center justify-center">
                 <CheckCircle2 className="text-emerald-600 w-6 h-6" />
@@ -279,13 +288,13 @@ export default function DeliveryManagement() {
         <div className="xl:col-span-3 space-y-6">
           <div className="flex items-center justify-between bg-white p-2 rounded-2xl border-none shadow-sm">
             <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-              <div className="flex items-center justify-between px-2">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2">
                 <TabsList className="bg-slate-100/50 rounded-xl">
                   <TabsTrigger value="all" className="rounded-lg text-[10px] font-black uppercase">Todas</TabsTrigger>
                   <TabsTrigger value="today" className="rounded-lg text-[10px] font-black uppercase">Hoy</TabsTrigger>
                   <TabsTrigger value="upcoming" className="rounded-lg text-[10px] font-black uppercase">Próximas</TabsTrigger>
                 </TabsList>
-                <div className="relative w-64">
+                <div className="relative w-full sm:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
                   <Input 
                     className="pl-9 bg-slate-50 border-none h-10 text-xs font-bold uppercase rounded-xl" 
@@ -308,8 +317,8 @@ export default function DeliveryManagement() {
             ) : (
               filteredDeliveries.map((delivery) => (
                 <Card key={delivery.id} className="premium-card border-none shadow-sm overflow-hidden group rounded-2xl bg-white">
-                  <div className="flex flex-col md:flex-row">
-                    <div className={cn("w-1.5", 
+                  <div className="flex flex-col md:flex-row h-full">
+                    <div className={cn("w-1.5 shrink-0", 
                       delivery.estado === 'Entregado' ? 'bg-emerald-500' : 
                       delivery.estado === 'Listo' ? 'bg-blue-500' : 'bg-primary'
                     )} />
@@ -321,7 +330,7 @@ export default function DeliveryManagement() {
                           </div>
                           <div>
                             <h3 className="font-black text-lg text-secondary uppercase italic leading-none mb-1">{delivery.cliente}</h3>
-                            <div className="flex items-center gap-2">
+                            <div className="flex flex-wrap items-center gap-2">
                               <span className="text-[10px] font-black text-muted-foreground uppercase">{delivery.vehiculoInfo}</span>
                               {delivery.recogidaRenting && (
                                 <Badge className="bg-orange-50 text-orange-600 text-[8px] font-black uppercase border-orange-100">
