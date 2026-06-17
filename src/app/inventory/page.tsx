@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 
 /**
  * Función de utilidad para comprimir imágenes antes de enviarlas al servidor.
- * Redimensiona a un máximo de 1280px y baja la calidad a 0.7 para evitar el error 413.
+ * Redimensiona a un máximo de 1280px y baja la calidad a 0.7 para asegurar que el peso sea < 1MB.
  */
 const compressImage = (file: File, maxWidth = 1280, maxHeight = 1280, quality = 0.7): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -34,7 +34,6 @@ const compressImage = (file: File, maxWidth = 1280, maxHeight = 1280, quality = 
         let width = img.width;
         let height = img.height;
 
-        // Mantener relación de aspecto
         if (width > height) {
           if (width > maxWidth) {
             height *= maxWidth / width;
@@ -51,7 +50,6 @@ const compressImage = (file: File, maxWidth = 1280, maxHeight = 1280, quality = 
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        // Exportar como JPEG comprimido
         resolve(canvas.toDataURL('image/jpeg', quality));
       };
       img.onerror = (e) => reject(e);
@@ -120,18 +118,18 @@ export default function InventarioGenius() {
 
     setIsScanning(true);
     try {
-      // COMPRESIÓN CRÍTICA: Evita el error 413 en producción
+      // Compresión crítica para evitar Error 413
       const compressedDataUri = await compressImage(file);
       const result = await scanVIN({ photoDataUri: compressedDataUri });
       
       if (result && result.vin) {
         handleAudit(result.vin);
       } else {
-        toast({ variant: "destructive", title: "Error de lectura", description: "La IA no ha podido extraer un VIN claro de la imagen comprimida." });
+        toast({ variant: "destructive", title: "Error de lectura", description: "La IA no pudo detectar el VIN. Intenta con más luz." });
       }
     } catch (err) {
       console.error("SCAN ERROR", err);
-      toast({ variant: "destructive", title: "Error de IA", description: "Hubo un problema al procesar la imagen. El archivo podría ser aún demasiado grande." });
+      toast({ variant: "destructive", title: "Error", description: "Error al procesar la imagen comprimida." });
     } finally {
       setIsScanning(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -154,10 +152,10 @@ export default function InventarioGenius() {
           </div>
           <div className="space-y-2">
             <h2 className="text-2xl font-black uppercase italic tracking-tighter">
-              {isScanning ? "Comprimiendo y Analizando..." : "Modo Recorrido"}
+              {isScanning ? "Comprimiendo..." : "Modo Recorrido"}
             </h2>
             <p className="text-white/50 text-[10px] font-black uppercase tracking-[0.2em] px-10">
-              Captura el VIN. La imagen se optimiza automáticamente para el servidor.
+              Captura el VIN. La imagen se optimiza automáticamente para cumplir el límite de 1MB.
             </p>
           </div>
           
@@ -172,7 +170,7 @@ export default function InventarioGenius() {
               disabled={isScanning}
             >
               <Camera className="mr-3 w-6 h-6" />
-              {isScanning ? "Enviando..." : "ESCANEAR BASTIDOR"}
+              {isScanning ? "Procesando..." : "ESCANEAR BASTIDOR"}
             </Button>
             
             <div className="flex gap-2">

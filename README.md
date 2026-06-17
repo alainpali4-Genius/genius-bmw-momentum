@@ -1,28 +1,23 @@
 # 🚀 Genius BMW - Momentum Navarra
 
-Sistema de gestión logística VN y exposición premium para Momentum Navarra. El código está sincronizado y listo para producción.
+Sistema de gestión logística VN y exposición premium para Momentum Navarra.
 
-## 🛠️ Despliegue en Firebase / Vercel
+## 🛠️ Comandos de Terminal Rápidos
 
-### Fix Crítico: Error 413 (Payload Too Large)
-Se ha implementado compresión de imágenes en el cliente para el módulo **Inventario IA**. Esto asegura que las fotos enviadas a Gemini pesen menos de 1MB, permitiendo que el sistema funcione en servidores con límites de tráfico estrictos.
-
----
-
-## 📦 Comandos para Sincronizar con GitHub
-
-Si acabas de aplicar el fix de compresión, copia y pega estos comandos en la terminal para actualizar tu repositorio:
+### 📤 Subida de cambios a GitHub (Fix Error 413)
+Copia y pega este comando para aplicar la compresión de imágenes y actualizar tu repositorio:
 
 ```bash
-git add .
-git commit -m "Fix: Implementar compresión de imágenes en Inventario IA para evitar error 413"
-git push origin main
+git add . && git commit -m "Fix: Implementar compresión de imágenes en Inventario IA para evitar error 413" && git push origin main
 ```
 
 ---
 
 ## 🎨 Diseño Premium Blindado
-- **Barra Lateral**: Fondo Azul Portimao (#003399). Hover en **Rojo M (#ED1C24)** estrictamente individual.
-- **Plano VN**: Siluetas de vehículos maximizadas al 150% para visibilidad total.
-- **Inventario IA**: Escáner de bastidor optimizado con reducción automática de tamaño de imagen.
-- **Persistencia**: Todo el stock se guarda automáticamente en Firebase Firestore.
+- **Barra Lateral**: Fondo Azul Portimao (#003399). Hover en **Rojo M (#ED1C24)** estrictamente individual por cada ítem.
+- **Plano VN**: Siluetas de vehículos maximizadas al 150%.
+- **Inventario IA**: Escáner de bastidor con compresión automática en el cliente (Máx 1280px / 0.7 JPEG) para cumplir con el límite de 1MB de los servidores.
+
+## 📦 Gestión de Stock
+- **Excel**: Soporte para importación masiva de archivos .xlsx y .xls.
+- **Persistencia**: Sincronización en tiempo real con Firebase Firestore.
