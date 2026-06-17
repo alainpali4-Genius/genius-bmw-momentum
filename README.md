@@ -4,11 +4,11 @@ Sistema de gestión logística VN y exposición premium para Momentum Navarra.
 
 ## 🛠️ Comandos de Terminal Rápidos
 
-### 📤 Subida de cambios a GitHub (Fix Error 413)
-Copia y pega este comando para aplicar la compresión de imágenes y actualizar tu repositorio:
+### 📤 Subida de cambios a GitHub
+Copia y pega este comando para aplicar la compresión de imágenes y actualizar tu repositorio, corrigiendo errores de terminal:
 
 ```bash
-git add . && git commit -m "Fix: Implementar compresión de imágenes en Inventario IA para evitar error 413" && git push origin main
+unset PROMPT_COMMAND && git add . && git commit -m "Fix: Implementar compresión de imágenes en Inventario IA para evitar error 413" && git push origin main
 ```
 
 ---
