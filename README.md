@@ -3,18 +3,18 @@
 
 Sistema de gestión logística VN y exposición premium para Momentum Navarra.
 
-## 🛠️ Comando de Sincronización Rápida
-Copia y pega este comando para aplicar los cambios y actualizar tu repositorio en GitHub de un solo golpe:
+## 🛠️ Comando de Sincronización Rápida (COPIA Y PEGA)
+Utiliza este comando en tu terminal para aplicar cambios y actualizar GitHub en un solo paso:
 
 ```bash
-git add . && git commit -m "Update: Sincronización de cambios desde Genius Studio" && git push origin main
+git add . && git commit -m "Update: Mejoras visuales en showroom y corrección de equilibrio de diseño" && git push origin main
 ```
 
 ---
 
 ## 🎨 Diseño Premium Blindado
 - **Barra Lateral**: Fondo Azul Portimao (#003399). Hover en **Rojo M (#ED1C24)** estrictamente individual por cada ítem.
-- **Plano VN**: Siluetas de vehículos y etiquetas de información optimizadas para dispositivos móviles (Full Responsiveness).
+- **Plano VN**: Siluetas de vehículos con información integrada y contraste inteligente adaptado al color del coche. Totalmente responsive.
 - **Inventario IA**: Escáner de bastidor con compresión automática en el cliente (Máx 1280px / 0.7 JPEG) para cumplir con el límite de 1MB.
 
 ## 📦 Gestión de Stock

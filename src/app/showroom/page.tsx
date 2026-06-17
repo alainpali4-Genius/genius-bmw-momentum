@@ -265,37 +265,37 @@ function ShowroomContent() {
         )}
       >
         <div className="absolute top-1.5 left-2 flex flex-col z-10 pointer-events-none">
-          <span className={cn("text-[9px] font-black uppercase tracking-[0.2em]", isP14 ? "text-accent" : "text-slate-300")}>{id}</span>
-          {isP13 && <Zap className="w-2.5 h-2.5 text-blue-400 mt-0.5" />}
+          <span className={cn("text-[8px] md:text-[9px] font-black uppercase tracking-[0.2em]", isP14 ? "text-accent" : "text-slate-300")}>{id}</span>
+          {isP13 && <Zap className="w-2 md:w-2.5 h-2 md:h-2.5 text-blue-400 mt-0.5" />}
         </div>
         
         {isP14 && !vehicle && (
           <div className="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
-            <span className="text-3xl font-black italic tracking-tighter text-accent">///M</span>
+            <span className="text-xl md:text-3xl font-black italic tracking-tighter text-accent">///M</span>
           </div>
         )}
 
         {vehicle ? (
           <div className="relative w-full h-full flex items-center justify-center">
-            <div className={cn("absolute inset-2 flex items-center justify-center transition-transform duration-500", isSelected && "scale-110")}>
+            <div className={cn("absolute inset-2 flex items-center justify-center transition-transform duration-500", isSelected && "scale-105")}>
               <BmwSilhouette 
                 type={vehicle.bodyType || 'SUV'} 
                 colorHex={colorHex} 
                 rotacion={rotacion} 
-                className={cn("scale-[0.8] md:scale-[1.6]", isSelected && "drop-shadow-2xl")} 
+                className={cn("scale-[0.8] md:scale-[1.3]", isSelected && "drop-shadow-2xl")} 
               />
             </div>
             
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 text-center px-2">
-              <div className={cn("w-full max-w-[80%] backdrop-blur-sm rounded-lg p-1 space-y-0.5", isDarkColor(colorHex) ? "bg-black/10" : "bg-white/10")}>
-                <p className={cn("text-[7px] md:text-[10px] font-black uppercase leading-none tracking-tight truncate", textColorClass)}>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 text-center px-1">
+              <div className={cn("w-full max-w-[90%] md:max-w-[70%] backdrop-blur-md rounded-lg p-0.5 md:p-1 space-y-0.5 shadow-sm", isDarkColor(colorHex) ? "bg-black/20" : "bg-white/20")}>
+                <p className={cn("text-[6px] md:text-[8px] font-black uppercase leading-none tracking-tight truncate", textColorClass)}>
                   {vehicle.modelo}
                 </p>
-                <div className="flex gap-1.5 items-center justify-center leading-none">
-                  <span className={cn("text-[6px] md:text-[8px] font-mono font-bold", subTextColorClass)}>
+                <div className="flex gap-1 items-center justify-center leading-none">
+                  <span className={cn("text-[5px] md:text-[7px] font-mono font-bold", subTextColorClass)}>
                     {vehicle.vin7 || vehicle.vin?.slice(-7)}
                   </span>
-                  <span className={cn("text-[6px] md:text-[8px] font-black", textColorClass)}>
+                  <span className={cn("text-[5px] md:text-[7px] font-black", textColorClass)}>
                     {vehicle.colorCodigo}
                   </span>
                 </div>
@@ -304,7 +304,7 @@ function ShowroomContent() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center opacity-10 group-hover:opacity-30 transition-opacity">
-             {movingVehicleId ? <Move className="w-5 h-5 text-primary animate-bounce" /> : <PlusCircle className="w-5 h-5 text-slate-400" />}
+             {movingVehicleId ? <Move className="w-4 h-4 text-primary animate-bounce" /> : <PlusCircle className="w-4 h-4 text-slate-400" />}
           </div>
         )}
       </div>
@@ -336,24 +336,24 @@ function ShowroomContent() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden relative p-4 md:p-6 lg:p-8">
+      <div className="flex-1 overflow-hidden relative p-2 md:p-6 lg:p-8">
         {loadingVehiculos ? (
           <div className="flex justify-center items-center h-full"><Loader2 className="animate-spin text-primary w-10 h-10" /></div>
         ) : (
-          <div className="h-full w-full max-w-[1600px] mx-auto flex gap-4 lg:gap-8">
-            <div className="flex-[8] flex flex-col gap-4 lg:gap-6 h-full">
-              <div className="flex-1 grid grid-cols-4 gap-4 lg:gap-6">{["P1", "P2", "P3", "P4"].map(id => renderPlaza(id))}</div>
-              <div className="flex-1 grid grid-cols-4 gap-4 lg:gap-6">{["P5", "P6", "P7", "P8"].map(id => renderPlaza(id))}</div>
-              <div className="h-12 md:h-16 shrink-0 grid grid-cols-4 gap-4 lg:gap-6">
+          <div className="h-full w-full max-w-[1400px] mx-auto flex gap-2 lg:gap-8 overflow-hidden">
+            <div className="flex-[8] flex flex-col gap-2 lg:gap-4 h-full">
+              <div className="flex-1 grid grid-cols-4 gap-2 lg:gap-4">{["P1", "P2", "P3", "P4"].map(id => renderPlaza(id))}</div>
+              <div className="flex-1 grid grid-cols-4 gap-2 lg:gap-4">{["P5", "P6", "P7", "P8"].map(id => renderPlaza(id))}</div>
+              <div className="h-10 md:h-14 shrink-0 grid grid-cols-4 gap-2 lg:gap-4">
                 {[1, 2, 3, 4].map(num => (
-                  <div key={`m-${num}`} className="bg-[#fef9f2] border-2 border-[#f3e3d3] border-dashed rounded-2xl flex items-center justify-center opacity-60">
-                    <Monitor className="w-4 h-4 text-[#d4a373] mr-2" />
-                    <span className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-[#d4a373]">MESA COMERCIAL {num}</span>
+                  <div key={`m-${num}`} className="bg-[#fef9f2]/50 border-2 border-[#f3e3d3] border-dashed rounded-xl flex items-center justify-center opacity-60">
+                    <Monitor className="w-3 h-3 text-[#d4a373] mr-1.5" />
+                    <span className="text-[6px] md:text-[8px] font-black uppercase tracking-widest text-[#d4a373]">MESA {num}</span>
                   </div>
                 ))}
               </div>
-              <div className="flex-1 grid grid-cols-4 gap-4 lg:gap-6">{["P9", "P10", "P11", "P12"].map(id => renderPlaza(id))}</div>
-              <div className="flex-1 grid grid-cols-4 gap-4 lg:gap-6">
+              <div className="flex-1 grid grid-cols-4 gap-2 lg:gap-4">{["P9", "P10", "P11", "P12"].map(id => renderPlaza(id))}</div>
+              <div className="flex-1 grid grid-cols-4 gap-2 lg:gap-4">
                 <div className="col-span-1" />
                 <div className="col-span-1">{renderPlaza("P14")}</div>
                 <div className="col-span-1">{renderPlaza("P15")}</div>
@@ -361,11 +361,11 @@ function ShowroomContent() {
               </div>
             </div>
             
-            <div className="w-16 flex flex-col items-center py-10 opacity-5 shrink-0 select-none">
-               {[1,2,3,4,5,6,7,8].map(i => <Footprints key={i} className="w-6 h-6 rotate-90 my-auto text-slate-900" />)}
+            <div className="w-8 md:w-16 flex flex-col items-center py-4 opacity-5 shrink-0 select-none">
+               {[1,2,3,4,5,6,7,8].map(i => <Footprints key={i} className="w-4 md:w-6 h-4 md:h-6 rotate-90 my-auto text-slate-900" />)}
             </div>
 
-            <div className="w-24 md:w-32 flex flex-col justify-center h-full py-[10%]">
+            <div className="w-16 md:w-32 flex flex-col justify-center h-full py-[10%] gap-2 lg:gap-4">
                <div className="h-[20%]">{renderPlaza("P13")}</div>
             </div>
           </div>
