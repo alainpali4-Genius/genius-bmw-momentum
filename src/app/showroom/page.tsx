@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, doc, updateDoc, deleteDoc, addDoc, query, orderBy } from "firebase/firestore";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Dialog, DialogContent } from "@/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
@@ -66,8 +66,8 @@ function BmwSilhouette({ type, colorHex, rotacion = 0, className }: { type: stri
   };
 
   return (
-    <div className={cn("transition-all duration-500 flex items-center justify-center", className)} style={{ transform: `rotate(${rotacion}deg)` }}>
-      <svg viewBox="0 0 100 180" className="w-14 h-24 md:w-24 md:h-40 filter drop-shadow-md">
+    <div className={cn("transition-all duration-500 flex items-center justify-center h-full w-full", className)} style={{ transform: `rotate(${rotacion}deg)` }}>
+      <svg viewBox="0 0 100 180" className="w-full h-full filter drop-shadow-md">
         <path d={paths[type] || paths.SUV} fill="rgba(0,0,0,0.15)" transform="translate(2,2)" />
         <path d={paths[type] || paths.SUV} fill={colorHex} stroke="rgba(0,0,0,0.3)" strokeWidth="1.2" />
       </svg>
@@ -225,6 +225,18 @@ function ShowroomContent() {
     const colorHex = colorObj?.hex || '#F5F5F5'; 
     const rotacion = FIXED_ORIENTATIONS[id] !== undefined ? FIXED_ORIENTATIONS[id] : 90;
     
+    // Función para determinar si el fondo es claro u oscuro para legibilidad
+    const isDarkColor = (hex: string) => {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+      return brightness < 128;
+    };
+
+    const textColorClass = isDarkColor(colorHex) ? "text-white" : "text-secondary";
+    const subTextColorClass = isDarkColor(colorHex) ? "text-white/70" : "text-slate-500";
+
     const isP13 = id === "P13";
     const isP14 = id === "P14";
 
@@ -252,7 +264,7 @@ function ShowroomContent() {
           isMovingTarget && "border-primary/50 bg-primary/5 cursor-pointer hover:bg-primary/10",
           isP13 && !vehicle && "bg-blue-50/5 border-blue-100 border-solid",
           isP14 && "border-accent/40 bg-accent/5",
-          (isSelected || isMovingSelf) && "z-20 ring-2 ring-primary/30 bg-white shadow-lg",
+          (isSelected || isMovingSelf) && "z-20 ring-2 ring-primary bg-white shadow-xl",
           isMovingSelf && "animate-pulse border-primary"
         )}
       >
@@ -268,23 +280,28 @@ function ShowroomContent() {
         )}
 
         {vehicle ? (
-          <div className="flex flex-col items-center justify-between animate-in fade-in duration-300 w-full h-full px-0.5 py-0.5 relative">
-            <div className="flex-1 flex items-center justify-center w-full">
-              <BmwSilhouette 
-                type={vehicle.bodyType || 'SUV'} 
-                colorHex={colorHex} 
-                rotacion={rotacion} 
-                className={cn("scale-[3.8] md:scale-[8.5] translate-y-[-10%] md:translate-y-0", (isSelected || isMovingSelf) && "filter drop-shadow-[0_0_15px_rgba(0,0,0,0.4)]")} 
-              />
-            </div>
+          <div className="relative w-full h-full flex items-center justify-center p-1">
+            <BmwSilhouette 
+              type={vehicle.bodyType || 'SUV'} 
+              colorHex={colorHex} 
+              rotacion={rotacion} 
+              className={cn("scale-[1.8] md:scale-[3.5]", (isSelected || isMovingSelf) && "filter drop-shadow-[0_0_15px_rgba(0,0,0,0.4)]")} 
+            />
             
-            <div className="w-full bg-white/95 px-0.5 py-0.5 rounded-lg shadow-sm flex flex-col items-center z-10 border border-slate-100 mt-auto min-h-[30px] md:min-h-0 justify-center">
-              <p className="text-[7px] md:text-[9.5px] font-black text-secondary uppercase whitespace-nowrap overflow-hidden text-center leading-tight tracking-tighter w-full px-0.5">
-                {vehicle.modelo}
-              </p>
-              <div className="flex gap-1 items-center leading-none mt-0.5">
-                <span className="text-[6px] md:text-[8.5px] font-mono font-bold text-slate-500">{vehicle.vin7 || vehicle.vin?.slice(-7)}</span>
-                <span className="text-[6px] md:text-[8.5px] font-black text-primary">{vehicle.colorCodigo}</span>
+            {/* Información integrada sobre el coche */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-10 text-center px-1">
+              <div className={cn("w-full bg-black/5 backdrop-blur-[1px] rounded px-1 py-0.5 md:py-1", isDarkColor(colorHex) ? "bg-white/5" : "bg-black/5")}>
+                <p className={cn("text-[6px] md:text-[10px] font-black uppercase leading-tight tracking-tighter truncate w-full", textColorClass)}>
+                  {vehicle.modelo}
+                </p>
+                <div className="flex gap-1 items-center justify-center leading-none mt-0.5">
+                  <span className={cn("text-[5px] md:text-[8px] font-mono font-bold", subTextColorClass)}>
+                    {vehicle.vin7 || vehicle.vin?.slice(-7)}
+                  </span>
+                  <span className={cn("text-[5px] md:text-[8px] font-black", textColorClass)}>
+                    {vehicle.colorCodigo}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
