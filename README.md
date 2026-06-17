@@ -2,30 +2,27 @@
 
 Sistema de gestión logística VN y exposición premium para Momentum Navarra. El código está sincronizado y listo para producción.
 
-## 🛠️ Despliegue en Firebase (Guía para el Plan Blaze)
+## 🛠️ Despliegue en Firebase / Vercel
 
-Como ves en tu consola de Firebase, para usar **App Hosting** es obligatorio activar el **Plan Blaze (Pago por uso)**. Google Cloud requiere esto para gestionar los servidores de Next.js.
-
-### Pasos para activar el Hosting:
-1. **Facturación**: En la ventana que tienes abierta en tu navegador, haz clic en **"Crea una cuenta de Facturación de Cloud"**.
-2. **Vincular**: Una vez tengas la cuenta de facturación, Firebase te dejará seleccionar tu repositorio de GitHub `alainpali4-Genius/genius-bmw-momentum`.
-3. **Configuración de App Hosting**:
-   - **Región**: Selecciona `europe-west1` (Bélgica) o la más cercana a España.
-   - **Root directory**: Déjalo como `/`.
-   - **Environment Variables**: Añade `GEMINI_API_KEY` con tu clave de Google AI Studio.
+### Fix Crítico: Error 413 (Payload Too Large)
+Se ha implementado compresión de imágenes en el cliente para el módulo **Inventario IA**. Esto asegura que las fotos enviadas a Gemini pesen menos de 1MB, permitiendo que el sistema funcione en servidores con límites de tráfico estrictos.
 
 ---
 
-## 📦 Comandos de Git (Uso Diario)
+## 📦 Comandos para Sincronizar con GitHub
 
-Para subir nuevos cambios a tu GitHub:
+Si acabas de aplicar el fix de compresión, copia y pega estos comandos en la terminal para actualizar tu repositorio:
+
 ```bash
 git add .
-git commit -m "Descripción de los cambios realizados"
+git commit -m "Fix: Implementar compresión de imágenes en Inventario IA para evitar error 413"
 git push origin main
 ```
 
+---
+
 ## 🎨 Diseño Premium Blindado
-- **Barra Lateral**: Fondo Azul Portimao (#003399). El hover en **Rojo M (#ED1C24)** es individual por cada opción.
+- **Barra Lateral**: Fondo Azul Portimao (#003399). Hover en **Rojo M (#ED1C24)** estrictamente individual.
 - **Plano VN**: Siluetas de vehículos maximizadas al 150% para visibilidad total.
+- **Inventario IA**: Escáner de bastidor optimizado con reducción automática de tamaño de imagen.
 - **Persistencia**: Todo el stock se guarda automáticamente en Firebase Firestore.
