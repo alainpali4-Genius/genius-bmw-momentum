@@ -247,7 +247,7 @@ function ShowroomContent() {
           }
         }}
         className={cn(
-          "relative flex flex-col items-center justify-center transition-all h-full w-full rounded-xl border",
+          "relative flex flex-col items-center justify-center transition-all h-full w-full rounded-xl border overflow-hidden",
           vehicle ? "border-transparent cursor-pointer" : "border-dashed border-slate-200 bg-slate-50/10",
           isMovingTarget && "border-primary/50 bg-primary/5 cursor-pointer hover:bg-primary/10",
           isP13 && !vehicle && "bg-blue-50/5 border-blue-100 border-solid",
@@ -268,25 +268,24 @@ function ShowroomContent() {
         )}
 
         {vehicle ? (
-          <div className="flex flex-col items-center justify-center animate-in fade-in duration-300 w-full px-1 py-1">
-            <BmwSilhouette 
-              type={vehicle.bodyType || 'SUV'} 
-              colorHex={colorHex} 
-              rotacion={rotacion} 
-              className={cn("scale-[6.5] md:scale-[8.5]", (isSelected || isMovingSelf) && "filter drop-shadow-[0_0_15px_rgba(0,0,0,0.4)]")} 
-            />
+          <div className="flex flex-col items-center justify-between animate-in fade-in duration-300 w-full h-full px-1 py-1 relative">
+            <div className="flex-1 flex items-center justify-center w-full">
+              <BmwSilhouette 
+                type={vehicle.bodyType || 'SUV'} 
+                colorHex={colorHex} 
+                rotacion={rotacion} 
+                className={cn("scale-[4.5] md:scale-[8.5] translate-y-[-5%] md:translate-y-0", (isSelected || isMovingSelf) && "filter drop-shadow-[0_0_15px_rgba(0,0,0,0.4)]")} 
+              />
+            </div>
             
-            <div className="mt-auto w-full bg-white/95 px-1 py-0.5 rounded-lg shadow-sm flex flex-col items-center z-10 border border-slate-100">
-              <p className="text-[7px] md:text-[8.5px] font-black text-secondary uppercase truncate w-full text-center leading-none tracking-tighter">
+            <div className="w-full bg-white/95 px-1 py-0.5 rounded-md shadow-sm flex flex-col items-center z-10 border border-slate-100 mt-auto min-h-[22px] md:min-h-0">
+              <p className="text-[6.5px] md:text-[8.5px] font-black text-secondary uppercase whitespace-nowrap overflow-hidden text-center leading-none tracking-tighter w-full">
                 {vehicle.modelo}
               </p>
-              <div className="flex gap-1 items-center mt-0.5">
-                <span className="text-[6px] md:text-[7.5px] font-mono font-bold text-slate-500">{vehicle.vin7 || vehicle.vin?.slice(-7)}</span>
-                <span className="text-[6px] md:text-[7.5px] font-black text-primary">{vehicle.colorCodigo}</span>
+              <div className="flex gap-1 items-center mt-0.5 leading-none">
+                <span className="text-[5.5px] md:text-[7.5px] font-mono font-bold text-slate-500">{vehicle.vin7 || vehicle.vin?.slice(-7)}</span>
+                <span className="text-[5.5px] md:text-[7.5px] font-black text-primary">{vehicle.colorCodigo}</span>
               </div>
-              <p className="text-[5px] md:text-[6.5px] font-black text-slate-400 uppercase truncate w-full text-center leading-none mt-0.5">
-                {colorObj?.name || vehicle.colorExterior}
-              </p>
             </div>
           </div>
         ) : (
@@ -327,15 +326,15 @@ function ShowroomContent() {
         {loadingVehiculos ? (
           <div className="flex justify-center items-center h-full"><Loader2 className="animate-spin text-primary w-8 h-8" /></div>
         ) : (
-          <div className="h-full w-full max-w-[1400px] mx-auto flex gap-1.5 md:gap-3">
+          <div className="h-full w-full max-w-[1400px] mx-auto flex gap-1 md:gap-3">
             <div className="flex-[6] flex flex-col gap-1 md:gap-2 h-full">
               <div className="flex-1 grid grid-cols-4 gap-1 md:gap-2">{["P1", "P2", "P3", "P4"].map(id => renderPlaza(id))}</div>
               <div className="flex-1 grid grid-cols-4 gap-1 md:gap-2">{["P5", "P6", "P7", "P8"].map(id => renderPlaza(id))}</div>
               <div className="h-6 md:h-10 shrink-0 grid grid-cols-4 gap-1 md:gap-2">
                 {[1, 2, 3, 4].map(num => (
                   <div key={`m-${num}`} className="bg-[#F5E9DA] border border-[#D2B48C] rounded-lg flex items-center justify-center shadow-sm">
-                    <Monitor className="w-3 h-3 text-[#8B4513] mr-1" />
-                    <span className="text-[7px] font-black uppercase tracking-widest text-[#8B4513]">M-{num}</span>
+                    <Monitor className="w-2.5 h-2.5 md:w-3 md:h-3 text-[#8B4513] mr-1" />
+                    <span className="text-[6px] md:text-[7px] font-black uppercase tracking-widest text-[#8B4513]">M-{num}</span>
                   </div>
                 ))}
               </div>
@@ -347,10 +346,10 @@ function ShowroomContent() {
                 <div className="col-span-1" />
               </div>
             </div>
-            <div className="w-3 md:w-6 flex flex-col items-center py-4 opacity-10 shrink-0">
-               {[1,2,3,4,5,6].map(i => <Footprints key={i} className="w-2.5 h-2.5 rotate-90 my-auto text-slate-600" />)}
+            <div className="w-2 md:w-6 flex flex-col items-center py-4 opacity-10 shrink-0">
+               {[1,2,3,4,5,6].map(i => <Footprints key={i} className="w-2 md:w-2.5 h-2 md:h-2.5 rotate-90 my-auto text-slate-600" />)}
             </div>
-            <div className="w-16 md:w-24 flex flex-col justify-center h-full py-[15%]">
+            <div className="w-12 md:w-24 flex flex-col justify-center h-full py-[15%]">
                <div className="h-[25%]">{renderPlaza("P13")}</div>
             </div>
           </div>
