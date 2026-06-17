@@ -263,28 +263,28 @@ function ShowroomContent() {
         
         {isP14 && !vehicle && (
           <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
-            <span className="text-4xl font-black italic tracking-tighter text-accent">///M</span>
+            <span className="text-2xl font-black italic tracking-tighter text-accent">///M</span>
           </div>
         )}
 
         {vehicle ? (
-          <div className="flex flex-col items-center justify-between animate-in fade-in duration-300 w-full h-full px-1 py-1 relative">
+          <div className="flex flex-col items-center justify-between animate-in fade-in duration-300 w-full h-full px-0.5 py-0.5 relative">
             <div className="flex-1 flex items-center justify-center w-full">
               <BmwSilhouette 
                 type={vehicle.bodyType || 'SUV'} 
                 colorHex={colorHex} 
                 rotacion={rotacion} 
-                className={cn("scale-[4.5] md:scale-[8.5] translate-y-[-5%] md:translate-y-0", (isSelected || isMovingSelf) && "filter drop-shadow-[0_0_15px_rgba(0,0,0,0.4)]")} 
+                className={cn("scale-[3.8] md:scale-[8.5] translate-y-[-10%] md:translate-y-0", (isSelected || isMovingSelf) && "filter drop-shadow-[0_0_15px_rgba(0,0,0,0.4)]")} 
               />
             </div>
             
-            <div className="w-full bg-white/95 px-1 py-1 rounded-lg shadow-sm flex flex-col items-center z-10 border border-slate-100 mt-auto min-h-[32px] md:min-h-0 justify-center">
-              <p className="text-[7.5px] md:text-[9.5px] font-black text-secondary uppercase whitespace-nowrap overflow-hidden text-center leading-tight tracking-tighter w-full px-1">
+            <div className="w-full bg-white/95 px-0.5 py-0.5 rounded-lg shadow-sm flex flex-col items-center z-10 border border-slate-100 mt-auto min-h-[30px] md:min-h-0 justify-center">
+              <p className="text-[7px] md:text-[9.5px] font-black text-secondary uppercase whitespace-nowrap overflow-hidden text-center leading-tight tracking-tighter w-full px-0.5">
                 {vehicle.modelo}
               </p>
-              <div className="flex gap-1.5 items-center leading-none mt-0.5">
-                <span className="text-[6.5px] md:text-[8.5px] font-mono font-bold text-slate-500">{vehicle.vin7 || vehicle.vin?.slice(-7)}</span>
-                <span className="text-[6.5px] md:text-[8.5px] font-black text-primary">{vehicle.colorCodigo}</span>
+              <div className="flex gap-1 items-center leading-none mt-0.5">
+                <span className="text-[6px] md:text-[8.5px] font-mono font-bold text-slate-500">{vehicle.vin7 || vehicle.vin?.slice(-7)}</span>
+                <span className="text-[6px] md:text-[8.5px] font-black text-primary">{vehicle.colorCodigo}</span>
               </div>
             </div>
           </div>

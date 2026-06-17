@@ -1,11 +1,10 @@
+
 # 🚀 Genius BMW - Momentum Navarra
 
 Sistema de gestión logística VN y exposición premium para Momentum Navarra.
 
-## 🛠️ Comandos de Terminal Rápidos
-
-### 📤 Subida de cambios a GitHub
-Copia y pega este comando para aplicar los cambios y actualizar tu repositorio en un solo paso:
+## 🛠️ Comando de Sincronización Rápida
+Copia y pega este comando para aplicar los cambios y actualizar tu repositorio en GitHub de un solo golpe:
 
 ```bash
 git add . && git commit -m "Update: Sincronización de cambios desde Genius Studio" && git push origin main
@@ -21,3 +20,9 @@ git add . && git commit -m "Update: Sincronización de cambios desde Genius Stud
 ## 📦 Gestión de Stock
 - **Excel**: Soporte para importación masiva de archivos .xlsx y .xls.
 - **Persistencia**: Sincronización en tiempo real con Firebase Firestore.
+
+## 🚀 Despliegue en Firebase App Hosting
+Para desplegar la aplicación en la nube:
+1. Asegúrate de tener activado el **Plan Blaze** en la consola de Firebase.
+2. Conecta este repositorio de GitHub a **App Hosting** en la consola de Firebase.
+3. Configura la variable `GEMINI_API_KEY` en los secretos de App Hosting.
