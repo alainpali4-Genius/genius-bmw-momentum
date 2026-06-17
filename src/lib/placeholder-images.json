@@ -1,0 +1,28 @@
+{
+  "placeholderImages": [
+    {
+      "id": "bmw-i4",
+      "description": "BMW i4 Electric Gran Coupe",
+      "imageUrl": "https://picsum.photos/seed/bmw1/800/600",
+      "imageHint": "BMW i4"
+    },
+    {
+      "id": "bmw-m3",
+      "description": "BMW M3 Sedan",
+      "imageUrl": "https://picsum.photos/seed/bmw2/800/600",
+      "imageHint": "BMW M3"
+    },
+    {
+      "id": "bmw-x5",
+      "description": "BMW X5 SUV",
+      "imageUrl": "https://picsum.photos/seed/bmw3/800/600",
+      "imageHint": "BMW X5"
+    },
+    {
+      "id": "bmw-showroom",
+      "description": "BMW Modern Showroom Interior",
+      "imageUrl": "https://picsum.photos/seed/bmwshow/1200/800",
+      "imageHint": "BMW Showroom"
+    }
+  ]
+}

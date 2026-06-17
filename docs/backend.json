@@ -1,0 +1,89 @@
+
+{
+  "entities": {
+    "Vehiculo": {
+      "title": "Vehículo",
+      "description": "Ficha técnica unificada de stock VN para Momentum Navarra.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "vin": { "type": "string", "description": "Número de bastidor completo." },
+        "vin7": { "type": "string", "description": "Últimos 7 caracteres del bastidor." },
+        "modelo": { "type": "string" },
+        "motor": { "type": "string" },
+        "bodyType": { 
+          "type": "string", 
+          "enum": ["SUV", "Berlina", "Coupe", "GranCoupe", "Roadster"],
+          "description": "Tipo de carrocería para representación en plano."
+        },
+        "rotacion": { "type": "number", "description": "Orientación en el plano (0, 90, 180, 270)." },
+        "colorExterior": { "type": "string" },
+        "colorCodigo": { "type": "string" },
+        "estado": { 
+          "type": "string", 
+          "enum": ["Exposicion", "Stock", "Demo", "Reservado", "Preparacion Entrega", "Entregado"] 
+        },
+        "ubicacion": { "type": "string" },
+        "comercial": { "type": "string" },
+        "clienteReserva": { "type": "string" },
+        "fechaEntrada": { "type": "string", "format": "date" },
+        "observaciones": { "type": "string" },
+        "checklist": {
+          "type": "object",
+          "properties": {
+            "lavado": { "type": "boolean" },
+            "combustible": { "type": "boolean" },
+            "documentacion": { "type": "boolean" },
+            "llaves": { "type": "boolean" },
+            "revision": { "type": "boolean" }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["vin", "vin7", "modelo", "motor", "estado", "ubicacion", "bodyType"]
+    },
+    "Movimiento": {
+      "title": "Registro Logístico",
+      "description": "Historial inalterable de operaciones y auditorías.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "vehiculoId": { "type": "string" },
+        "vehiculoInfo": { "type": "string" },
+        "tipoAccion": { "type": "string", "enum": ["Alta", "Edicion", "Eliminacion", "Movimiento", "Reserva", "Entrega", "Inventario"] },
+        "fecha": { "type": "string", "format": "date-time" },
+        "origen": { "type": "string" },
+        "destino": { "type": "string" },
+        "usuario": { "type": "string" },
+        "detalles": { "type": "string" }
+      }
+    },
+    "Incidencia": {
+      "title": "Incidencia",
+      "description": "Reporte de daños o problemas técnicos detectados.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "vehiculoId": { "type": "string" },
+        "vehiculoInfo": { "type": "string" },
+        "vin": { "type": "string" },
+        "tipo": { "type": "string", "enum": ["Daño", "Mecánico", "Pintura", "Transporte", "Otro"] },
+        "severidad": { "type": "string", "enum": ["Baja", "Media", "Alta"] },
+        "estado": { "type": "string", "enum": ["Reportado", "Evaluación", "Taller", "Resuelto"] },
+        "descripcion": { "type": "string" },
+        "reportadoPor": { "type": "string" },
+        "fechaReporte": { "type": "string", "format": "date-time" }
+      },
+      "required": ["vehiculoId", "tipo", "severidad", "estado", "descripcion"]
+    }
+  },
+  "auth": {
+    "providers": ["google.com"]
+  },
+  "firestore": {
+    "/vehiculos/{vehiculoId}": { "schema": "Vehiculo", "description": "Inventario VN BMW." },
+    "/movimientos/{movimientoId}": { "schema": "Movimiento", "description": "Trazabilidad logística." },
+    "/incidencias/{incidenciaId}": { "schema": "Incidencia", "description": "Registro de incidencias de stock." }
+  }
+}

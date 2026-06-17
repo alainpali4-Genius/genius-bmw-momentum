@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Paleta BMW M Oficial Portimao */
+    --bmw-navy: 221 58% 19%;  /* #14284B */
+    --bmw-blue: 218 100% 30%;  /* #003399 - Azul Portimao */
+    --bmw-sky: 196 100% 47%;   /* #00AEEF */
+    --bmw-red: 358 86% 52%;    /* #ED1C24 - Rojo M */
+
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: var(--bmw-blue);
+    --primary-foreground: 0 0% 100%;
+    --secondary: var(--bmw-navy);
+    --secondary-foreground: 0 0% 100%;
+    --muted: 196 100% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: var(--bmw-red);
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: var(--bmw-sky);
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body { 
+    @apply bg-[#f4f7fa] text-foreground antialiased overflow-hidden h-screen; 
+    font-family: 'Inter', sans-serif;
+  }
+}
+
+.premium-card {
+  @apply bg-white border border-slate-100 shadow-sm hover:shadow-md transition-all duration-200 rounded-xl;
+}
+
+.font-black {
+  font-weight: 900;
+}
+
+/* Scrollbar minimalista */
+::-webkit-scrollbar {
+  width: 4px;
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 rounded-full;
+}
+* {
+  scrollbar-width: none; /* Ocultar scrollbars */
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
+.bottom-nav-item {
+  @apply flex flex-col items-center justify-center flex-1 h-full text-slate-400 transition-all;
+}
+.bottom-nav-item.active {
+  @apply text-[#00AEEF];
+}
