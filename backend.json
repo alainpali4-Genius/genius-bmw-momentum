@@ -1,0 +1,66 @@
+{
+  "entities": {
+    "Vehiculo": {
+      "title": "Vehículo",
+      "description": "Ficha técnica unificada de stock VN para Momentum Navarra.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "vin": { "type": "string" },
+        "vin7": { "type": "string" },
+        "modelo": { "type": "string" },
+        "motor": { "type": "string" },
+        "bodyType": { 
+          "type": "string", 
+          "enum": ["SUV", "Berlina", "Coupe", "GranCoupe", "Roadster"]
+        },
+        "colorExterior": { "type": "string" },
+        "colorCodigo": { "type": "string" },
+        "estado": { 
+          "type": "string", 
+          "enum": ["Exposicion", "Stock", "Demo", "Reservado", "Preparacion Entrega", "Entregado", "Cedido"] 
+        },
+        "ubicacion": { "type": "string" },
+        "comercial": { "type": "string" },
+        "fechaEntrada": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      }
+    },
+    "Movimiento": {
+      "title": "Registro Logístico",
+      "description": "Historial de operaciones de stock.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "vehiculoId": { "type": "string" },
+        "vehiculoInfo": { "type": "string" },
+        "tipoAccion": { "type": "string" },
+        "fecha": { "type": "string" },
+        "origen": { "type": "string" },
+        "destino": { "type": "string" },
+        "usuario": { "type": "string" },
+        "detalles": { "type": "string" }
+      }
+    },
+    "Incidencia": {
+      "title": "Incidencia",
+      "description": "Registro de daños o problemas técnicos.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "vehiculoId": { "type": "string" },
+        "tipo": { "type": "string" },
+        "severidad": { "type": "string" },
+        "estado": { "type": "string" },
+        "descripcion": { "type": "string" },
+        "fechaReporte": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/vehiculos/{vehiculoId}": { "schema": "Vehiculo", "description": "Colección de stock de vehículos." },
+    "/movimientos/{movimientoId}": { "schema": "Movimiento", "description": "Colección de trazabilidad logística." },
+    "/incidencias/{incidenciaId}": { "schema": "Incidencia", "description": "Colección de incidencias reportadas." }
+  }
+}

@@ -1,0 +1,18 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /vehiculos/{vehiculoId} {
+      allow read, write: if true;
+    }
+    match /movimientos/{movimientoId} {
+      allow read, write: if true;
+    }
+    match /incidencias/{incidenciaId} {
+      allow read, write: if true;
+    }
+    // Regla por defecto para cualquier otra colección
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
