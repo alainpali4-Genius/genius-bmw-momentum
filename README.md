@@ -18,7 +18,7 @@ git add . && git commit -m "Update: Balance visual final y optimización de show
 - **Inventario IA**: Escáner de bastidor con compresión automática en el cliente para evitar el error 413 (>1MB).
 
 ## 📦 Gestión de Stock
-- **Excel**: Soporte para importación masiva de archivos .xlsx y .xls.
+- **Excel**: Soporte para importación masiva de archivos .xlsx y .xls con prevención de duplicados.
 - **Persistencia**: Sincronización en tiempo real con Firebase Firestore.
 
 ## 🚀 Despliegue

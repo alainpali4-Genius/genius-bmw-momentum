@@ -171,7 +171,7 @@ function ShowroomContent() {
 
     const vinNorm = formData.vin.trim().toUpperCase();
 
-    // Validar si el VIN ya existe en el stock
+    // Validar si el VIN ya existe en el stock para evitar duplicados
     const isDuplicate = vehiculos.some(v => v.vin === vinNorm || v.vin7 === vinNorm.slice(-7));
     if (isDuplicate) {
       toast({ 
@@ -285,7 +285,7 @@ function ShowroomContent() {
                 type={vehicle.bodyType || 'SUV'} 
                 colorHex={colorHex} 
                 rotacion={rotacion} 
-                className={cn("scale-[0.85] md:scale-[1.5]", isSelected && "drop-shadow-xl")} 
+                className={cn("scale-[0.8] md:scale-[1.6]", isSelected && "drop-shadow-xl")} 
               />
             </div>
             

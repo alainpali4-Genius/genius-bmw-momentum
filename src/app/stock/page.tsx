@@ -106,7 +106,7 @@ export default function StockManagement() {
           const vin = String(getValueByTags(row, ['vin', 'bastidor']) || "").trim().toUpperCase();
           if (!vin || vin.length < 5) return;
 
-          // Validar duplicado contra la base de datos actual
+          // Validar duplicado contra la base de datos actual para seguridad
           const isDuplicate = vehiculos.some(v => v.vin === vin || v.vin7 === vin.slice(-7));
           if (isDuplicate) {
             duplicateCount++;
