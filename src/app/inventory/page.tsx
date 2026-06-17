@@ -118,7 +118,6 @@ export default function InventarioGenius() {
 
     setIsScanning(true);
     try {
-      // Compresión crítica para evitar Error 413
       const compressedDataUri = await compressImage(file);
       const result = await scanVIN({ photoDataUri: compressedDataUri });
       
