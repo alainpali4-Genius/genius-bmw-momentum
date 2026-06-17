@@ -100,9 +100,18 @@ export default function StockManagement() {
         const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]) as any[];
         
         let successCount = 0;
+        let duplicateCount = 0;
+        
         const creationPromises = jsonData.map(async (row) => {
           const vin = String(getValueByTags(row, ['vin', 'bastidor']) || "").trim().toUpperCase();
           if (!vin || vin.length < 5) return;
+
+          // Validar duplicado contra la base de datos actual
+          const isDuplicate = vehiculos.some(v => v.vin === vin || v.vin7 === vin.slice(-7));
+          if (isDuplicate) {
+            duplicateCount++;
+            return;
+          }
 
           const colorInfo = String(getValueByTags(row, ['color', 'exterior', 'codigo color']) || "").trim().toUpperCase();
           const matchedColor = BMW_COLORS.find(c => colorInfo.includes(c.code) || colorInfo.includes(c.name.toUpperCase()));
@@ -134,7 +143,15 @@ export default function StockManagement() {
         });
 
         await Promise.allSettled(creationPromises);
-        toast({ title: "Importación finalizada", description: `Se han añadido ${successCount} vehículos al stock VN.` });
+        
+        if (duplicateCount > 0) {
+          toast({ 
+            title: "Importación Completada", 
+            description: `Se han añadido ${successCount} vehículos. Se omitieron ${duplicateCount} por estar duplicados.` 
+          });
+        } else {
+          toast({ title: "Importación finalizada", description: `Se han añadido ${successCount} vehículos al stock VN.` });
+        }
       } catch (error) {
         toast({ variant: "destructive", title: "Error", description: "Fallo al procesar el Excel." });
       } finally {

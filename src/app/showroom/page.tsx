@@ -169,8 +169,20 @@ function ShowroomContent() {
       return;
     }
 
-    const colorObj = BMW_COLORS.find(c => c.code === formData.colorBMW);
     const vinNorm = formData.vin.trim().toUpperCase();
+
+    // Validar si el VIN ya existe en el stock
+    const isDuplicate = vehiculos.some(v => v.vin === vinNorm || v.vin7 === vinNorm.slice(-7));
+    if (isDuplicate) {
+      toast({ 
+        variant: "destructive", 
+        title: "Bastidor Duplicado", 
+        description: `El VIN ${vinNorm} ya existe en el inventario actual.` 
+      });
+      return;
+    }
+
+    const colorObj = BMW_COLORS.find(c => c.code === formData.colorBMW);
     
     const vehiclePayload = {
       modelo: formData.modelo,
