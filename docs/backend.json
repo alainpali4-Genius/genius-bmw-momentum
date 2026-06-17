@@ -43,6 +43,26 @@
       },
       "required": ["vin", "vin7", "modelo", "motor", "estado", "ubicacion", "bodyType"]
     },
+    "Entrega": {
+      "title": "Entrega",
+      "description": "Planificación y seguimiento de entregas a clientes.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "vehiculoId": { "type": "string" },
+        "vehiculoInfo": { "type": "string" },
+        "cliente": { "type": "string" },
+        "fecha": { "type": "string", "format": "date" },
+        "hora": { "type": "string" },
+        "asesor": { "type": "string" },
+        "estado": { "type": "string", "enum": ["Preparación", "Listo", "Entregado"] },
+        "actaEnviada": { "type": "boolean" },
+        "recogidaRenting": { "type": "boolean" },
+        "recogidaRentingInfo": { "type": "string" },
+        "progress": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      }
+    },
     "Movimiento": {
       "title": "Registro Logístico",
       "description": "Historial inalterable de operaciones y auditorías.",
@@ -83,6 +103,7 @@
   },
   "firestore": {
     "/vehiculos/{vehiculoId}": { "schema": "Vehiculo", "description": "Inventario VN BMW." },
+    "/entregas/{entregaId}": { "schema": "Entrega", "description": "Gestión de entregas a clientes." },
     "/movimientos/{movimientoId}": { "schema": "Movimiento", "description": "Trazabilidad logística." },
     "/incidencias/{incidenciaId}": { "schema": "Incidencia", "description": "Registro de incidencias de stock." }
   }

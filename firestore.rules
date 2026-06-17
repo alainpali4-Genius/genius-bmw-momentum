@@ -1,3 +1,4 @@
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -8,6 +9,9 @@ service cloud.firestore {
       allow read, write: if true;
     }
     match /incidencias/{incidenciaId} {
+      allow read, write: if true;
+    }
+    match /entregas/{entregaId} {
       allow read, write: if true;
     }
     // Regla por defecto para cualquier otra colección
