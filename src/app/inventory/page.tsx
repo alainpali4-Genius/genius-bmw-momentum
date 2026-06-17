@@ -18,6 +18,46 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useToast } from "@/hooks/use-toast";
 
+/**
+ * Función de utilidad para comprimir imágenes antes de enviarlas al servidor.
+ * Evita el error 413 Payload Too Large.
+ */
+const compressImage = (file: File, maxWidth = 1280, maxHeight = 1280, quality = 0.7): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target?.result as string;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+    };
+    reader.onerror = reject;
+  });
+};
+
 export default function InventarioGenius() {
   const db = useFirestore();
   const { toast } = useToast();
@@ -38,7 +78,6 @@ export default function InventarioGenius() {
     
     const vinNorm = vinToFind.trim().toUpperCase();
     
-    // Búsqueda flexible: por VIN completo o VIN7
     const vehicle = vehiculos.find(v => 
       v.vin === vinNorm || 
       v.vin7 === vinNorm || 
@@ -58,7 +97,6 @@ export default function InventarioGenius() {
         detalles: "Auditoría física confirmada por escaneo."
       };
 
-      // Escritura no bloqueante
       addDoc(collection(db, "movimientos"), payload).catch((err) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
           path: 'movimientos', operation: 'create', requestResourceData: payload
@@ -79,24 +117,23 @@ export default function InventarioGenius() {
     if (!file) return;
 
     setIsScanning(true);
-    const reader = new FileReader();
-    reader.onload = async () => {
-      try {
-        const result = await scanVIN({ photoDataUri: reader.result as string });
-        if (result && result.vin) {
-          handleAudit(result.vin);
-        } else {
-          toast({ variant: "destructive", title: "Error de lectura", description: "La IA no ha podido extraer un VIN claro de la imagen." });
-        }
-      } catch (err) {
-        console.error("SCAN ERROR", err);
-        toast({ variant: "destructive", title: "Error de IA", description: "Hubo un problema al procesar la imagen con Gemini." });
-      } finally {
-        setIsScanning(false);
-        if (fileInputRef.current) fileInputRef.current.value = "";
+    try {
+      // Comprimimos la imagen antes de procesarla
+      const compressedDataUri = await compressImage(file);
+      const result = await scanVIN({ photoDataUri: compressedDataUri });
+      
+      if (result && result.vin) {
+        handleAudit(result.vin);
+      } else {
+        toast({ variant: "destructive", title: "Error de lectura", description: "La IA no ha podido extraer un VIN claro de la imagen." });
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err) {
+      console.error("SCAN ERROR", err);
+      toast({ variant: "destructive", title: "Error de IA", description: "Hubo un problema al procesar la imagen con Gemini." });
+    } finally {
+      setIsScanning(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   return (
