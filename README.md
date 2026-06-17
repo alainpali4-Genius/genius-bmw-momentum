@@ -2,39 +2,30 @@
 
 Sistema de gestión logística VN y exposición premium para Momentum Navarra. El código está sincronizado y listo para producción.
 
-## 🛠️ Operativa en GitHub
+## 🛠️ Despliegue en Firebase (Guía para el Plan Blaze)
 
-Ahora que el proyecto está en GitHub, sigue estos pasos para sacarle el máximo partido:
+Como ves en tu consola de Firebase, para usar **App Hosting** es obligatorio activar el **Plan Blaze (Pago por uso)**. Google Cloud requiere esto para gestionar los servidores de Next.js.
 
-### 1. Despliegue Automático (CI/CD)
-Para que la aplicación esté disponible en internet:
-1. Ve a la [Consola de Firebase](https://console.firebase.google.com/).
-2. Crea un nuevo proyecto (o usa uno existente).
-3. Ve a **App Hosting** y conecta este repositorio de GitHub.
-4. Firebase desplegará la app automáticamente cada vez que subas cambios.
-
-### 2. Configuración de IA (Secrets)
-Para que Gemini funcione en el servidor desplegado:
-1. En tu repositorio de GitHub, ve a **Settings > Secrets and variables > Actions**.
-2. Añade un nuevo secreto llamado `GEMINI_API_KEY` con tu clave de Google AI Studio.
-3. Asegúrate de que las variables de Firebase (`NEXT_PUBLIC_FIREBASE_...`) estén configuradas en el panel de App Hosting.
-
-### 3. Comandos de Trabajo Diario
-Cuando hagas cambios locales y quieras subirlos:
-```bash
-git add .
-git commit -m "Descripción del cambio (ej: Mejora en el plano)"
-git push origin main
-```
+### Pasos para activar el Hosting:
+1. **Facturación**: En la ventana que tienes abierta en tu navegador, haz clic en **"Crea una cuenta de Facturación de Cloud"**.
+2. **Vincular**: Una vez tengas la cuenta de facturación, Firebase te dejará seleccionar tu repositorio de GitHub `alainpali4-Genius/genius-bmw-momentum`.
+3. **Configuración de App Hosting**:
+   - **Región**: Selecciona `europe-west1` (Bélgica) o la más cercana a España.
+   - **Root directory**: Déjalo como `/`.
+   - **Environment Variables**: Añade `GEMINI_API_KEY` con tu clave de Google AI Studio.
 
 ---
 
-## 📦 Gestión de Backups
-Para generar un archivo de respaldo local sin archivos basura:
-1. Ejecuta: `npm run backup`
-2. El archivo `proyecto_backup.tar.gz` será ignorado por Git automáticamente para no saturar el repositorio.
+## 📦 Comandos de Git (Uso Diario)
 
-## 🎨 Identidad Visual
-- **Primario:** BMW Portimao Blue (#003399)
-- **Acento:** BMW M Red (#ED1C24)
-- **Fondo:** Navy Blue para menús, Slate para áreas de trabajo.
+Para subir nuevos cambios a tu GitHub:
+```bash
+git add .
+git commit -m "Descripción de los cambios realizados"
+git push origin main
+```
+
+## 🎨 Diseño Premium Blindado
+- **Barra Lateral**: Fondo Azul Portimao (#003399). El hover en **Rojo M (#ED1C24)** es individual por cada opción.
+- **Plano VN**: Siluetas de vehículos maximizadas al 150% para visibilidad total.
+- **Persistencia**: Todo el stock se guarda automáticamente en Firebase Firestore.
