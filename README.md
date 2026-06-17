@@ -8,7 +8,7 @@ Sistema de gestión logística VN y exposición premium para Momentum Navarra.
 Copia y pega este comando para aplicar la compresión de imágenes y actualizar tu repositorio, corrigiendo errores de terminal:
 
 ```bash
-unset PROMPT_COMMAND && git add . && git commit -m "Fix: Implementar compresión de imágenes en Inventario IA para evitar error 413" && git push origin main
+git add . && git commit -m "Fix: Implementar compresión de imágenes en Inventario IA para evitar error 413" && git push origin main
 ```
 
 ---

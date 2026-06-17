@@ -50,7 +50,7 @@ const compressImage = (file: File, maxWidth = 1280, maxHeight = 1280, quality = 
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        resolve(canvas.toWav ? canvas.toDataURL('image/jpeg', quality) : canvas.toDataURL('image/jpeg', quality));
       };
       img.onerror = (e) => reject(e);
     };
