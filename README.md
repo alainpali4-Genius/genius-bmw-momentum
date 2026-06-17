@@ -3,26 +3,25 @@
 
 Sistema de gestión logística VN y exposición premium para Momentum Navarra.
 
-## 🛠️ Comando de Sincronización Rápida (COPIA Y PEGA)
-Utiliza este comando en tu terminal para aplicar cambios y actualizar GitHub en un solo paso:
+## 🛠️ COMANDO DE ACTUALIZACIÓN RÁPIDA (COPIA Y PEGA)
+Utiliza este comando en tu terminal para aplicar cambios y actualizar GitHub/Vercel en un solo paso:
 
 ```bash
-git add . && git commit -m "Update: Mejoras visuales en showroom y corrección de equilibrio de diseño" && git push origin main
+git add . && git commit -m "Update: Balance visual final y optimización de showroom" && git push origin main
 ```
 
 ---
 
 ## 🎨 Diseño Premium Blindado
-- **Barra Lateral**: Fondo Azul Portimao (#003399). Hover en **Rojo M (#ED1C24)** estrictamente individual por cada ítem.
-- **Plano VN**: Siluetas de vehículos con información integrada y contraste inteligente adaptado al color del coche. Totalmente responsive.
-- **Inventario IA**: Escáner de bastidor con compresión automática en el cliente (Máx 1280px / 0.7 JPEG) para cumplir con el límite de 1MB.
+- **Showroom**: Información integrada sobre siluetas con contraste inteligente.
+- **Plano VN**: Siluetas de vehículos con información legible tanto en móvil como en escritorio.
+- **Inventario IA**: Escáner de bastidor con compresión automática en el cliente para evitar el error 413 (>1MB).
 
 ## 📦 Gestión de Stock
 - **Excel**: Soporte para importación masiva de archivos .xlsx y .xls.
 - **Persistencia**: Sincronización en tiempo real con Firebase Firestore.
 
-## 🚀 Despliegue en Firebase App Hosting
-Para desplegar la aplicación en la nube:
-1. Asegúrate de tener activado el **Plan Blaze** en la consola de Firebase.
-2. Conecta este repositorio de GitHub a **App Hosting** en la consola de Firebase.
-3. Configura la variable `GEMINI_API_KEY` en los secretos de App Hosting.
+## 🚀 Despliegue
+Para asegurar que los cambios se reflejen en Vercel:
+1. Ejecuta el comando de actualización rápida de arriba.
+2. Vercel detectará el nuevo commit en la rama `main` y desplegará automáticamente.
