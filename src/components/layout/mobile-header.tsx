@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { BrandLogo } from './brand-logo';
 
 const navItems = [
   { title: "Panel de Control", url: "/", icon: LayoutDashboard },
@@ -27,11 +28,11 @@ export function MobileHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="h-14 border-b bg-white flex items-center px-4 md:hidden shrink-0 z-50">
+    <header className="h-14 border-b bg-[#003399] flex items-center px-4 md:hidden shrink-0 z-50">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden h-10 w-10">
-            <Menu className="h-6 w-6 text-slate-600" />
+          <Button variant="ghost" size="icon" className="md:hidden h-10 w-10 text-white">
+            <Menu className="h-6 w-6" />
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-[300px] p-0 bg-[#003399] border-none text-white">
@@ -39,11 +40,8 @@ export function MobileHeader() {
             <SheetTitle>Menú de Navegación</SheetTitle>
           </SheetHeader>
           <div className="flex flex-col h-full">
-            <div className="h-24 flex items-center px-6 border-b border-white/10 shrink-0">
-              <div className="flex flex-col">
-                <span className="font-black text-lg tracking-tighter uppercase italic text-white">GENIUS BMW</span>
-                <span className="text-[8px] opacity-60 font-black uppercase tracking-widest text-white/70">Momentum Navarra</span>
-              </div>
+            <div className="h-28 flex items-center px-6 border-b border-white/10 shrink-0">
+              <BrandLogo className="w-full h-auto" />
             </div>
             
             <nav className="flex-1 overflow-y-auto px-2 py-6 space-y-8">
@@ -96,7 +94,7 @@ export function MobileHeader() {
         </SheetContent>
       </Sheet>
       <div className="flex-1 flex items-center justify-center pr-10">
-        <span className="font-black text-slate-800 text-sm uppercase tracking-tighter italic">GENIUS BMW</span>
+        <BrandLogo variant="compact" className="h-8" />
       </div>
     </header>
   );

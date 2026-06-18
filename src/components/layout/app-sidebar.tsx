@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -30,6 +31,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { BrandLogo } from "./brand-logo"
 
 const items = [
   {
@@ -79,7 +81,7 @@ const administrationItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { isMobile, setOpenMobile } = useSidebar();
+  const { isMobile, setOpenMobile, state } = useSidebar();
 
   const handleLinkClick = () => {
     if (isMobile) {
@@ -89,14 +91,17 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="bg-[#003399] border-none text-white overflow-hidden">
-      <SidebarHeader className="h-32 flex flex-col justify-center px-8 shrink-0">
+      <SidebarHeader className="h-32 flex flex-col justify-center px-4 shrink-0">
         <div className="flex items-center justify-between w-full">
-          <div className="flex flex-col">
-            <span className="font-black text-xl tracking-tighter uppercase italic leading-none text-white">GENIUS BMW</span>
-            <span className="text-[8px] opacity-60 font-black uppercase tracking-[0.4em] leading-none mt-2 text-white/80">Momentum Navarra</span>
-          </div>
+          {state === 'expanded' ? (
+            <BrandLogo className="w-full h-auto px-2" />
+          ) : (
+            <div className="w-full flex justify-center">
+              <div className="w-8 h-8 bg-[#ED1C24] rounded-lg flex items-center justify-center font-black italic text-white text-xs">M</div>
+            </div>
+          )}
           {isMobile && (
-            <Button variant="ghost" size="icon" onClick={() => setOpenMobile(false)} className="text-white hover:bg-white/10">
+            <Button variant="ghost" size="icon" onClick={() => setOpenMobile(false)} className="text-white hover:bg-white/10 ml-auto">
               <X className="w-5 h-5" />
             </Button>
           )}
