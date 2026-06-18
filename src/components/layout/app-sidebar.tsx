@@ -31,7 +31,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { BrandLogo } from "./brand-logo"
 
 const items = [
   {
@@ -94,10 +93,16 @@ export function AppSidebar() {
       <SidebarHeader className="h-32 flex flex-col justify-center px-4 shrink-0">
         <div className="flex items-center justify-between w-full">
           {state === 'expanded' ? (
-            <BrandLogo className="w-full h-auto px-2" />
+            <div className="px-2 flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span className="text-2xl font-black italic tracking-tighter text-white">GENIUS</span>
+                <span className="text-2xl font-black italic tracking-tighter text-[#ED1C24]">VN</span>
+              </div>
+              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-white/40 leading-none mt-1">MOMENTUM NAVARRA</span>
+            </div>
           ) : (
             <div className="w-full flex justify-center">
-              <div className="w-8 h-8 bg-[#ED1C24] rounded-lg flex items-center justify-center font-black italic text-white text-xs">M</div>
+              <div className="w-8 h-8 bg-[#ED1C24] rounded-lg flex items-center justify-center font-black italic text-white text-xs shadow-lg">G</div>
             </div>
           )}
           {isMobile && (
