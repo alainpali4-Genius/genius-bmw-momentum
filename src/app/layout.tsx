@@ -26,7 +26,10 @@ export const metadata: Metadata = {
     title: 'Genius BMW',
   },
   icons: {
-    icon: '/favicon.ico',
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon', type: 'image/png' },
+    ],
     apple: '/logo-product-genius.png',
   },
 };
