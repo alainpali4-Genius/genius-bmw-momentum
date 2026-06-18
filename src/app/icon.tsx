@@ -1,6 +1,5 @@
 import { ImageResponse } from 'next/og';
 
-// Configuración del icono BMW oficial con máxima fidelidad
 export const runtime = 'edge';
 export const size = {
   width: 32,
@@ -27,22 +26,21 @@ export default function Icon() {
           viewBox="0 0 100 100"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Anillo exterior negro/gris oscuro */}
+          {/* Anillo exterior negro */}
           <circle cx="50" cy="50" r="48" fill="#1A1A1A" />
-          <circle cx="50" cy="50" r="46" fill="none" stroke="#666" strokeWidth="1" />
           
-          {/* Centro BMW */}
+          {/* Centro BMW Blanco */}
           <circle cx="50" cy="50" r="32" fill="white" />
           
-          {/* Cuadrantes azules */}
+          {/* Cuadrantes azules oficiales */}
           <path d="M50,50 L50,18 A32,32 0 0,0 18,50 Z" fill="#0066B3" />
           <path d="M50,50 L50,82 A32,32 0 0,1 82,50 Z" fill="#0066B3" />
 
-          {/* Letras BMW en el anillo */}
-          <g fill="white" style={{ fontSize: '13px', fontWeight: 'bold', fontFamily: 'Arial, sans-serif' }}>
+          {/* Texto BMW en el anillo */}
+          <g fill="white" style={{ fontSize: '14px', fontWeight: 'bold', fontFamily: 'Arial, sans-serif' }}>
             <text x="32" y="38" transform="rotate(-45, 32, 38)">B</text>
-            <text x="44" y="28">M</text>
-            <text x="62" y="34" transform="rotate(45, 62, 34)">W</text>
+            <text x="44" y="27">M</text>
+            <text x="64" y="34" transform="rotate(45, 64, 34)">W</text>
           </g>
         </svg>
       </div>

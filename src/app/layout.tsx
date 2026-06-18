@@ -29,6 +29,7 @@ export const metadata: Metadata = {
     icon: [
       { url: '/icon', type: 'image/png' },
     ],
+    shortcut: '/icon',
     apple: '/logo-product-genius.png',
   },
 };
