@@ -2,11 +2,11 @@
 
 Sistema de gestión logística VN y exposición premium para Momentum Navarra.
 
-## 🛠️ COMANDO DE ACTUALIZACIÓN RÁPIDA (COPIA Y PEGA)
-Utiliza este comando en tu terminal para solucionar conflictos de sincronización y actualizar GitHub/Vercel en un solo paso:
+## 🛠️ COMANDO DE ACTUALIZACIÓN RÁPIDA (SOLUCIÓN DE ERRORES)
+Utiliza este comando para guardar tus cambios primero y luego sincronizar con GitHub/Vercel sin errores de "unstaged changes":
 
 ```bash
-git pull origin main --rebase && git add . && git commit -m "Update: Fix git sync and branding" && git push origin main
+git add . && git commit -m "Branding: BMW Logo Favicon" && git pull origin main --rebase && git push origin main
 ```
 
 ---
