@@ -7,7 +7,7 @@ Sistema de gestión logística VN y exposición premium para Momentum Navarra.
 Utiliza este comando en tu terminal para aplicar cambios y actualizar GitHub/Vercel en un solo paso:
 
 ```bash
-git add . && git commit -m "Update: Sincronización de sistema y branding" && git push origin main
+git add . && git commit -m "Update: Fix logo visibility and final sync" && git push origin main
 ```
 
 ---

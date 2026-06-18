@@ -24,6 +24,7 @@ export function BrandLogo({ className, variant = 'full' }: BrandLogoProps) {
         height={variant === 'full' ? 120 : 60}
         className="object-contain"
         priority
+        unoptimized
         data-ai-hint={brandLogo.imageHint}
       />
     </div>

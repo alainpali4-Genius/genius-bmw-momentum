@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useMemo } from "react";
@@ -20,7 +21,6 @@ import { useToast } from "@/hooks/use-toast";
 
 /**
  * Función de utilidad para comprimir imágenes antes de enviarlas al servidor.
- * Redimensiona a un máximo de 1280px y baja la calidad a 0.7 para asegurar que el peso sea < 1MB.
  */
 const compressImage = (file: File, maxWidth = 1280, maxHeight = 1280, quality = 0.7): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -50,7 +50,7 @@ const compressImage = (file: File, maxWidth = 1280, maxHeight = 1280, quality = 
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toWav ? canvas.toDataURL('image/jpeg', quality) : canvas.toDataURL('image/jpeg', quality));
+        resolve(canvas.toDataURL('image/jpeg', quality));
       };
       img.onerror = (e) => reject(e);
     };
