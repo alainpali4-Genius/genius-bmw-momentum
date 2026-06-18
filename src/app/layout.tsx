@@ -11,6 +11,11 @@ import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 export const metadata: Metadata = {
   title: 'GENIUS BMW EXPO | Momentum Navarra',
   description: 'Sistema Logístico VN Momentum Navarra',
+  icons: {
+    icon: '/logo-momentum.png',
+    shortcut: '/logo-momentum.png',
+    apple: '/logo-momentum.png',
+  },
 };
 
 export default function RootLayout({
