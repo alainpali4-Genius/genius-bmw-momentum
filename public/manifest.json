@@ -1,0 +1,17 @@
+{
+  "name": "Genius BMW Expo - Momentum",
+  "short_name": "Genius BMW",
+  "description": "Sistema Logístico VN Momentum Navarra",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#003399",
+  "theme_color": "#003399",
+  "icons": [
+    {
+      "src": "/logo-momentum.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
