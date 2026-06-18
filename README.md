@@ -1,4 +1,3 @@
-
 # 🚀 Genius BMW - Momentum Navarra
 
 Sistema de gestión logística VN y exposición premium para Momentum Navarra.
@@ -19,7 +18,7 @@ Para que el logo aparezca correctamente, **DEBES SUBIRLO MANUALMENTE**:
 3. Ejecuta el comando de actualización rápida de arriba.
 
 ## 🎨 Diseño Premium Blindado
-- **Showroom**: Etiquetas integradas sobre siluetas con contraste inteligente.
+- **Showroom**: Icono oficial de BMW en la pestaña del navegador para un look de marca corporativo impecable.
 - **Inventario IA**: Escáner de bastidor con compresión automática (<1MB).
 - **Seguridad**: Prevención de duplicados de VIN en todo el sistema.
 
