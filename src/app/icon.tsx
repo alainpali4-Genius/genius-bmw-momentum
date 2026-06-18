@@ -14,35 +14,42 @@ export default function Icon() {
     (
       <div
         style={{
-          fontSize: 24,
-          background: '#003399',
           width: '100%',
           height: '100%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          borderRadius: '20%',
-          color: 'white',
+          background: 'transparent',
         }}
       >
         <svg
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
+          width="32"
+          height="32"
+          viewBox="0 0 100 100"
+          xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Círculo exterior del volante */}
-          <circle cx="12" cy="12" r="10" />
-          {/* Radios del volante */}
-          <line x1="12" y1="12" x2="12" y2="3" />
-          <line x1="12" y1="12" x2="5" y2="18" />
-          <line x1="12" y1="12" x2="19" y2="18" />
-          {/* Centro del volante */}
-          <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+          {/* Anillo exterior gris/plateado */}
+          <circle cx="50" cy="50" r="48" fill="white" stroke="#A6A9AA" strokeWidth="2" />
+          
+          {/* Anillo interior de separación */}
+          <circle cx="50" cy="50" r="44" fill="white" stroke="#A6A9AA" strokeWidth="1" />
+          
+          {/* Cuadrantes centrales */}
+          {/* Top Left - Blue */}
+          <path d="M50,50 L50,15 A35,35 0 0,0 15,50 Z" fill="#0066B3" />
+          {/* Top Right - White */}
+          <path d="M50,50 L85,50 A35,35 0 0,0 50,15 Z" fill="white" />
+          {/* Bottom Right - Blue */}
+          <path d="M50,50 L50,85 A35,35 0 0,1 85,50 Z" fill="#0066B3" />
+          {/* Bottom Left - White */}
+          <path d="M50,50 L15,50 A35,35 0 0,1 50,85 Z" fill="white" />
+
+          {/* Letras BMW (Simplificadas para legibilidad en 32x32) */}
+          <g fill="#A6A9AA" style={{ fontSize: '14px', fontWeight: 'bold', fontFamily: 'sans-serif' }}>
+            <text x="28" y="38" transform="rotate(-40, 28, 38)">B</text>
+            <text x="44" y="28">M</text>
+            <text x="62" y="34" transform="rotate(40, 62, 34)">W</text>
+          </g>
         </svg>
       </div>
     ),
