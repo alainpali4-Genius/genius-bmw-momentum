@@ -3,9 +3,9 @@
   "placeholderImages": [
     {
       "id": "brand-logo",
-      "description": "Logo Momentum BMW MINI M Product Genius",
-      "imageUrl": "/logo-momentum.png",
-      "imageHint": "Momentum Logo"
+      "description": "Logo BMW MINI M Product Genius",
+      "imageUrl": "/logo-product-genius.png",
+      "imageHint": "Product Genius Logo"
     },
     {
       "id": "bmw-i4",

@@ -2,28 +2,30 @@
 'use client';
 
 import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
 
 interface BrandLogoProps {
   className?: string;
-  variant?: 'full' | 'compact';
+  variant?: 'full' | 'sidebar' | 'mobile';
 }
 
 export function BrandLogo({ className, variant = 'full' }: BrandLogoProps) {
-  const brandLogo = PlaceHolderImages.find(img => img.id === 'brand-logo');
-  
-  if (!brandLogo) return null;
+  // Dimensiones basadas en la variante solicitada
+  const dimensions = {
+    full: { width: 220, height: 80 },
+    sidebar: { width: 200, height: 72 },
+    mobile: { width: 100, height: 36 }
+  };
 
-  // Usamos unoptimized={true} para que Next.js no intente procesar la imagen local en build
-  // y src="/logo-momentum.png" para que la busque en la raíz de la carpeta public.
+  const { width, height } = dimensions[variant];
+
   return (
     <div className={cn("relative flex items-center justify-center", className)}>
       <Image 
-        src="/logo-momentum.png" 
-        alt="Momentum Product Genius"
-        width={variant === 'full' ? 240 : 120}
-        height={variant === 'full' ? 120 : 60}
+        src="/logo-product-genius.png" 
+        alt="BMW MINI M Product Genius"
+        width={width}
+        height={height}
         className="object-contain"
         priority
         unoptimized={true}

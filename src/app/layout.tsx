@@ -1,3 +1,4 @@
+
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
 import { SidebarProvider } from '@/components/ui/sidebar';
@@ -26,7 +27,8 @@ export const metadata: Metadata = {
     title: 'Genius BMW',
   },
   icons: {
-    apple: '/logo-momentum.png',
+    apple: '/logo-product-genius.png',
+    icon: '/logo-product-genius.png',
   },
 };
 

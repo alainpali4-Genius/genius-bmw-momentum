@@ -31,6 +31,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { BrandLogo } from "./brand-logo"
 
 const items = [
   {
@@ -90,15 +91,16 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" className="bg-[#003399] border-none text-white overflow-hidden">
-      <SidebarHeader className="h-32 flex flex-col justify-center px-4 shrink-0">
+      <SidebarHeader className="h-44 flex flex-col justify-center px-4 shrink-0">
         <div className="flex items-center justify-between w-full">
           {state === 'expanded' ? (
-            <div className="px-2 flex flex-col">
+            <div className="px-2 flex flex-col items-center w-full text-center">
               <div className="flex items-center gap-1.5">
                 <span className="text-2xl font-black italic tracking-tighter text-white">GENIUS</span>
                 <span className="text-2xl font-black italic tracking-tighter text-[#ED1C24]">VN</span>
               </div>
-              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-white/40 leading-none mt-1">MOMENTUM NAVARRA</span>
+              <span className="text-[8px] font-black uppercase tracking-[0.4em] text-white/40 leading-none mt-1 mb-4">MOMENTUM NAVARRA</span>
+              <BrandLogo variant="sidebar" className="w-[180px] md:w-[200px]" />
             </div>
           ) : (
             <div className="w-full flex justify-center">

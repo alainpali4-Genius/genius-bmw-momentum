@@ -18,9 +18,9 @@ const navItems = [
 ];
 
 const adminItems = [
-  { title: "Incidencias", url: "/incidents", icon: ShieldCheck },
+  { title: "Incidencias", url: "/", icon: ShieldCheck }, // Ajustado a raíz si no hay página específica
   { title: "Historial", url: "/history", icon: History },
-  { title: "Configuración", url: "/settings", icon: Settings },
+  { title: "Configuración", url: "/", icon: Settings }, // Ajustado a raíz si no hay página específica
 ];
 
 export function MobileHeader() {
@@ -31,7 +31,7 @@ export function MobileHeader() {
     <header className="h-14 border-b bg-[#003399] flex items-center px-4 md:hidden shrink-0 z-50">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden h-10 w-10 text-white">
+          <Button variant="ghost" size="icon" className="md:hidden h-10 w-10 text-white z-10">
             <Menu className="h-6 w-6" />
           </Button>
         </SheetTrigger>
@@ -40,8 +40,12 @@ export function MobileHeader() {
             <SheetTitle>Menú de Navegación</SheetTitle>
           </SheetHeader>
           <div className="flex flex-col h-full">
-            <div className="h-28 flex items-center px-6 border-b border-white/10 shrink-0">
-              <BrandLogo className="w-full h-auto" />
+            <div className="h-32 flex flex-col items-center justify-center px-6 border-b border-white/10 shrink-0">
+              <div className="flex items-center gap-1.5 mb-2">
+                <span className="text-xl font-black italic tracking-tighter text-white">GENIUS</span>
+                <span className="text-xl font-black italic tracking-tighter text-[#ED1C24]">VN</span>
+              </div>
+              <BrandLogo variant="mobile" className="h-8" />
             </div>
             
             <nav className="flex-1 overflow-y-auto px-2 py-6 space-y-8">
@@ -93,8 +97,8 @@ export function MobileHeader() {
           </div>
         </SheetContent>
       </Sheet>
-      <div className="flex-1 flex items-center justify-center pr-10">
-        <BrandLogo variant="compact" className="h-8" />
+      <div className="absolute inset-x-0 flex items-center justify-center pointer-events-none">
+        <BrandLogo variant="mobile" className="h-9" />
       </div>
     </header>
   );
