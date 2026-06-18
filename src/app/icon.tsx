@@ -26,13 +26,13 @@ export default function Icon() {
           viewBox="0 0 100 100"
           xmlns="http://www.w3.org/2000/svg"
         >
-          {/* Anillo exterior negro */}
+          {/* Anillo exterior negro BMW */}
           <circle cx="50" cy="50" r="48" fill="#1A1A1A" />
           
-          {/* Centro BMW Blanco */}
+          {/* Centro blanco */}
           <circle cx="50" cy="50" r="32" fill="white" />
           
-          {/* Cuadrantes azules oficiales */}
+          {/* Cuadrantes azul oficial BMW */}
           <path d="M50,50 L50,18 A32,32 0 0,0 18,50 Z" fill="#0066B3" />
           <path d="M50,50 L50,82 A32,32 0 0,1 82,50 Z" fill="#0066B3" />
 
