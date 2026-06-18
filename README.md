@@ -2,29 +2,25 @@
 
 Sistema de gestión logística VN y exposición premium para Momentum Navarra.
 
-## 🛠️ COMANDO DE ACTUALIZACIÓN RÁPIDA (SOLUCIÓN DE ERRORES)
-Utiliza este comando para guardar tus cambios primero y luego sincronizar con GitHub/Vercel sin errores de "unstaged changes":
+## 🛠️ COMANDO DE ACTUALIZACIÓN RÁPIDA (PARA GITHUB Y VERCEL)
+Copia y pega este comando en tu terminal para guardar tus cambios, sincronizar con la nube y desplegar en Vercel sin errores de conflictos:
 
 ```bash
-git add . && git commit -m "Branding: BMW Logo Favicon" && git pull origin main --rebase && git push origin main
+git add . && git commit -m "Update: Sincronización Genius BMW" && git pull origin main --rebase && git push origin main
 ```
 
 ---
 
-## 🎨 IMPORTANTE: Carga del Logo
-Para que el logo aparezca correctamente, **DEBES SUBIRLO MANUALMENTE**:
-1. Crea una carpeta llamada `public` en la raíz (si no existe).
-2. Sube tu imagen y cámbiale el nombre a `logo-product-genius.png`.
-3. Ejecuta el comando de actualización rápida de arriba.
+## 🎨 Branding & Identidad Corporativa
+- **Favicon**: Logotipo oficial de BMW implementado mediante `src/app/icon.tsx` (estándar Next.js) para máxima nitidez en URL.
+- **Logo Sidebar**: Se utiliza `/logo-product-genius.png` en la barra lateral y cabecera móvil.
+- **Interfaz**: Colores oficiales BMW M (Portimao Blue y M Red) aplicados en todo el sistema.
 
-## 🎨 Diseño Premium Blindado
-- **Showroom**: Icono oficial de BMW en la pestaña del navegador para un look de marca corporativo impecable.
-- **Inventario IA**: Escáner de bastidor con compresión automática (<1MB).
-- **Seguridad**: Prevención de duplicados de VIN en todo el sistema.
+## 📦 Funcionalidades Core
+- **Plano de Exposición**: Gestión visual de plazas en tiempo real.
+- **Inventario IA**: Escáner de bastidor con compresión automática de imágenes (<1MB).
+- **Control de Stock**: Importación masiva vía Excel y detección de duplicados de VIN.
+- **Entregas**: Planificación logística y control de actas de entrega.
 
-## 📦 Gestión de Stock
-- **Excel**: Soporte para importación masiva con detección de duplicados.
-- **Entregas**: Gestión completa de actas, recogidas de renting y actualización de stock.
-
-## 🚀 Despliegue
-Para asegurar que los cambios se reflejen en Vercel, asegúrate de haber ejecutado el comando `git push`.
+## 🚀 Notas de Despliegue
+Si el favicon no cambia tras un despliegue, recuerda abrir la web en una **ventana de incógnito** o pulsar `Ctrl + F5` para refrescar la caché del navegador.
