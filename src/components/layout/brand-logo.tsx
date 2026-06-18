@@ -10,7 +10,6 @@ interface BrandLogoProps {
 }
 
 export function BrandLogo({ className, variant = 'full' }: BrandLogoProps) {
-  // Dimensiones basadas en la variante solicitada
   const dimensions = {
     full: { width: 220, height: 80 },
     sidebar: { width: 200, height: 72 },

@@ -18,9 +18,9 @@ const navItems = [
 ];
 
 const adminItems = [
-  { title: "Incidencias", url: "/", icon: ShieldCheck }, // Ajustado a raíz si no hay página específica
+  { title: "Incidencias", url: "/incidents", icon: ShieldCheck },
   { title: "Historial", url: "/history", icon: History },
-  { title: "Configuración", url: "/", icon: Settings }, // Ajustado a raíz si no hay página específica
+  { title: "Configuración", url: "/settings", icon: Settings },
 ];
 
 export function MobileHeader() {
@@ -40,12 +40,12 @@ export function MobileHeader() {
             <SheetTitle>Menú de Navegación</SheetTitle>
           </SheetHeader>
           <div className="flex flex-col h-full">
-            <div className="h-32 flex flex-col items-center justify-center px-6 border-b border-white/10 shrink-0">
-              <div className="flex items-center gap-1.5 mb-2">
+            <div className="h-40 flex flex-col items-center justify-center px-6 border-b border-white/10 shrink-0">
+              <div className="flex items-center gap-1.5 mb-3">
                 <span className="text-xl font-black italic tracking-tighter text-white">GENIUS</span>
                 <span className="text-xl font-black italic tracking-tighter text-[#ED1C24]">VN</span>
               </div>
-              <BrandLogo variant="mobile" className="h-8" />
+              <BrandLogo variant="mobile" className="h-9" />
             </div>
             
             <nav className="flex-1 overflow-y-auto px-2 py-6 space-y-8">
