@@ -4,10 +4,10 @@
 Sistema de gestión logística VN y exposición premium para Momentum Navarra.
 
 ## 🛠️ COMANDO DE ACTUALIZACIÓN RÁPIDA (COPIA Y PEGA)
-Utiliza este comando en tu terminal para aplicar cambios y actualizar GitHub/Vercel en un solo paso:
+Utiliza este comando en tu terminal para solucionar conflictos de sincronización y actualizar GitHub/Vercel en un solo paso:
 
 ```bash
-git add . && git commit -m "Update: Fix logo visibility and final sync" && git push origin main
+git pull origin main --rebase && git add . && git commit -m "Update: Fix git sync and branding" && git push origin main
 ```
 
 ---
@@ -15,7 +15,7 @@ git add . && git commit -m "Update: Fix logo visibility and final sync" && git p
 ## 🎨 IMPORTANTE: Carga del Logo
 Para que el logo aparezca correctamente, **DEBES SUBIRLO MANUALMENTE**:
 1. Crea una carpeta llamada `public` en la raíz (si no existe).
-2. Sube tu imagen y cámbiale el nombre a `logo-momentum.png`.
+2. Sube tu imagen y cámbiale el nombre a `logo-product-genius.png`.
 3. Ejecuta el comando de actualización rápida de arriba.
 
 ## 🎨 Diseño Premium Blindado

@@ -10,6 +10,9 @@ interface BrandLogoProps {
 }
 
 export function BrandLogo({ className, variant = 'full' }: BrandLogoProps) {
+  // Dimensiones ajustadas a las especificaciones: 
+  // Sidebar: 180-220px
+  // Móvil: Altura máx 36px
   const dimensions = {
     full: { width: 220, height: 80 },
     sidebar: { width: 200, height: 72 },
@@ -22,7 +25,7 @@ export function BrandLogo({ className, variant = 'full' }: BrandLogoProps) {
     <div className={cn("relative flex items-center justify-center", className)}>
       <Image 
         src="/logo-product-genius.png" 
-        alt="BMW MINI M Product Genius"
+        alt="Product Genius Logo"
         width={width}
         height={height}
         className="object-contain"
