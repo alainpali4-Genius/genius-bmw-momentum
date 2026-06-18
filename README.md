@@ -13,10 +13,11 @@ git add . && git commit -m "Update: Sincronización de sistema y branding" && gi
 ---
 
 ## 🎨 Personalización de Marca (Logo)
-Para cambiar el logo de la aplicación:
-1. Ve a la carpeta **`public/`** en la raíz del proyecto.
-2. Sube tu imagen y renómbrala exactamente como **`logo-momentum.png`**.
-3. El sistema la detectará automáticamente en la barra lateral y el móvil.
+Si no ves la carpeta **`public/`** en el menú de la izquierda:
+1. Haz clic en el icono de **"Nueva Carpeta"** en el explorador de archivos.
+2. Nómbrala exactamente como `public`.
+3. Sube tu imagen dentro de esa carpeta y renómbrala como **`logo-momentum.png`**.
+4. El sistema la detectará automáticamente.
 
 ## 🎨 Diseño Premium Blindado
 - **Showroom**: Etiquetas integradas sobre siluetas con contraste inteligente (Legible en móvil y PC).
