@@ -13,11 +13,7 @@ git add . && git commit -m "Update: Sincronización de sistema y branding" && gi
 ---
 
 ## 🎨 Personalización de Marca (Logo)
-Si no ves la carpeta **`public/`** en el menú de la izquierda:
-1. Haz clic en el icono de **"Nueva Carpeta"** en el explorador de archivos.
-2. Nómbrala exactamente como `public`.
-3. Sube tu imagen dentro de esa carpeta y renómbrala como **`logo-momentum.png`**.
-4. El sistema la detectará automáticamente.
+El sistema detecta automáticamente el logo en `public/logo-momentum.png`. 
 
 ## 🎨 Diseño Premium Blindado
 - **Showroom**: Etiquetas integradas sobre siluetas con contraste inteligente (Legible en móvil y PC).
@@ -31,4 +27,4 @@ Si no ves la carpeta **`public/`** en el menú de la izquierda:
 ## 🚀 Despliegue
 Para asegurar que los cambios se reflejen en Vercel:
 1. Ejecuta el comando de actualización rápida de arriba.
-2. Vercel detectará el nuevo commit en la barra `main` y desplegará automáticamente.
+2. Vercel detectará el nuevo commit en la rama `main` y desplegará automáticamente.
