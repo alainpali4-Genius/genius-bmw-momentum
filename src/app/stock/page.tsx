@@ -11,8 +11,7 @@ import {
   MapPin,
   Clock,
   Droplets,
-  ArrowRightCircle,
-  TrendingDown
+  ArrowRightCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -97,15 +96,15 @@ export default function StockManagement() {
     <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-6 h-full flex flex-col overflow-hidden">
       <div className="flex justify-between items-center shrink-0">
         <div>
-          <h1 className="text-3xl font-black text-secondary uppercase italic leading-none tracking-tighter">CONTROL <span className="text-primary not-italic">VN</span></h1>
-          <p className="text-muted-foreground mt-1 text-[10px] font-black uppercase tracking-widest">GESTIÓN LOGÍSTICA MOMENTUM NAVARRA</p>
+          <h1 className="text-3xl font-black text-secondary uppercase italic leading-none tracking-tighter">STOCK <span className="text-primary not-italic">VN</span></h1>
+          <p className="text-muted-foreground mt-1 text-[10px] font-black uppercase tracking-widest">LOGÍSTICA MOMENTUM NAVARRA</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" className="h-12 text-[10px] font-black uppercase rounded-xl border-slate-200" onClick={() => router.push('/showroom')}>
-            VER PLANO EXPOSICIÓN
+            PLANO EXPOSICIÓN
           </Button>
           <Button className="h-12 bg-secondary text-white text-[10px] font-black uppercase rounded-xl px-6" onClick={() => router.push('/showroom?add=true')}>
-            <Plus className="w-4 h-4 mr-2" /> ALTA VEHÍCULO
+            <Plus className="w-4 h-4 mr-2" /> NUEVA ALTA
           </Button>
         </div>
       </div>
@@ -123,7 +122,7 @@ export default function StockManagement() {
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-300" />
         <Input 
           className="pl-12 h-14 bg-white border-none shadow-sm rounded-xl text-xs font-black uppercase tracking-widest" 
-          placeholder="BUSCAR POR MODELO, VIN O BASTIDOR..." 
+          placeholder="BUSCAR POR MODELO O BASTIDOR..." 
           value={searchTerm} 
           onChange={e => setSearchTerm(e.target.value)} 
         />
@@ -135,10 +134,10 @@ export default function StockManagement() {
             <TableHeader className="bg-slate-50 sticky top-0 z-10">
               <TableRow className="border-none h-14">
                 <TableHead className="font-black text-[10px] uppercase px-6">Modelo</TableHead>
-                <TableHead className="font-black text-[10px] uppercase">Color Oficial</TableHead>
-                <TableHead className="font-black text-[10px] uppercase">VIN7</TableHead>
+                <TableHead className="font-black text-[10px] uppercase">Color</TableHead>
+                <TableHead className="font-black text-[10px] uppercase">Bastidor</TableHead>
                 <TableHead className="font-black text-[10px] uppercase">Ubicación</TableHead>
-                <TableHead className="font-black text-[10px] uppercase text-center">Antigüedad</TableHead>
+                <TableHead className="font-black text-[10px] uppercase text-center">Días</TableHead>
                 <TableHead className="text-right px-6">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -146,7 +145,7 @@ export default function StockManagement() {
               {loading ? (
                 <TableRow><TableCell colSpan={6} className="py-20 text-center"><Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" /></TableCell></TableRow>
               ) : filteredVehiculos.length === 0 ? (
-                <TableRow><TableCell colSpan={6} className="py-20 text-center text-slate-300 font-black uppercase text-xs tracking-widest">No se encontraron vehículos en esta zona</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="py-20 text-center text-slate-300 font-black uppercase text-xs tracking-widest">Sin resultados</TableCell></TableRow>
               ) : filteredVehiculos.map((car) => {
                 const days = car.fechaEntrada ? differenceInDays(new Date(), parseISO(car.fechaEntrada)) : 0;
                 const colorObj = BMW_COLORS.find(c => c.code === (car.colorCodigo || car.colorBMW));
@@ -155,8 +154,8 @@ export default function StockManagement() {
                     <TableCell className="font-black text-[11px] uppercase text-secondary px-6">{car.modelo}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <div className="w-4 h-4 rounded-full border border-slate-200 shadow-sm" style={{ backgroundColor: colorObj?.hex || '#F5F5F5' }} />
-                        <span className="text-[10px] uppercase font-bold text-slate-500">{car.colorExterior || 'N/A'}</span>
+                        <div className="w-3.5 h-3.5 rounded-full border border-slate-200" style={{ backgroundColor: colorObj?.hex || '#F5F5F5' }} />
+                        <span className="text-[9px] uppercase font-bold text-slate-500">{car.colorExterior?.slice(0, 15)}</span>
                       </div>
                     </TableCell>
                     <TableCell className="font-mono text-[10px] font-bold text-slate-400">{car.vin7}</TableCell>
@@ -169,13 +168,10 @@ export default function StockManagement() {
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="flex flex-col items-center">
-                        <span className={cn("text-sm font-black", days > 60 ? "text-red-600" : "text-secondary")}>{days}</span>
-                        <span className="text-[8px] font-bold text-slate-400 uppercase">DÍAS</span>
-                      </div>
+                      <span className={cn("text-[11px] font-black", days > 60 ? "text-red-600" : "text-secondary")}>{days} d</span>
                     </TableCell>
                     <TableCell className="text-right px-6">
-                      <Button variant="ghost" size="icon" className="rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); if(confirm("¿Eliminar del stock?")) deleteDoc(doc(db, "vehiculos", car.id)); }}>
+                      <Button variant="ghost" size="icon" className="rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => { e.stopPropagation(); if(confirm("¿Eliminar?")) deleteDoc(doc(db, "vehiculos", car.id)); }}>
                         <Trash2 className="w-4 h-4 text-slate-300 hover:text-red-600" />
                       </Button>
                     </TableCell>
