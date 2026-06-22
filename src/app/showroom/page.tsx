@@ -101,7 +101,6 @@ function ShowroomContent() {
 
     let finalUpdates = { ...updates, updatedAt: new Date().toISOString() };
     
-    // Automatización: Si el estado cambia a algo que no sea Exposición, se quita del plano
     if (updates.estado && updates.estado !== 'Exposicion' && PLAZAS_LIST.includes(vehicle.ubicacion)) {
       finalUpdates.ubicacion = 'Stock';
       toast({ title: "Vehículo Movido a Stock", description: "Plaza liberada automáticamente por cambio de estado." });
@@ -213,43 +212,33 @@ function ShowroomContent() {
       <div className="flex-1 p-6 overflow-hidden flex items-center justify-center">
         <div className="w-full h-full max-w-[1400px] grid grid-rows-5 gap-3">
           
-          {/* Fila 1: P1-P4 | Pasillo | Bloque B */}
           <div className="grid grid-cols-6 gap-3">
             {renderPlaza("P1")}
             {renderPlaza("P2")}
             {renderPlaza("P3")}
             {renderPlaza("P4")}
             {renderPasilloVertical()}
-            <div className="bg-slate-50/20 rounded-2xl border border-dashed border-slate-100 flex items-center justify-center">
-               <span className="text-[8px] font-black text-slate-200 uppercase">BLOQUE B</span>
-            </div>
+            <div className="bg-transparent"></div>
           </div>
 
-          {/* Fila 2: P5-P8 | Pasillo | Bloque B */}
           <div className="grid grid-cols-6 gap-3">
             {renderPlaza("P5")}
             {renderPlaza("P6")}
             {renderPlaza("P7")}
             {renderPlaza("P8")}
             {renderPasilloVertical()}
-            <div className="bg-slate-50/20 rounded-2xl border border-dashed border-slate-100 flex items-center justify-center">
-               <span className="text-[8px] font-black text-slate-200 uppercase">BLOQUE B</span>
-            </div>
+            <div className="bg-transparent"></div>
           </div>
 
-          {/* Fila 3: Mesas Genius 1-4 | Pasillo | Mesas Adicionales */}
           <div className="grid grid-cols-6 gap-3">
             {renderPuestoGenius(1)}
             {renderPuestoGenius(2)}
             {renderPuestoGenius(3)}
             {renderPuestoGenius(4)}
             {renderPasilloVertical()}
-            <div className="bg-slate-50/20 rounded-2xl border border-dashed border-slate-100 flex items-center justify-center">
-               <span className="text-[8px] font-black text-slate-200 uppercase">ZONA MESAS</span>
-            </div>
+            <div className="bg-transparent"></div>
           </div>
 
-          {/* Fila 4: P9-P12 | Pasillo | P13 (Frente a P12) */}
           <div className="grid grid-cols-6 gap-3">
             {renderPlaza("P9")}
             {renderPlaza("P10")}
@@ -259,7 +248,6 @@ function ShowroomContent() {
             {renderPlaza("P13")}
           </div>
 
-          {/* Fila 5: P15 (Bajo P10) y P14 (Bajo P12) | Pasillo | Vacío */}
           <div className="grid grid-cols-6 gap-3">
             <div className="bg-transparent"></div>
             {renderPlaza("P15")}
