@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, Suspense } from "react";
+import { useState, useMemo, Suspense } from "react";
 import { 
-  Plus, Move, Car, ChevronRight, Loader2, X, Trash2, Monitor, PlusCircle, RefreshCw, Package
+  Plus, Move, ChevronRight, Loader2, X, Trash2, Monitor, PlusCircle, Package
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,6 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { useSearchParams } from "next/navigation";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
@@ -115,7 +114,7 @@ function ShowroomContent() {
       const oldLocation = PLAZAS_LIST.includes(sourceCar?.ubicacion) ? sourceCar.ubicacion : 'Stock';
       handleUpdateVehicle(sourceId, { ubicacion: targetPlaza, estado: 'Exposicion' });
       handleUpdateVehicle(targetCar.id, { ubicacion: oldLocation });
-      toast({ title: "Intercambio Realizado", description: `Plazas permutadas.` });
+      toast({ title: "Intercambio Realizado", description: `Plazas permutadas automáticamente.` });
     } else {
       handleUpdateVehicle(sourceId, { ubicacion: targetPlaza, estado: 'Exposicion' });
       toast({ title: "Vehículo Ubicado", description: `Asignado a ${targetPlaza}.` });
@@ -198,7 +197,7 @@ function ShowroomContent() {
       <div className="flex-1 p-8 overflow-hidden flex items-center justify-center">
         <div className="w-full h-full max-w-[1400px] grid grid-rows-5 gap-4">
           
-          {/* Fila 1: P1-P4 | Pasillo | Bloque Derecho */}
+          {/* Fila 1: P1-P4 | Pasillo | Bloque B */}
           <div className="grid grid-cols-6 gap-4">
             {renderPlaza("P1")}
             {renderPlaza("P2")}
@@ -210,7 +209,7 @@ function ShowroomContent() {
             </div>
           </div>
 
-          {/* Fila 2: P5-P8 | Pasillo | Bloque Derecho */}
+          {/* Fila 2: P5-P8 | Pasillo | Bloque B */}
           <div className="grid grid-cols-6 gap-4">
             {renderPlaza("P5")}
             {renderPlaza("P6")}
@@ -222,7 +221,7 @@ function ShowroomContent() {
             </div>
           </div>
 
-          {/* Fila 3: Genius 1-4 | Pasillo | Bloque Derecho */}
+          {/* Fila 3: Genius 1-4 | Pasillo | Mesas */}
           <div className="grid grid-cols-6 gap-4">
             {renderPuestoGenius(1)}
             {renderPuestoGenius(2)}
@@ -234,7 +233,7 @@ function ShowroomContent() {
             </div>
           </div>
 
-          {/* Fila 4: P9-P12 | Pasillo | P13 enfrente de P12 */}
+          {/* Fila 4: P9-P12 | Pasillo | P13 (frente a P12) */}
           <div className="grid grid-cols-6 gap-4">
             {renderPlaza("P9")}
             {renderPlaza("P10")}
