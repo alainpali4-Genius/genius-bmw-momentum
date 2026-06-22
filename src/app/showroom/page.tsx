@@ -40,7 +40,7 @@ export const BMW_COLORS = [
 ];
 
 const ESTADOS = ["Exposicion", "Stock", "Demo", "Reservado", "Preparacion Entrega", "Entregado", "Cedido"];
-const SHOWROOM_PLAZAS = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12", "P13", "P14", "P15"];
+const PLAZAS_LIST = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12", "P13", "P14", "P15"];
 const OTHER_LOCATIONS = ["Stock", "Terraza", "Entreplanta", "Lavadero", "Zona Entrega", "Taller", "Entregado"];
 
 function CarSilhouette({ bodyType, color, className }: { bodyType: string, color: string, className?: string }) {
@@ -57,7 +57,7 @@ function CarSilhouette({ bodyType, color, className }: { bodyType: string, color
   };
 
   return (
-    <svg viewBox="0 0 100 100" className={cn("w-full h-full drop-shadow-md", className)} fill={color}>
+    <svg viewBox="0 0 100 100" className={cn("w-full h-full drop-shadow-lg", className)} fill={color}>
       <path d={getPath()} />
     </svg>
   );
@@ -79,11 +79,7 @@ function ShowroomContent() {
   });
 
   const vehiculos = useMemo(() => (vehiculosRaw || []) as any[], [vehiculosRaw]);
-  const pendingStock = useMemo(() => vehiculos.filter(v => !v.ubicacion?.startsWith('P')), [vehiculos]);
-
-  useEffect(() => {
-    if (searchParams.get('add') === 'true') setIsAddingNew(true);
-  }, [searchParams]);
+  const pendingStock = useMemo(() => vehiculos.filter(v => !PLAZAS_LIST.includes(v.ubicacion)), [vehiculos]);
 
   const handleUpdateVehicle = (vehicleId: string, updates: any) => {
     const docRef = doc(db, "vehiculos", vehicleId);
@@ -92,8 +88,8 @@ function ShowroomContent() {
 
     let finalUpdates = { ...updates, updatedAt: new Date().toISOString() };
     
-    // Automatización: Si el estado cambia a algo que no sea Exposición, sale del plano
-    if (updates.estado && updates.estado !== 'Exposicion' && vehicle.ubicacion?.startsWith('P')) {
+    // Regla de oro: si el estado cambia a algo que no sea Exposición, sale del plano
+    if (updates.estado && updates.estado !== 'Exposicion' && PLAZAS_LIST.includes(vehicle.ubicacion)) {
       finalUpdates.ubicacion = 'Stock';
       toast({ title: "Vehículo Movido a Stock", description: "Plaza liberada automáticamente al cambiar estado." });
     }
@@ -117,7 +113,7 @@ function ShowroomContent() {
     const targetCar = vehiculos.find(v => v.ubicacion === targetPlaza);
 
     if (targetCar && targetCar.id !== sourceId) {
-      const oldLocation = sourceCar?.ubicacion?.startsWith('P') ? sourceCar.ubicacion : 'Stock';
+      const oldLocation = PLAZAS_LIST.includes(sourceCar?.ubicacion) ? sourceCar.ubicacion : 'Stock';
       handleUpdateVehicle(sourceId, { ubicacion: targetPlaza, estado: 'Exposicion' });
       handleUpdateVehicle(targetCar.id, { ubicacion: oldLocation });
       toast({ title: "Intercambio Realizado", description: `Plazas ${oldLocation} y ${targetPlaza} permutadas.` });
@@ -145,13 +141,13 @@ function ShowroomContent() {
       >
         <div className="absolute top-2 left-3 z-20"><span className="text-[10px] font-black uppercase text-slate-300">{id}</span></div>
         {vehicle ? (
-          <div className="w-full h-full flex flex-col items-center justify-center p-4">
-            <div className="w-[60%] h-[50%] mb-2">
+          <div className="w-full h-full flex flex-col items-center justify-center p-3">
+            <div className="w-[70%] h-[60%] mb-1.5">
               <CarSilhouette bodyType={vehicle.bodyType || 'SUV'} color={colorObj?.hex || '#CBD5E1'} />
             </div>
             <div className="text-center px-1">
-              <p className="text-[11px] font-black uppercase text-secondary truncate max-w-[120px]">{vehicle.modelo}</p>
-              <p className="text-[9px] font-mono font-bold text-slate-400 mt-0.5">{vehicle.vin7 || vehicle.vin?.slice(-7)}</p>
+              <p className="text-[10px] font-black uppercase text-secondary truncate max-w-[140px] leading-tight">{vehicle.modelo}</p>
+              <p className="text-[8px] font-mono font-bold text-slate-400 mt-0.5">{vehicle.vin7 || vehicle.vin?.slice(-7)}</p>
             </div>
           </div>
         ) : (
@@ -161,32 +157,20 @@ function ShowroomContent() {
     );
   };
 
-  const handleQuickAdd = async () => {
-    if (!formData.modelo || !formData.vin) {
-      toast({ variant: "destructive", title: "Faltan datos" });
-      return;
-    }
-    const vin7 = formData.vin.slice(-7).toUpperCase();
-    const payload = {
-      ...formData,
-      vin: formData.vin.toUpperCase(),
-      vin7,
-      colorCodigo: formData.colorBMW,
-      colorExterior: BMW_COLORS.find(c => c.code === formData.colorBMW)?.name || "Alpine White",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      checklist: { lavado: false, combustible: false, documentacion: false, llaves: false, revision: false }
-    };
+  const renderPasilloVertical = () => (
+    <div className="h-full w-full bg-slate-50/50 border-x border-dashed border-slate-100 flex flex-col items-center justify-center">
+      <div className="rotate-90 flex items-center gap-2">
+        <span className="text-[8px] font-black uppercase tracking-[0.4em] text-slate-200">PASILLO LOGÍSTICO</span>
+      </div>
+    </div>
+  );
 
-    try {
-      await addDoc(collection(db, "vehiculos"), payload);
-      toast({ title: "Vehículo Registrado" });
-      setIsAddingNew(false);
-      setFormData({ modelo: "", vin: "", colorBMW: "300", ubicacion: "Stock", motor: "sDrive20i", bodyType: "SUV", estado: "Stock" });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error al guardar" });
-    }
-  };
+  const renderPuestoGenius = (num: number) => (
+    <div className="h-full w-full bg-slate-100/40 border border-dashed border-slate-200 rounded-2xl flex items-center justify-center group hover:bg-white transition-colors">
+      <Monitor className="w-4 h-4 text-slate-300 mr-2 group-hover:text-primary" />
+      <span className="text-[9px] font-black uppercase tracking-widest text-slate-300 group-hover:text-primary">GENIUS {num}</span>
+    </div>
+  );
 
   return (
     <div className="flex flex-col h-screen bg-[#f4f7fa] overflow-hidden">
@@ -194,7 +178,7 @@ function ShowroomContent() {
       <div className="bg-white border-b px-8 py-5 flex items-center justify-between shrink-0 shadow-sm z-40">
         <div className="flex flex-col">
           <h1 className="text-2xl font-black text-secondary uppercase italic leading-none tracking-tighter">PLANO <span className="text-primary not-italic">EXPOSICIÓN</span></h1>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">SISTEMA LOGÍSTICO VN MOMENTUM NAVARRA</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">LOGÍSTICA MOMENTUM NAVARRA • VN PREMIUM</p>
         </div>
         <div className="flex gap-3">
           {movingVehicleId && (
@@ -211,42 +195,54 @@ function ShowroomContent() {
         </div>
       </div>
 
-      {/* PLANO GRID - DISEÑO OPTIMIZADO PARA PANTALLA ÚNICA */}
+      {/* PLANO GRID - ARQUITECTURA EXACTA SOLICITADA */}
       <div className="flex-1 p-6 lg:p-8 overflow-hidden">
-        <div className="h-full w-full max-w-[1600px] mx-auto flex flex-col gap-4">
+        <div className="h-full w-full max-w-[1600px] mx-auto grid grid-rows-5 gap-4">
           
-          {/* Fila superior P1-P4 (Flex 1) */}
-          <div className="flex-1 grid grid-cols-4 gap-4 min-h-0">
-            {["P1", "P2", "P3", "P4"].map(id => renderPlaza(id))}
+          {/* Fila 1: P1-P3 | Pasillo | P4 */}
+          <div className="grid grid-cols-5 gap-4 min-h-0">
+            {renderPlaza("P1")}
+            {renderPlaza("P2")}
+            {renderPlaza("P3")}
+            {renderPasilloVertical()}
+            {renderPlaza("P4")}
           </div>
 
-          {/* Fila intermedia P5-P8 (Flex 1) */}
-          <div className="flex-1 grid grid-cols-4 gap-4 min-h-0">
-            {["P5", "P6", "P7", "P8"].map(id => renderPlaza(id))}
+          {/* Fila 2: P5-P7 | Pasillo | P8 */}
+          <div className="grid grid-cols-5 gap-4 min-h-0">
+            {renderPlaza("P5")}
+            {renderPlaza("P6")}
+            {renderPlaza("P7")}
+            {renderPasilloVertical()}
+            {renderPlaza("P8")}
           </div>
 
-          {/* Pasillo central y Puestos Genius (Altura Fija) */}
-          <div className="h-16 shrink-0 grid grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map(num => (
-              <div key={num} className="bg-slate-100/40 border border-dashed border-slate-200 rounded-2xl flex items-center justify-center opacity-50 group hover:opacity-100 transition-opacity">
-                <Monitor className="w-4 h-4 text-slate-400 mr-2 group-hover:text-primary transition-colors" />
-                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 group-hover:text-primary transition-colors">PUESTO GENIUS {num}</span>
-              </div>
-            ))}
+          {/* Fila 3: Genius 1-3 | Pasillo | Genius 4 */}
+          <div className="grid grid-cols-5 gap-4 min-h-0">
+            {renderPuestoGenius(1)}
+            {renderPuestoGenius(2)}
+            {renderPuestoGenius(3)}
+            {renderPasilloVertical()}
+            {renderPuestoGenius(4)}
           </div>
 
-          {/* Fila inferior mixta P9-P12 (Flex 1) */}
-          <div className="flex-1 grid grid-cols-4 gap-4 min-h-0">
-            {["P9", "P10", "P11", "P12"].map(id => renderPlaza(id))}
+          {/* Fila 4: P9-P11 | Pasillo | P12 */}
+          <div className="grid grid-cols-5 gap-4 min-h-0">
+            {renderPlaza("P9")}
+            {renderPlaza("P10")}
+            {renderPlaza("P11")}
+            {renderPasilloVertical()}
+            {renderPlaza("P12")}
           </div>
 
-          {/* Fila final P13-P15 + Espacio (Flex 1) */}
-          <div className="flex-1 grid grid-cols-4 gap-4 min-h-0">
+          {/* Fila 5: P13-P15 | Pasillo | Stock Espacio */}
+          <div className="grid grid-cols-5 gap-4 min-h-0">
             {renderPlaza("P13")}
             {renderPlaza("P14")}
             {renderPlaza("P15")}
+            {renderPasilloVertical()}
             <div className="rounded-2xl border border-dashed border-slate-100 flex items-center justify-center bg-slate-50/20">
-              <span className="text-[8px] font-black text-slate-200 uppercase tracking-widest">ESPACIO LIBRE</span>
+              <span className="text-[8px] font-black text-slate-200 uppercase tracking-widest">ZONA ESCAPARATE</span>
             </div>
           </div>
 
@@ -289,7 +285,7 @@ function ShowroomContent() {
                   <Select value={selectedVehicle.ubicacion} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { ubicacion: v })}>
                     <SelectTrigger className="h-14 bg-white border-none rounded-2xl font-black uppercase text-xs shadow-sm"><SelectValue /></SelectTrigger>
                     <SelectContent className="rounded-2xl max-h-[300px]">
-                      {SHOWROOM_PLAZAS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                      {PLAZAS_LIST.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                       <Separator className="my-2" />
                       {OTHER_LOCATIONS.map(p => <SelectItem key={p} value={p}>{p.toUpperCase()}</SelectItem>)}
                     </SelectContent>
@@ -312,7 +308,7 @@ function ShowroomContent() {
         <SheetContent side="right" className="w-[400px] p-0 border-none bg-white shadow-2xl">
           <div className="p-8 bg-slate-50 border-b flex flex-col gap-2">
             <h3 className="text-2xl font-black uppercase italic text-secondary leading-none">STOCK <span className="text-primary not-italic">VN</span></h3>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">VEHÍCULOS FUERA DE EXPOSICIÓN</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">VEHÍCULOS PENDIENTES DE EXPOSICIÓN</p>
           </div>
           <div className="p-6 space-y-4 overflow-y-auto h-[calc(100vh-140px)] scrollbar-none">
             {pendingStock.length === 0 ? (
@@ -373,9 +369,36 @@ function ShowroomContent() {
       </Dialog>
     </div>
   );
+
+  async function handleQuickAdd() {
+    if (!formData.modelo || !formData.vin) {
+      toast({ variant: "destructive", title: "Faltan datos" });
+      return;
+    }
+    const vin7 = formData.vin.slice(-7).toUpperCase();
+    const payload = {
+      ...formData,
+      vin: formData.vin.toUpperCase(),
+      vin7,
+      colorCodigo: formData.colorBMW,
+      colorExterior: BMW_COLORS.find(c => c.code === formData.colorBMW)?.name || "Alpine White",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      checklist: { lavado: false, combustible: false, documentacion: false, llaves: false, revision: false }
+    };
+
+    try {
+      await addDoc(collection(db, "vehiculos"), payload);
+      toast({ title: "Vehículo Registrado" });
+      setIsAddingNew(false);
+      setFormData({ modelo: "", vin: "", colorBMW: "300", ubicacion: "Stock", motor: "sDrive20i", bodyType: "SUV", estado: "Stock" });
+    } catch (e) {
+      toast({ variant: "destructive", title: "Error al guardar" });
+    }
+  }
 }
 
-export default function ShowroomRetailFixed() {
+export default function ShowroomRetailFinal() {
   return (
     <Suspense fallback={<div className="flex justify-center items-center h-screen bg-slate-50"><Loader2 className="animate-spin text-primary w-14 h-14" /></div>}>
       <ShowroomContent />
