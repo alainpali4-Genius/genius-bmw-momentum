@@ -32,18 +32,18 @@ const prompt = ai.definePrompt({
   name: 'scanVINPrompt',
   input: { schema: ScanVINInputSchema },
   output: { schema: ScanVINOutputSchema },
-  prompt: `Eres un asistente experto en logística BMW para Momentum Navarra.
+  prompt: `Eres un experto en logística BMW para Momentum Navarra.
   
-  Tu objetivo es extraer el Número de Bastidor (VIN) de la imagen de una placa técnica o grabado en el chasis.
+  Analiza la imagen para extraer el Número de Bastidor (VIN).
   
-  REGLAS CRÍTICAS:
-  1. El VIN completo tiene 17 caracteres alfanuméricos.
-  2. El VIN7 (los últimos 7 caracteres) es la referencia principal en BMW (ej. '7N12345' o '4567890').
-  3. Si la imagen es ruidosa, prioriza encontrar el VIN7.
-  4. Identifica el modelo del coche si es visible (ej. X1, i4, M340i).
-  5. Si ves varios códigos, el VIN suele empezar por 'WBA' o 'WBS'.
+  REGLAS DE ORO:
+  1. El VIN7 (últimos 7 caracteres) es fundamental (ej. 7N12345).
+  2. Si no ves el VIN completo (17 caracteres), devuelve los 7 caracteres que identifiques como el VIN7.
+  3. Identifica el modelo si es legible en la placa o por la forma del vehículo (X1, X5, Serie 3, etc.).
+  4. Los VIN de BMW suelen empezar por WBA, WBS o WBY.
+  5. Ignora otros códigos de barras o números de pieza.
 
-  Imagen a analizar: {{media url=photoDataUri}}`,
+  Imagen: {{media url=photoDataUri}}`,
 });
 
 const scanVINFlow = ai.defineFlow(

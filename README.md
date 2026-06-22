@@ -14,12 +14,12 @@ git add . && git commit -m "Update: Sincronización Genius BMW" && git pull orig
 ## 🎨 Branding & Identidad Corporativa
 - **Favicon**: Logotipo oficial de BMW implementado mediante `src/app/icon.tsx` (estándar Next.js) para máxima nitidez en URL.
 - **Logo Sidebar**: Se utiliza `/logo-product-genius.png` en la barra lateral y cabecera móvil.
-- **Interfaz**: Colores oficiales BMW M (Portimao Blue y M Red) aplicados en todo el sistema.
+- **Interfaz**: Colores oficiales BMW M (Azul Portimao y Rojo M) aplicados en todo el sistema.
 
 ## 📦 Funcionalidades Core
-- **Plano de Exposición**: Gestión visual de plazas en tiempo real.
-- **Inventario IA**: Escáner de bastidor con compresión automática de imágenes (<1MB).
-- **Control de Stock**: Importación masiva vía Excel y detección de duplicados de VIN.
+- **Plano de Exposición**: Gestión visual con intercambio inteligente de plazas y salida automática a stock.
+- **Inventario IA**: Escáner de bastidor optimizado con compresión automática (<1MB) y detección VIN7.
+- **Control de Stock**: Filtros rápidos para Terraza, Entreplanta, Lavadero y Zona de Entrega.
 - **Entregas**: Planificación logística y control de actas de entrega.
 
 ## 🚀 Notas de Despliegue
