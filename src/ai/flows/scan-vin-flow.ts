@@ -33,14 +33,15 @@ const prompt = ai.definePrompt({
   name: 'scanVINPrompt',
   input: { schema: ScanVINInputSchema },
   output: { schema: ScanVINOutputSchema },
-  prompt: `Eres un experto en logística BMW. Tu misión es extraer el VIN7 (últimos 7 caracteres del bastidor) de la imagen.
+  prompt: `Eres un experto en logística BMW altamente preciso. Tu misión es extraer el VIN7 (los últimos 7 caracteres del bastidor) de la imagen proporcionada.
   
-  REGLAS ESTRICTAS:
-  1. El VIN7 suele tener un formato como '7N12345' (una letra seguida de 6 números) o similar.
-  2. Si ves el VIN completo (17 caracteres que empiezan por WBA, WBS o WBY), extráelo.
-  3. Si solo ves una parte, prioriza los últimos 7 caracteres.
-  4. Identifica el modelo si es legible (X1, X3, i4, M3, etc.).
-  5. Ignora cualquier otro texto, código de barras o número de pieza.
+  REGLAS CRÍTICAS DE DETECCIÓN:
+  1. El VIN7 es fundamental. Suele ser una letra seguida de 6 números (ej. 7N12345) o similar.
+  2. Busca específicamente el bloque de 17 caracteres (VIN completo) que empieza por WBA, WBS o WBY.
+  3. Si el VIN completo es ilegible pero los últimos 7 caracteres son claros, devuelve esos 7 caracteres en el campo 'vin'.
+  4. Identifica el modelo (X1, X3, M3, i4, etc.) basándote en cualquier texto visible o forma característica si es posible.
+  5. Si ves varios códigos, prioriza el que parezca un número de bastidor troquelado o impreso en placa técnica.
+  6. Ignora números de piezas, códigos de barras o fechas.
 
   Imagen: {{media url=photoDataUri}}`,
 });

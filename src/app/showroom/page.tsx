@@ -66,7 +66,6 @@ function CarSilhouette({ bodyType, color, className }: { bodyType: string, color
 function ShowroomContent() {
   const { toast } = useToast();
   const db = useFirestore();
-  const searchParams = useSearchParams();
   const { data: vehiculosRaw, loading } = useCollection(query(collection(db, "vehiculos"), orderBy("createdAt", "desc")));
   
   const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
@@ -116,10 +115,10 @@ function ShowroomContent() {
       const oldLocation = PLAZAS_LIST.includes(sourceCar?.ubicacion) ? sourceCar.ubicacion : 'Stock';
       handleUpdateVehicle(sourceId, { ubicacion: targetPlaza, estado: 'Exposicion' });
       handleUpdateVehicle(targetCar.id, { ubicacion: oldLocation });
-      toast({ title: "Intercambio Realizado", description: `Plazas ${oldLocation} y ${targetPlaza} permutadas.` });
+      toast({ title: "Intercambio Realizado", description: `Plazas permutadas.` });
     } else {
       handleUpdateVehicle(sourceId, { ubicacion: targetPlaza, estado: 'Exposicion' });
-      toast({ title: "Vehículo Ubicado", description: `Asignado a la plaza ${targetPlaza}.` });
+      toast({ title: "Vehículo Ubicado", description: `Asignado a ${targetPlaza}.` });
     }
     setMovingVehicleId(null);
   };
@@ -134,7 +133,7 @@ function ShowroomContent() {
         key={id}
         onClick={() => movingVehicleId ? handleSwapOrMove(movingVehicleId, id) : vehicle && setSelectedVehicle(vehicle)}
         className={cn(
-          "relative flex flex-col items-center justify-center transition-all h-full w-full rounded-2xl border-2 overflow-hidden",
+          "relative flex flex-col items-center justify-center transition-all aspect-square w-full rounded-2xl border-2 overflow-hidden",
           vehicle ? "bg-white border-transparent shadow-sm cursor-pointer hover:shadow-md" : "bg-white/40 border-slate-100 border-dashed",
           isMovingTarget && "border-primary bg-primary/5 ring-4 ring-primary/20 scale-[1.02] z-30"
         )}
@@ -142,12 +141,12 @@ function ShowroomContent() {
         <div className="absolute top-2 left-3 z-20"><span className="text-[10px] font-black uppercase text-slate-300">{id}</span></div>
         {vehicle ? (
           <div className="w-full h-full flex flex-col items-center justify-center p-3">
-            <div className="w-[70%] h-[60%] mb-1.5">
+            <div className="w-[70%] h-[60%] mb-1">
               <CarSilhouette bodyType={vehicle.bodyType || 'SUV'} color={colorObj?.hex || '#CBD5E1'} />
             </div>
             <div className="text-center px-1">
-              <p className="text-[10px] font-black uppercase text-secondary truncate max-w-[140px] leading-tight">{vehicle.modelo}</p>
-              <p className="text-[8px] font-mono font-bold text-slate-400 mt-0.5">{vehicle.vin7 || vehicle.vin?.slice(-7)}</p>
+              <p className="text-[9px] font-black uppercase text-secondary truncate max-w-full leading-tight">{vehicle.modelo}</p>
+              <p className="text-[7px] font-mono font-bold text-slate-400 mt-0.5">{vehicle.vin7 || vehicle.vin?.slice(-7)}</p>
             </div>
           </div>
         ) : (
@@ -158,7 +157,7 @@ function ShowroomContent() {
   };
 
   const renderPasilloVertical = () => (
-    <div className="h-full w-full bg-slate-50/50 border-x border-dashed border-slate-100 flex flex-col items-center justify-center">
+    <div className="h-full w-full flex flex-col items-center justify-center bg-slate-50/30 border-x border-dashed border-slate-100">
       <div className="rotate-90 flex items-center gap-2">
         <span className="text-[8px] font-black uppercase tracking-[0.4em] text-slate-200">PASILLO</span>
       </div>
@@ -166,7 +165,7 @@ function ShowroomContent() {
   );
 
   const renderPuestoGenius = (num: number) => (
-    <div className="h-full w-full bg-slate-100/40 border border-dashed border-slate-200 rounded-2xl flex items-center justify-center group hover:bg-white transition-colors">
+    <div className="aspect-square w-full bg-slate-100/40 border border-dashed border-slate-200 rounded-2xl flex items-center justify-center group hover:bg-white transition-colors">
       <Monitor className="w-4 h-4 text-slate-300 mr-2 group-hover:text-primary" />
       <span className="text-[9px] font-black uppercase tracking-widest text-slate-300 group-hover:text-primary">MESA {num}</span>
     </div>
@@ -195,54 +194,66 @@ function ShowroomContent() {
         </div>
       </div>
 
-      {/* PLANO GRID - ARQUITECTURA EXACTA CON PASILLO VERTICAL */}
-      <div className="flex-1 p-6 lg:p-8 overflow-hidden">
-        <div className="h-full w-full max-w-[1600px] mx-auto grid grid-rows-5 gap-4">
+      {/* PLANO GRID - ARQUITECTURA EXACTA SOLICITADA */}
+      <div className="flex-1 p-8 overflow-hidden flex items-center justify-center">
+        <div className="w-full h-full max-w-[1400px] grid grid-rows-5 gap-4">
           
-          {/* Fila 1: P1-P3 | Pasillo | P4 */}
-          <div className="grid grid-cols-5 gap-4 min-h-0">
+          {/* Fila 1: P1-P4 | Pasillo | Bloque Derecho */}
+          <div className="grid grid-cols-6 gap-4">
             {renderPlaza("P1")}
             {renderPlaza("P2")}
             {renderPlaza("P3")}
-            {renderPasilloVertical()}
             {renderPlaza("P4")}
+            {renderPasilloVertical()}
+            <div className="bg-slate-50/20 rounded-2xl border border-dashed border-slate-100 flex items-center justify-center">
+               <span className="text-[8px] font-black text-slate-200 uppercase">BLOQUE B</span>
+            </div>
           </div>
 
-          {/* Fila 2: P5-P7 | Pasillo | P8 */}
-          <div className="grid grid-cols-5 gap-4 min-h-0">
+          {/* Fila 2: P5-P8 | Pasillo | Bloque Derecho */}
+          <div className="grid grid-cols-6 gap-4">
             {renderPlaza("P5")}
             {renderPlaza("P6")}
             {renderPlaza("P7")}
-            {renderPasilloVertical()}
             {renderPlaza("P8")}
+            {renderPasilloVertical()}
+            <div className="bg-slate-50/20 rounded-2xl border border-dashed border-slate-100 flex items-center justify-center">
+               <span className="text-[8px] font-black text-slate-200 uppercase">BLOQUE B</span>
+            </div>
           </div>
 
-          {/* Fila 3: Genius 1-3 | Pasillo | Genius 4 */}
-          <div className="grid grid-cols-5 gap-4 min-h-0">
+          {/* Fila 3: Genius 1-4 | Pasillo | Bloque Derecho */}
+          <div className="grid grid-cols-6 gap-4">
             {renderPuestoGenius(1)}
             {renderPuestoGenius(2)}
             {renderPuestoGenius(3)}
-            {renderPasilloVertical()}
             {renderPuestoGenius(4)}
+            {renderPasilloVertical()}
+            <div className="bg-slate-50/20 rounded-2xl border border-dashed border-slate-100 flex items-center justify-center">
+               <span className="text-[8px] font-black text-slate-200 uppercase">MESAS</span>
+            </div>
           </div>
 
-          {/* Fila 4: P9-P11 | Pasillo | P12 */}
-          <div className="grid grid-cols-5 gap-4 min-h-0">
+          {/* Fila 4: P9-P12 | Pasillo | P13 enfrente de P12 */}
+          <div className="grid grid-cols-6 gap-4">
             {renderPlaza("P9")}
             {renderPlaza("P10")}
             {renderPlaza("P11")}
-            {renderPasilloVertical()}
             {renderPlaza("P12")}
+            {renderPasilloVertical()}
+            {renderPlaza("P13")}
           </div>
 
-          {/* Fila 5: P13-P14-P15 | Pasillo | Espacio Adicional */}
-          <div className="grid grid-cols-5 gap-4 min-h-0">
-            {renderPlaza("P13")}
-            {renderPlaza("P14")}
-            {renderPlaza("P15")}
+          {/* Fila 5: Otros | Pasillo | P14-P15 */}
+          <div className="grid grid-cols-6 gap-4">
+            <div className="bg-slate-50/20 rounded-2xl border border-dashed border-slate-100"></div>
+            <div className="bg-slate-50/20 rounded-2xl border border-dashed border-slate-100"></div>
+            <div className="bg-slate-50/20 rounded-2xl border border-dashed border-slate-100"></div>
+            <div className="bg-slate-50/20 rounded-2xl border border-dashed border-slate-100"></div>
             {renderPasilloVertical()}
-            <div className="rounded-2xl border border-dashed border-slate-100 flex items-center justify-center bg-slate-50/20">
-              <span className="text-[8px] font-black text-slate-200 uppercase tracking-widest">ESCAPARATE</span>
+            <div className="grid grid-cols-2 gap-2 w-full h-full">
+              {renderPlaza("P14")}
+              {renderPlaza("P15")}
             </div>
           </div>
 
@@ -293,7 +304,7 @@ function ShowroomContent() {
                 </div>
                 <div className="space-y-3">
                   <Label className="text-[10px] font-black uppercase text-slate-400 px-1 tracking-widest">Acciones Críticas</Label>
-                  <Button variant="destructive" className="h-14 w-full rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg" onClick={() => { if(confirm("¿Eliminar este vehículo de la base de datos?")) { deleteDoc(doc(db, "vehiculos", selectedVehicle.id)); setSelectedVehicle(null); } }}>
+                  <Button variant="destructive" className="h-14 w-full rounded-2xl font-black uppercase text-[10px] tracking-widest shadow-lg" onClick={() => { if(confirm("¿Eliminar este vehículo?")) { deleteDoc(doc(db, "vehiculos", selectedVehicle.id)); setSelectedVehicle(null); } }}>
                     <Trash2 className="w-4 h-4 mr-2" /> Eliminar Registro
                   </Button>
                 </div>
