@@ -47,19 +47,16 @@ const ESTADOS = ["Exposicion", "Stock", "Demo", "Reservado", "Preparacion Entreg
 const SHOWROOM_PLAZAS = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12", "P13", "P14", "P15"];
 const OTHER_LOCATIONS = ["Stock", "Terraza", "Entreplanta", "Lavadero", "Zona Entrega", "Taller", "Entregado", "Cedido"];
 
-// Componente para renderizar la silueta del coche vista desde arriba
+// Componente para renderizar la silueta del coche vista desde arriba de forma profesional
 function CarSilhouette({ bodyType, color, className }: { bodyType: string, color: string, className?: string }) {
   const getPath = () => {
     switch (bodyType) {
       case 'SUV':
-        // Silueta más ancha y robusta
         return "M20,10 L80,10 Q90,10 90,20 L90,80 Q90,90 80,90 L20,90 Q10,90 10,80 L10,20 Q10,10 20,10 Z M25,25 L75,25 L75,45 L25,45 Z M25,55 L75,55 L75,80 L25,80 Z";
       case 'Coupe':
-        // Silueta más afilada y aerodinámica
         return "M30,15 L70,15 Q85,15 85,30 L85,70 Q85,85 70,85 L30,85 Q15,85 15,70 L15,30 Q15,15 30,15 Z M35,30 L65,30 Q70,30 70,35 L70,65 Q70,70 65,70 L35,70 Q30,70 30,65 L30,35 Q30,30 35,30 Z";
       case 'Berlina':
       default:
-        // Silueta estándar compensada
         return "M25,12 L75,12 Q85,12 85,25 L85,75 Q85,88 75,88 L25,88 Q15,88 15,75 L15,25 Q15,12 25,12 Z M30,28 L70,28 L70,48 L30,48 Z M30,55 L70,55 L70,78 L30,78 Z";
     }
   };
@@ -119,11 +116,11 @@ function ShowroomContent() {
 
     let finalUpdates = { ...updates, updatedAt: new Date().toISOString() };
     
-    // Automatización de salida del plano si cambia el estado y no es Exposicion
+    // Automatización de salida del plano si cambia el estado a algo que no sea Exposicion
     if (updates.estado && updates.estado !== 'Exposicion') {
       if (vehicle.ubicacion?.startsWith('P')) {
         finalUpdates.ubicacion = 'Stock';
-        toast({ title: "Vehículo Liberado", description: "Movido a Stock automáticamente por cambio de estado." });
+        toast({ title: "Vehículo Movido a Stock", description: "Liberada plaza de exposición automáticamente." });
       }
     }
 
@@ -158,24 +155,24 @@ function ShowroomContent() {
     if (!sourceCar) return;
 
     if (targetCar) {
-      // Intercambio
+      // INTERCAMBIO
       const oldLocation = sourceCar.ubicacion;
       const swapTo = oldLocation?.startsWith('P') ? oldLocation : 'Stock';
       
       handleUpdateVehicle(sourceId, { ubicacion: targetPlaza, estado: 'Exposicion' });
       handleUpdateVehicle(targetCar.id, { ubicacion: swapTo });
       
-      toast({ title: "Intercambio Realizado", description: `${sourceCar.vin7} y ${targetCar.vin7} han intercambiado plazas.` });
+      toast({ title: "Intercambio Realizado", description: `${sourceCar.vin7} <-> ${targetCar.vin7}` });
     } else {
-      // Movimiento simple
+      // MOVIMIENTO SIMPLE
       handleUpdateVehicle(sourceId, { ubicacion: targetPlaza, estado: 'Exposicion' });
-      toast({ title: "Vehículo Ubicado", description: `Trasladado a la plaza ${targetPlaza}.` });
+      toast({ title: "Vehículo Ubicado", description: `Plaza ${targetPlaza}` });
     }
     setMovingVehicleId(null);
   };
 
   const handleDeleteVehicle = (vehicleId: string, info: string) => {
-    if (confirm(`¿Eliminar permanentemente el vehículo ${info}?`)) {
+    if (confirm(`¿Eliminar vehículo ${info}?`)) {
       const docRef = doc(db, "vehiculos", vehicleId);
       deleteDoc(docRef).then(() => {
         toast({ title: "Vehículo Eliminado" });
@@ -189,7 +186,6 @@ function ShowroomContent() {
       toast({ variant: "destructive", title: "Faltan datos" });
       return;
     }
-
     const vinNorm = formData.vin.trim().toUpperCase();
     const colorObj = BMW_COLORS.find(c => c.code === formData.colorBMW);
     const vehiclePayload = {
@@ -208,7 +204,7 @@ function ShowroomContent() {
     setIsAddingNew(false);
     try {
       await addDoc(collection(db, "vehiculos"), vehiclePayload);
-      toast({ title: "Vehículo Guardado" });
+      toast({ title: "Vehículo Registrado" });
     } catch (error) {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: 'vehiculos', operation: 'create', requestResourceData: vehiclePayload,
@@ -249,8 +245,8 @@ function ShowroomContent() {
         
         {vehicle ? (
           <div className="w-full h-full flex flex-col items-center justify-center p-3">
-            <div className="w-[85%] h-[65%] flex items-center justify-center">
-              <CarSilhouette bodyType={vehicle.bodyType || 'SUV'} color={colorHex} className="drop-shadow-2xl" />
+            <div className="w-[85%] h-[60%] flex items-center justify-center">
+              <CarSilhouette bodyType={vehicle.bodyType || 'SUV'} color={colorHex} className="drop-shadow-xl" />
             </div>
             <div className="mt-3 text-center z-10 w-full px-2">
               <p className="text-[10px] font-black uppercase text-secondary leading-tight tracking-tighter truncate">
@@ -274,7 +270,7 @@ function ShowroomContent() {
 
   return (
     <div className="flex flex-col h-full bg-[#f4f7fa] overflow-hidden">
-      {/* Header Premium */}
+      {/* HEADER ORIGINAL */}
       <div className="bg-white border-b px-8 py-5 shrink-0 z-50 shadow-sm flex items-center justify-between">
         <div className="flex items-center gap-8">
           <div className="flex flex-col">
@@ -283,7 +279,7 @@ function ShowroomContent() {
           </div>
           {movingVehicleId && (
             <Badge className="bg-primary text-white animate-pulse px-6 py-3 rounded-2xl font-black uppercase text-[11px] gap-3 border-none shadow-xl">
-              <Move className="w-5 h-5" /> SELECCIONA PLAZA DE DESTINO
+              <Move className="w-5 h-5" /> SELECCIONA DESTINO
               <button onClick={() => setMovingVehicleId(null)} className="ml-2 bg-white/20 hover:bg-white/40 rounded-full p-1"><X className="w-4 h-4" /></button>
             </Badge>
           )}
@@ -298,18 +294,18 @@ function ShowroomContent() {
         </div>
       </div>
 
-      {/* Grid del Plano con Siluetas */}
+      {/* GRID DEL PLANO ORIGINAL RECUPERADO */}
       <div className="flex-1 overflow-hidden relative p-8 lg:p-14">
         {loadingVehiculos ? (
           <div className="flex justify-center items-center h-full"><Loader2 className="animate-spin text-primary w-14 h-14" /></div>
         ) : (
           <div className="h-full w-full max-w-[1800px] mx-auto flex gap-10 lg:gap-20 overflow-hidden">
             <div className="flex-[9] flex flex-col gap-8 lg:gap-12 h-full">
-              {/* Filas Superiores */}
+              {/* FILAS SUPERIORES */}
               <div className="flex-1 grid grid-cols-4 gap-8 lg:gap-12">{["P1", "P2", "P3", "P4"].map(id => renderPlaza(id))}</div>
               <div className="flex-1 grid grid-cols-4 gap-8 lg:gap-12">{["P5", "P6", "P7", "P8"].map(id => renderPlaza(id))}</div>
               
-              {/* Pasillo de Mesas */}
+              {/* PASILLO Y MESAS GENIUS RECUPERADOS */}
               <div className="h-24 shrink-0 grid grid-cols-4 gap-8 lg:gap-12">
                 {[1, 2, 3, 4].map(num => (
                   <div key={`m-${num}`} className="bg-slate-100/50 border-2 border-slate-200/30 border-dashed rounded-[2.5rem] flex items-center justify-center opacity-60">
@@ -319,7 +315,7 @@ function ShowroomContent() {
                 ))}
               </div>
 
-              {/* Filas Inferiores */}
+              {/* FILAS INFERIORES */}
               <div className="flex-1 grid grid-cols-4 gap-8 lg:gap-12">{["P9", "P10", "P11", "P12"].map(id => renderPlaza(id))}</div>
               <div className="flex-1 grid grid-cols-4 gap-8 lg:gap-12">
                 <div className="col-span-1" />
@@ -329,7 +325,7 @@ function ShowroomContent() {
               </div>
             </div>
 
-            {/* Columna Lateral (Escaparate) */}
+            {/* COLUMNA ESCAPARATE P13 */}
             <div className="w-40 md:w-64 flex flex-col justify-center h-full py-[12%] gap-12">
                <div className="h-[35%]">{renderPlaza("P13")}</div>
             </div>
@@ -337,7 +333,7 @@ function ShowroomContent() {
         )}
       </div>
 
-      {/* Detalles del Vehículo - Sheet Inferior */}
+      {/* SHEET DE DETALLES */}
       <Sheet open={!!selectedVehicle} onOpenChange={(open) => !open && setSelectedVehicle(null)}>
         <SheetContent side="bottom" className="p-0 rounded-t-[5rem] border-none h-[88vh] bg-white overflow-hidden shadow-[0_-20px_60px_-15px_rgba(0,0,0,0.15)]">
           {selectedVehicle && (
@@ -353,7 +349,7 @@ function ShowroomContent() {
                     <h2 className="text-7xl font-black uppercase italic leading-none tracking-tighter">{selectedVehicle.modelo}</h2>
                   </div>
                   <div className="flex gap-5">
-                    <Button variant="ghost" onClick={() => handleDeleteVehicle(selectedVehicle.id, `${selectedVehicle.modelo} (${selectedVehicle.vin7})`)} className="text-white/20 hover:bg-red-600 hover:text-white rounded-[2rem] h-20 w-20 transition-all"><Trash2 className="w-10 h-10" /></Button>
+                    <Button variant="ghost" onClick={() => handleDeleteVehicle(selectedVehicle.id, `${selectedVehicle.modelo}`)} className="text-white/20 hover:bg-red-600 hover:text-white rounded-[2rem] h-20 w-20 transition-all"><Trash2 className="w-10 h-10" /></Button>
                     <Button variant="ghost" onClick={() => setSelectedVehicle(null)} className="text-white/20 hover:bg-white/10 rounded-[2rem] h-20 w-20 transition-all"><X className="w-14 h-14" /></Button>
                   </div>
                 </div>
@@ -376,7 +372,7 @@ function ShowroomContent() {
                   
                   <div className="space-y-14">
                      <div className="bg-white p-12 rounded-[4rem] border border-slate-100 shadow-xl space-y-8">
-                        <Label className="text-[13px] font-black uppercase text-slate-400 tracking-widest px-3">Ubicación Logística</Label>
+                        <Label className="text-[13px] font-black uppercase text-slate-400 tracking-widest px-3">Ubicación Actual</Label>
                         <Select value={selectedVehicle.ubicacion} onValueChange={(val) => handleUpdateVehicle(selectedVehicle.id, { ubicacion: val })}>
                           <SelectTrigger className="bg-secondary text-white text-[16px] font-black uppercase rounded-[2rem] border-none shadow-2xl h-20 px-10"><SelectValue /></SelectTrigger>
                           <SelectContent className="rounded-3xl border-none shadow-3xl max-h-[450px]">
@@ -387,16 +383,6 @@ function ShowroomContent() {
                             {OTHER_LOCATIONS.map(p => <SelectItem key={p} value={p} className="rounded-xl">{p.toUpperCase()}</SelectItem>)}
                           </SelectContent>
                         </Select>
-                        <div className="pt-6 grid grid-cols-2 gap-6">
-                           <div className="bg-slate-50 p-6 rounded-3xl">
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Bastidor</p>
-                              <p className="text-xl font-mono font-bold text-secondary">{selectedVehicle.vin7}</p>
-                           </div>
-                           <div className="bg-slate-50 p-6 rounded-3xl">
-                              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Carrocería</p>
-                              <p className="text-xl font-black text-secondary uppercase italic">{selectedVehicle.bodyType}</p>
-                           </div>
-                        </div>
                      </div>
                   </div>
                 </div>
@@ -406,19 +392,16 @@ function ShowroomContent() {
         </SheetContent>
       </Sheet>
 
-      {/* Lista de Stock Lateral - Sheet Derecha */}
+      {/* LISTA DE STOCK SHEET */}
       <Sheet open={isStockSheetOpen} onOpenChange={setIsStockSheetOpen}>
         <SheetContent side="right" className="w-[500px] md:w-[700px] p-0 border-none bg-white shadow-3xl">
           <SheetHeader className="p-14 bg-slate-50 border-b">
             <SheetTitle className="text-5xl font-black uppercase italic tracking-tighter text-secondary leading-none">STOCK <span className="text-primary not-italic">VN</span></SheetTitle>
-            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-2">VEHÍCULOS PENDIENTES DE UBICAR</p>
+            <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mt-2">PENDIENTES DE UBICAR</p>
           </SheetHeader>
           <div className="p-12 space-y-8 overflow-y-auto h-[calc(100vh-220px)]">
             {pendingStock.length === 0 ? (
-              <div className="text-center py-28 space-y-4 opacity-30">
-                <Package className="w-16 h-16 mx-auto" />
-                <p className="text-[14px] font-black uppercase tracking-widest">Almacén vacío</p>
-              </div>
+              <div className="text-center py-28 opacity-30"><Package className="w-16 h-16 mx-auto" /><p className="text-[14px] font-black uppercase tracking-widest">Almacén vacío</p></div>
             ) : pendingStock.map((car) => {
               const colorObj = BMW_COLORS.find(c => c.code === car.colorCodigo);
               return (
@@ -427,14 +410,11 @@ function ShowroomContent() {
                   <div className="ml-8 space-y-5">
                     <div className="flex justify-between items-start">
                       <h4 className="font-black text-secondary text-2xl uppercase leading-none tracking-tight">{car.modelo}</h4>
-                      <Badge variant="outline" className="text-[11px] font-black uppercase px-4 py-1.5 rounded-xl text-primary border-primary/20">{car.estado}</Badge>
+                      <Badge variant="outline" className="text-[11px] font-black uppercase px-4 py-1.5 rounded-xl text-primary">{car.estado}</Badge>
                     </div>
                     <div className="flex items-center gap-5">
-                      <Badge variant="outline" className="text-[12px] font-mono font-bold text-slate-400 px-5 py-1.5 rounded-xl border-slate-100">{car.vin7 || car.vin?.slice(-7)}</Badge>
-                      <div className="flex items-center gap-2 text-slate-400">
-                        <ChevronRight className="w-4 h-4" />
-                        <span className="text-[11px] font-black uppercase tracking-widest">{car.ubicacion}</span>
-                      </div>
+                      <Badge variant="outline" className="text-[12px] font-mono font-bold text-slate-400 px-5 py-1.5 rounded-xl border-slate-100">{car.vin7}</Badge>
+                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-400">{car.ubicacion}</span>
                     </div>
                   </div>
                 </div>
@@ -444,51 +424,49 @@ function ShowroomContent() {
         </SheetContent>
       </Sheet>
 
-      {/* Diálogo Nuevo Activo - Estética Premium */}
+      {/* DIALOG NUEVO ACTIVO */}
       <Dialog open={isAddingNew} onOpenChange={setIsAddingNew}>
         <DialogContent className="max-w-2xl p-0 overflow-hidden border-none rounded-[4rem] shadow-4xl">
           <div className="p-12 bg-secondary text-white"><h2 className="text-4xl font-black uppercase italic tracking-tighter">ALTA DE VEHÍCULO</h2></div>
           <div className="p-14 space-y-12 bg-white">
             <div className="grid grid-cols-2 gap-10">
               <div className="space-y-5">
-                <Label className="text-[13px] font-black uppercase text-slate-400 px-3 tracking-widest">Modelo BMW</Label>
-                <Input value={formData.modelo} onChange={e => setFormData({...formData, modelo: e.target.value})} className="h-20 bg-slate-50 border-none font-black uppercase text-lg rounded-3xl px-8 shadow-inner" placeholder="EJ: X5 xDRIVE45e" />
+                <Label className="text-[13px] font-black uppercase text-slate-400 px-3 tracking-widest">Modelo</Label>
+                <Input value={formData.modelo} onChange={e => setFormData({...formData, modelo: e.target.value})} className="h-20 bg-slate-50 border-none font-black uppercase text-lg rounded-3xl px-8" placeholder="EJ: X5 xDRIVE" />
               </div>
               <div className="space-y-5">
-                <Label className="text-[13px] font-black uppercase text-slate-400 px-3 tracking-widest">Bastidor (VIN)</Label>
-                <Input value={formData.vin} onChange={e => setFormData({...formData, vin: e.target.value})} className="h-20 bg-slate-50 border-none font-mono text-lg uppercase rounded-3xl px-8 shadow-inner" placeholder="VIN COMPLETO" />
+                <Label className="text-[13px] font-black uppercase text-slate-400 px-3 tracking-widest">Bastidor</Label>
+                <Input value={formData.vin} onChange={e => setFormData({...formData, vin: e.target.value})} className="h-20 bg-slate-50 border-none font-mono text-lg uppercase rounded-3xl px-8" placeholder="VIN COMPLETO" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-10">
               <div className="space-y-5">
-                <Label className="text-[13px] font-black uppercase text-slate-400 px-3 tracking-widest">Ubicación de Entrada</Label>
+                <Label className="text-[13px] font-black uppercase text-slate-400 px-3 tracking-widest">Ubicación</Label>
                 <Select value={formData.ubicacion} onValueChange={v => setFormData({...formData, ubicacion: v})}>
                   <SelectTrigger className="h-20 bg-slate-50 border-none text-lg uppercase font-black rounded-3xl px-8"><SelectValue /></SelectTrigger>
-                  <SelectContent className="rounded-3xl border-none shadow-3xl">
-                    {SHOWROOM_PLAZAS.map(p => <SelectItem key={p} value={p} className="rounded-xl">{p}</SelectItem>)}
+                  <SelectContent className="rounded-3xl shadow-3xl">
+                    {SHOWROOM_PLAZAS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                     <Separator className="my-3" />
-                    {OTHER_LOCATIONS.map(p => <SelectItem key={p} value={p} className="rounded-xl">{p.toUpperCase()}</SelectItem>)}
+                    {OTHER_LOCATIONS.map(p => <SelectItem key={p} value={p}>{p.toUpperCase()}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-5">
-                <Label className="text-[13px] font-black uppercase text-slate-400 px-3 tracking-widest">Color Oficial</Label>
+                <Label className="text-[13px] font-black uppercase text-slate-400 px-3 tracking-widest">Color</Label>
                 <Select value={formData.colorBMW} onValueChange={v => setFormData({...formData, colorBMW: v})}>
                   <SelectTrigger className="h-20 bg-slate-50 border-none text-lg uppercase font-black rounded-3xl px-8"><SelectValue /></SelectTrigger>
-                  <SelectContent className="rounded-3xl shadow-4xl max-h-[450px] p-3">{BMW_COLORS.map(c => <SelectItem key={c.code} value={c.code} className="rounded-2xl font-bold py-4">{c.name}</SelectItem>)}</SelectContent>
+                  <SelectContent className="rounded-3xl shadow-4xl max-h-[450px] p-3">{BMW_COLORS.map(c => <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
             </div>
             <div className="space-y-5">
-              <Label className="text-[13px] font-black uppercase text-slate-400 px-3 tracking-widest">Carrocería (Silueta)</Label>
+              <Label className="text-[13px] font-black uppercase text-slate-400 px-3 tracking-widest">Silueta</Label>
               <Select value={formData.bodyType} onValueChange={v => setFormData({...formData, bodyType: v})}>
                 <SelectTrigger className="h-20 bg-slate-50 border-none text-lg uppercase font-black rounded-3xl px-8"><SelectValue /></SelectTrigger>
-                <SelectContent className="rounded-3xl border-none shadow-3xl p-3">
-                  {["SUV", "Berlina", "Coupe", "GranCoupe", "Roadster"].map(t => <SelectItem key={t} value={t} className="rounded-2xl font-bold py-4">{t.toUpperCase()}</SelectItem>)}
-                </SelectContent>
+                <SelectContent className="rounded-3xl p-3">{["SUV", "Berlina", "Coupe", "GranCoupe", "Roadster"].map(t => <SelectItem key={t} value={t}>{t.toUpperCase()}</SelectItem>)}</SelectContent>
               </Select>
             </div>
-            <Button onClick={handleQuickAdd} className="w-full h-24 bg-primary text-white rounded-[3rem] font-black uppercase text-[16px] shadow-3xl hover:bg-blue-800 transition-all active:scale-[0.98] mt-6"><Save className="mr-5 w-8 h-8" /> GUARDAR EN EL SISTEMA</Button>
+            <Button onClick={handleQuickAdd} className="w-full h-24 bg-primary text-white rounded-[3rem] font-black uppercase text-[16px] shadow-3xl mt-6">GUARDAR ACTIVO</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -496,7 +474,7 @@ function ShowroomContent() {
   );
 }
 
-export default function ShowroomRetailNext() {
+export default function ShowroomRetailFixed() {
   return (
     <Suspense fallback={<div className="flex justify-center items-center h-screen"><Loader2 className="animate-spin text-primary w-14 h-14" /></div>}>
       <ShowroomContent />

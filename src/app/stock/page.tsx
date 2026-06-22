@@ -13,7 +13,8 @@ import {
   X,
   ArrowRightCircle,
   MapPin,
-  Clock
+  Clock,
+  Droplets
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +42,6 @@ export default function StockManagement() {
   const { data: vehiculosRaw, loading } = useCollection(vehiculosQuery);
   
   const [searchTerm, setSearchTerm] = useState("");
-  const [isImporting, setIsImporting] = useState(false);
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   const vehiculos = useMemo(() => (vehiculosRaw || []) as any[], [vehiculosRaw]);
@@ -99,7 +99,6 @@ export default function StockManagement() {
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    setIsImporting(true);
     const reader = new FileReader();
     reader.onload = async (event) => {
       try {
@@ -122,8 +121,6 @@ export default function StockManagement() {
         toast({ title: "Importación finalizada" });
       } catch (error) {
         toast({ variant: "destructive", title: "Error Excel" });
-      } finally {
-        setIsImporting(false);
       }
     };
     reader.readAsArrayBuffer(file);
@@ -177,7 +174,7 @@ export default function StockManagement() {
         <QuickFilterCard type="terraza" label="TERRAZA" val={stats.terraza} color="text-[#00AEEF]" icon={MapPin} />
         <QuickFilterCard type="entreplanta" label="ENTREPLANTA" val={stats.entreplanta} color="text-secondary" icon={MapPin} />
         <QuickFilterCard type="entrega" label="ZONA ENTREGA" val={stats.entrega} color="text-emerald-600" icon={ArrowRightCircle} />
-        <QuickFilterCard type="lavadero" label="LAVADERO" val={stats.lavadero} color="text-blue-400" icon={Filter} />
+        <QuickFilterCard type="lavadero" label="LAVADERO" val={stats.lavadero} color="text-blue-400" icon={Droplets} />
         <QuickFilterCard type="aging" label="AGING > 60D" val={stats.aging} color="text-accent" icon={Clock} />
       </div>
 
