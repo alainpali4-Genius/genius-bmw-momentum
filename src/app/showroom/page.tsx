@@ -138,7 +138,7 @@ function ShowroomContent() {
         key={id}
         onClick={() => movingVehicleId ? handleSwapOrMove(movingVehicleId, id) : vehicle && setSelectedVehicle(vehicle)}
         className={cn(
-          "relative flex flex-col items-center justify-center transition-all aspect-square md:aspect-auto md:h-full w-full rounded-2xl border-2 overflow-hidden",
+          "relative flex flex-col items-center justify-center transition-all h-full w-full rounded-2xl border-2 overflow-hidden",
           vehicle ? "bg-white border-transparent shadow-sm cursor-pointer hover:shadow-md" : "bg-white/40 border-slate-100 border-dashed",
           isMovingTarget && "border-primary bg-primary/5 ring-4 ring-primary/20 scale-[1.02] z-30"
         )}
@@ -211,21 +211,21 @@ function ShowroomContent() {
         </div>
       </div>
 
-      {/* PLANO GRID */}
+      {/* PLANO GRID - DISEÑO OPTIMIZADO PARA PANTALLA ÚNICA */}
       <div className="flex-1 p-6 lg:p-8 overflow-hidden">
         <div className="h-full w-full max-w-[1600px] mx-auto flex flex-col gap-4">
           
-          {/* Fila superior P1-P4 */}
-          <div className="flex-[4] grid grid-cols-4 gap-4">
+          {/* Fila superior P1-P4 (Flex 1) */}
+          <div className="flex-1 grid grid-cols-4 gap-4 min-h-0">
             {["P1", "P2", "P3", "P4"].map(id => renderPlaza(id))}
           </div>
 
-          {/* Fila intermedia P5-P8 */}
-          <div className="flex-[4] grid grid-cols-4 gap-4">
+          {/* Fila intermedia P5-P8 (Flex 1) */}
+          <div className="flex-1 grid grid-cols-4 gap-4 min-h-0">
             {["P5", "P6", "P7", "P8"].map(id => renderPlaza(id))}
           </div>
 
-          {/* Pasillo central y Puestos Genius */}
+          {/* Pasillo central y Puestos Genius (Altura Fija) */}
           <div className="h-16 shrink-0 grid grid-cols-4 gap-4">
             {[1, 2, 3, 4].map(num => (
               <div key={num} className="bg-slate-100/40 border border-dashed border-slate-200 rounded-2xl flex items-center justify-center opacity-50 group hover:opacity-100 transition-opacity">
@@ -235,13 +235,13 @@ function ShowroomContent() {
             ))}
           </div>
 
-          {/* Fila inferior mixta P9-P12 y laterales */}
-          <div className="flex-[4] grid grid-cols-4 gap-4">
+          {/* Fila inferior mixta P9-P12 (Flex 1) */}
+          <div className="flex-1 grid grid-cols-4 gap-4 min-h-0">
             {["P9", "P10", "P11", "P12"].map(id => renderPlaza(id))}
           </div>
 
-          {/* Fila final P13-P15 */}
-          <div className="flex-[4] grid grid-cols-4 gap-4">
+          {/* Fila final P13-P15 + Espacio (Flex 1) */}
+          <div className="flex-1 grid grid-cols-4 gap-4 min-h-0">
             {renderPlaza("P13")}
             {renderPlaza("P14")}
             {renderPlaza("P15")}

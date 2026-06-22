@@ -33,7 +33,6 @@ export default function StockManagement() {
   const db = useFirestore();
   const { toast } = useToast();
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const vehiculosQuery = useMemo(() => query(collection(db, "vehiculos"), orderBy("createdAt", "desc")), [db]);
   const { data: vehiculosRaw, loading } = useCollection(vehiculosQuery);
@@ -131,6 +130,8 @@ export default function StockManagement() {
             <TableBody>
               {loading ? (
                 <TableRow><TableCell colSpan={6} className="py-20 text-center"><Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" /></TableCell></TableRow>
+              ) : filteredVehiculos.length === 0 ? (
+                <TableRow><TableCell colSpan={6} className="py-20 text-center text-slate-300 font-black uppercase text-[10px]">Sin resultados</TableCell></TableRow>
               ) : filteredVehiculos.map((car) => {
                 const days = car.fechaEntrada ? differenceInDays(new Date(), parseISO(car.fechaEntrada)) : 0;
                 const colorObj = BMW_COLORS.find(c => c.code === car.colorCodigo);
@@ -141,7 +142,7 @@ export default function StockManagement() {
                     <TableCell className="font-mono text-[10px] font-bold text-slate-400">{car.vin7}</TableCell>
                     <TableCell><Badge className={cn("text-[8px] font-black uppercase", car.ubicacion?.startsWith('P') ? "bg-primary text-white" : "bg-slate-100 text-secondary")}>{car.ubicacion}</Badge></TableCell>
                     <TableCell className="text-center font-black text-[9px]">{days}D</TableCell>
-                    <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); deleteDoc(doc(db, "vehiculos", car.id)); }}><Trash2 className="w-4 h-4 text-slate-300 hover:text-red-600" /></Button></TableCell>
+                    <TableCell className="text-right"><Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); if(confirm("¿Eliminar?")) deleteDoc(doc(db, "vehiculos", car.id)); }}><Trash2 className="w-4 h-4 text-slate-300 hover:text-red-600" /></Button></TableCell>
                   </TableRow>
                 );
               })}

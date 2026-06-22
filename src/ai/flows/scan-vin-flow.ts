@@ -1,8 +1,9 @@
+
 'use server';
 /**
  * @fileOverview Flujo de IA optimizado para detección de VIN y modelos BMW.
  * 
- * - scanVIN - Función para detectar VIN/VIN7 y modelo desde una imagen.
+ * - scanVIN - Función para detectar VIN/VIN7 y modelo desde una imagen de placa técnica.
  */
 
 import { ai } from '@/ai/genkit';
@@ -18,8 +19,8 @@ const ScanVINInputSchema = z.object({
 export type ScanVINInput = z.infer<typeof ScanVINInputSchema>;
 
 const ScanVINOutputSchema = z.object({
-  vin: z.string().describe('El número de bastidor (VIN) completo o VIN7 detectado.'),
-  modelo: z.string().describe('El modelo de vehículo detectado (ej. X1, i4, M3).'),
+  vin: z.string().describe('El número de bastidor (VIN) completo o VIN7 detectado (7 caracteres).'),
+  modelo: z.string().describe('El modelo de vehículo detectado (ej. X1, X5, Serie 3).'),
   confianza: z.number().describe('Nivel de confianza de la detección (0-1).'),
 });
 export type ScanVINOutput = z.infer<typeof ScanVINOutputSchema>;
@@ -32,16 +33,14 @@ const prompt = ai.definePrompt({
   name: 'scanVINPrompt',
   input: { schema: ScanVINInputSchema },
   output: { schema: ScanVINOutputSchema },
-  prompt: `Eres un experto en logística BMW para Momentum Navarra.
+  prompt: `Eres un experto en logística BMW. Tu misión es extraer el VIN7 (últimos 7 caracteres del bastidor) de la imagen.
   
-  Analiza la imagen para extraer el Número de Bastidor (VIN).
-  
-  REGLAS DE ORO:
-  1. El VIN7 (últimos 7 caracteres) es fundamental (ej. 7N12345).
-  2. Si no ves el VIN completo (17 caracteres), devuelve los 7 caracteres que identifiques como el VIN7.
-  3. Identifica el modelo si es legible en la placa o por la forma del vehículo (X1, X5, Serie 3, etc.).
-  4. Los VIN de BMW suelen empezar por WBA, WBS o WBY.
-  5. Ignora otros códigos de barras o números de pieza.
+  REGLAS ESTRICTAS:
+  1. El VIN7 suele tener un formato como '7N12345' (una letra seguida de 6 números) o similar.
+  2. Si ves el VIN completo (17 caracteres que empiezan por WBA, WBS o WBY), extráelo.
+  3. Si solo ves una parte, prioriza los últimos 7 caracteres.
+  4. Identifica el modelo si es legible (X1, X3, i4, M3, etc.).
+  5. Ignora cualquier otro texto, código de barras o número de pieza.
 
   Imagen: {{media url=photoDataUri}}`,
 });
