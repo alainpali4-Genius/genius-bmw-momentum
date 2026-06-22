@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useRef } from "react";
@@ -10,7 +11,9 @@ import {
   Car,
   Filter,
   X,
-  ArrowRightCircle
+  ArrowRightCircle,
+  MapPin,
+  Clock
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -132,17 +135,17 @@ export default function StockManagement() {
       <Card 
         onClick={() => setActiveFilter(isActive ? 'all' : type)}
         className={cn(
-          "premium-card border-none shadow-sm cursor-pointer transition-all active:scale-95 bg-white",
+          "premium-card border-none shadow-sm cursor-pointer transition-all active:scale-95 bg-white h-24 flex items-center",
           isActive && "ring-2 ring-primary bg-primary/5"
         )}
       >
-        <CardContent className="p-4">
+        <CardContent className="p-4 w-full">
           <p className={cn("text-[8px] font-black uppercase mb-1 tracking-widest", isActive ? "text-primary" : "text-slate-400")}>
             {label}
           </p>
           <div className="flex items-end justify-between">
             <p className={cn("text-xl font-black leading-none", color)}>{val}</p>
-            <Icon className={cn("w-4 h-4 opacity-10", isActive && "opacity-40 text-primary")} />
+            <Icon className={cn("w-5 h-5 opacity-10", isActive && "opacity-40 text-primary")} />
           </div>
         </CardContent>
       </Card>
@@ -171,11 +174,11 @@ export default function StockManagement() {
 
       <div className="grid grid-cols-2 md:grid-cols-6 gap-3 shrink-0">
         <QuickFilterCard type="exposicion" label="EXPOSICIÓN" val={stats.exposicion} color="text-primary" icon={Car} />
-        <QuickFilterCard type="terraza" label="TERRAZA" val={stats.terraza} color="text-[#00AEEF]" icon={Car} />
-        <QuickFilterCard type="entreplanta" label="ENTREPLANTA" val={stats.entreplanta} color="text-secondary" icon={Car} />
+        <QuickFilterCard type="terraza" label="TERRAZA" val={stats.terraza} color="text-[#00AEEF]" icon={MapPin} />
+        <QuickFilterCard type="entreplanta" label="ENTREPLANTA" val={stats.entreplanta} color="text-secondary" icon={MapPin} />
         <QuickFilterCard type="entrega" label="ZONA ENTREGA" val={stats.entrega} color="text-emerald-600" icon={ArrowRightCircle} />
         <QuickFilterCard type="lavadero" label="LAVADERO" val={stats.lavadero} color="text-blue-400" icon={Filter} />
-        <QuickFilterCard type="aging" label="AGING > 60D" val={stats.aging} color="text-accent" icon={Car} />
+        <QuickFilterCard type="aging" label="AGING > 60D" val={stats.aging} color="text-accent" icon={Clock} />
       </div>
 
       <div className="relative shrink-0">
@@ -204,6 +207,8 @@ export default function StockManagement() {
             <TableBody>
               {loading ? (
                 <TableRow><TableCell colSpan={6} className="py-20 text-center"><Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" /></TableCell></TableRow>
+              ) : filteredVehiculos.length === 0 ? (
+                <TableRow><TableCell colSpan={6} className="py-20 text-center text-[10px] font-black uppercase text-slate-300">No se encontraron vehículos</TableCell></TableRow>
               ) : filteredVehiculos.map((car) => {
                 const days = car.fechaEntrada ? differenceInDays(new Date(), parseISO(car.fechaEntrada)) : 0;
                 const colorObj = BMW_COLORS.find(c => c.code === car.colorCodigo || car.colorExterior?.includes(c.code));
