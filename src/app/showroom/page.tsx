@@ -43,6 +43,25 @@ const ESTADOS = ["Exposicion", "Stock", "Demo", "Reservado", "Preparacion Entreg
 const PLAZAS_LIST = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12", "P13", "P14", "P15"];
 const OTHER_LOCATIONS = ["Stock", "Terraza", "Entreplanta", "Lavadero", "Zona Entrega", "Taller", "Entregado"];
 
+// Mapeo explícito de posiciones para evitar que desaparezcan coches
+const GRID_POSITIONS: Record<string, string> = {
+  P1: "col-start-1 row-start-1",
+  P2: "col-start-2 row-start-1",
+  P3: "col-start-3 row-start-1",
+  P4: "col-start-4 row-start-1",
+  P5: "col-start-1 row-start-2",
+  P6: "col-start-2 row-start-2",
+  P7: "col-start-3 row-start-2",
+  P8: "col-start-4 row-start-2",
+  P9: "col-start-1 row-start-4",
+  P10: "col-start-2 row-start-4",
+  P11: "col-start-3 row-start-4",
+  P12: "col-start-4 row-start-4",
+  P13: "col-start-6 row-start-4 row-span-2", // Plaza vertical
+  P15: "col-start-2 row-start-5", // Bajo P10
+  P14: "col-start-4 row-start-5", // Bajo P12
+};
+
 function CarSilhouette({ bodyType, color, className, style }: { bodyType: string, color: string, className?: string, style?: React.CSSProperties }) {
   return (
     <svg 
@@ -59,16 +78,14 @@ function CarSilhouette({ bodyType, color, className, style }: { bodyType: string
           <stop offset="100%" stopColor="#1a1a1a" />
         </linearGradient>
       </defs>
-      <ellipse cx="50" cy="100" rx="48" ry="98" fill="black" opacity="0.15" />
+      <ellipse cx="50" cy="100" rx="48" ry="98" fill="black" opacity="0.25" />
       <path 
         d={bodyType === 'SUV' 
           ? "M10,15 Q10,2 30,2 L70,2 Q90,2 90,15 L95,60 Q95,85 92,185 Q90,198 75,198 L25,198 Q10,198 8,185 Q5,85 5,60 L10,15 Z"
-          : bodyType === 'Coupe'
-          ? "M20,10 Q20,0 35,0 L65,0 Q80,0 80,10 L92,70 Q92,95 86,190 Q82,200 65,200 L35,200 Q18,200 14,190 Q8,95 8,70 L20,10 Z"
           : "M15,12 Q15,2 32,2 L68,2 Q85,2 85,12 L92,65 Q92,90 88,190 Q85,200 68,200 L32,200 Q15,200 12,190 Q8,90 8,65 L15,12 Z"
         }
         fill={color} 
-        stroke="rgba(0,0,0,0.2)"
+        stroke="rgba(0,0,0,0.3)"
         strokeWidth="1.5"
       />
       <path d="M22,45 Q50,35 78,45 L75,80 Q50,70 25,80 Z" fill="url(#glassGrad)" />
@@ -151,7 +168,7 @@ function ShowroomContent() {
     const vehicle = vehiculos.find(v => v.ubicacion === id);
     const isMovingTarget = !!movingVehicleId && movingVehicleId !== vehicle?.id;
     const colorObj = BMW_COLORS.find(c => c.code === (vehicle?.colorCodigo || vehicle?.colorBMW));
-    const isP13 = id === 'P13';
+    const isVertical = id === 'P13';
     
     return (
       <div 
@@ -159,35 +176,36 @@ function ShowroomContent() {
         onClick={() => movingVehicleId ? handleSwapOrMove(movingVehicleId, id) : vehicle && setSelectedVehicle(vehicle)}
         className={cn(
           "relative flex flex-col items-center justify-center transition-all h-full w-full rounded-2xl overflow-hidden",
+          GRID_POSITIONS[id],
           vehicle ? "bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed border bg-white/30",
           isMovingTarget && "border-primary bg-primary/5 ring-4 ring-primary/20 z-50 scale-[1.02]",
-          isP13 && "border-[3px] border-secondary"
+          isVertical && "border-2 border-slate-800"
         )}
       >
         <div className="absolute top-2 left-2 z-30">
           <span className="text-[10px] font-black uppercase text-slate-300 tracking-tighter">{id}</span>
         </div>
         {vehicle ? (
-          <div className="w-full h-full flex items-center justify-center p-2">
+          <div className="w-full h-full flex items-center justify-center p-1">
             <div className={cn(
-              "relative flex items-center justify-center transition-all duration-500",
-              isP13 ? "h-[90%] w-auto" : "h-auto w-[90%] rotate-90"
+              "relative flex items-center justify-center transition-all duration-300",
+              isVertical ? "h-[90%] w-full" : "w-[90%] h-full rotate-90"
             )}>
               <CarSilhouette 
                 bodyType={vehicle.bodyType || 'SUV'} 
                 color={colorObj?.hex || '#CBD5E1'} 
-                className={cn("w-full h-full", isP13 ? "aspect-[1/2]" : "aspect-[2/1]")}
+                className="w-full h-full max-h-full max-w-full"
               />
               <div className={cn(
                 "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center",
-                isP13 ? "" : "-rotate-90" 
+                !isVertical && "-rotate-90" 
               )}>
-                 <p className="text-[10px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-tight mb-1 px-4 line-clamp-2">
+                 <p className="text-[9px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-none mb-1 px-4 line-clamp-2">
                    {vehicle.modelo}
                  </p>
                  <div className="flex flex-col items-center gap-0.5">
-                    <span className="text-[12px] font-mono font-black text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
-                    <Badge className="bg-black/60 text-white text-[9px] font-black border-none px-2 h-5 backdrop-blur-sm mt-1">
+                    <span className="text-[11px] font-mono font-black text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
+                    <Badge className="bg-black/60 text-white text-[8px] font-black border-none px-2 h-4 backdrop-blur-sm mt-0.5">
                       {colorObj?.code || '---'}
                     </Badge>
                  </div>
@@ -222,28 +240,10 @@ function ShowroomContent() {
       </div>
 
       <div className="flex-1 p-6 overflow-auto flex items-start justify-center">
-        <div className="w-full h-full max-w-[1600px] min-w-[1000px] min-h-[700px] grid grid-cols-6 grid-rows-5 gap-3">
-          {/* Fila 1 */}
-          {renderPlaza("P1")} {renderPlaza("P2")} {renderPlaza("P3")} {renderPlaza("P4")}
-          <div className="bg-transparent" /> <div className="bg-transparent" />
-
-          {/* Fila 2 */}
-          {renderPlaza("P5")} {renderPlaza("P6")} {renderPlaza("P7")} {renderPlaza("P8")}
-          <div className="bg-transparent" /> <div className="bg-transparent" />
-
-          {/* Fila 3: Pasillo */}
-          <div className="bg-transparent" /> <div className="bg-transparent" />
-          <div className="bg-transparent" /> <div className="bg-transparent" />
-          <div className="bg-transparent" /> <div className="bg-transparent" />
-
-          {/* Fila 4 */}
-          {renderPlaza("P9")} {renderPlaza("P10")} {renderPlaza("P11")} {renderPlaza("P12")}
-          <div className="bg-transparent" /> {renderPlaza("P13")}
-
-          {/* Fila 5: P15 bajo P10, P14 bajo P12 */}
-          <div className="bg-transparent" /> {renderPlaza("P15")}
-          <div className="bg-transparent" /> {renderPlaza("P14")}
-          <div className="bg-transparent" /> <div className="bg-transparent" />
+        <div className="w-full h-full max-w-[1600px] min-w-[1000px] grid grid-cols-6 grid-rows-5 gap-3">
+          {PLAZAS_LIST.map(id => renderPlaza(id))}
+          {/* Relleno de pasillo y zonas vacías para que el grid no colapse */}
+          <div className="col-start-5 row-start-1 row-span-5 border-l border-slate-100 border-dashed" />
         </div>
       </div>
 
@@ -254,36 +254,36 @@ function ShowroomContent() {
           </SheetHeader>
           {selectedVehicle && (
             <div className="flex flex-col">
-              <div className="bg-secondary p-6 text-white flex justify-between items-center shrink-0">
-                <div className="space-y-1">
+              <div className="bg-secondary p-5 text-white flex justify-between items-center shrink-0">
+                <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
                     <Badge className="bg-primary text-white text-[10px] font-black uppercase px-3 py-0.5 border-none">{selectedVehicle.estado}</Badge>
                     <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">VN • MOMENTUM</span>
                   </div>
-                  <h2 className="text-2xl font-black uppercase italic tracking-tighter leading-none">{selectedVehicle.modelo}</h2>
-                  <p className="text-white/40 font-mono text-[10px] font-bold tracking-widest">VIN: {selectedVehicle.vin}</p>
+                  <h2 className="text-xl font-black uppercase italic tracking-tighter leading-none">{selectedVehicle.modelo}</h2>
+                  <p className="text-white/40 font-mono text-[9px] font-bold tracking-widest">VIN: {selectedVehicle.vin}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="ghost" onClick={() => { setMovingVehicleId(selectedVehicle.id); setSelectedVehicle(null); }} className="h-12 w-12 rounded-xl bg-white/5 text-white hover:bg-white/10">
-                    <Move className="w-5 h-5" />
+                  <Button variant="ghost" onClick={() => { setMovingVehicleId(selectedVehicle.id); setSelectedVehicle(null); }} className="h-10 w-10 rounded-xl bg-white/5 text-white hover:bg-white/10">
+                    <Move className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" onClick={() => setSelectedVehicle(null)} className="h-12 w-12 rounded-xl bg-white/5 text-white hover:bg-white/10">
-                    <X className="w-5 h-5" />
+                  <Button variant="ghost" onClick={() => setSelectedVehicle(null)} className="h-10 w-10 rounded-xl bg-white/5 text-white hover:bg-white/10">
+                    <X className="w-4 h-4" />
                   </Button>
                 </div>
               </div>
-              <div className="p-8 grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="space-y-2">
+              <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] px-1">ESTADO OPERATIVO</Label>
                   <Select value={selectedVehicle.estado} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { estado: v })}>
-                    <SelectTrigger className="h-12 bg-slate-50 border-none rounded-xl font-black uppercase text-[10px] shadow-sm"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-black uppercase text-[10px] shadow-sm"><SelectValue /></SelectTrigger>
                     <SelectContent className="rounded-xl border-none shadow-2xl">{ESTADOS.map(e => <SelectItem key={e} value={e} className="text-[10px] font-bold">{e.toUpperCase()}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] px-1">UBICACIÓN ACTUAL</Label>
                   <Select value={selectedVehicle.ubicacion} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { ubicacion: v })}>
-                    <SelectTrigger className="h-12 bg-slate-50 border-none rounded-xl font-black uppercase text-[10px] shadow-sm"><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-black uppercase text-[10px] shadow-sm"><SelectValue /></SelectTrigger>
                     <SelectContent className="rounded-xl border-none shadow-2xl max-h-[300px]">
                       {PLAZAS_LIST.map(p => <SelectItem key={p} value={p} className="text-[10px] font-bold">{p}</SelectItem>)}
                       <Separator className="my-2" />
@@ -291,10 +291,10 @@ function ShowroomContent() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] px-1">COLOR OFICIAL BMW</Label>
                   <Select value={selectedVehicle.colorCodigo || selectedVehicle.colorBMW} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { colorCodigo: v })}>
-                    <SelectTrigger className="h-12 bg-slate-50 border-none rounded-xl font-black uppercase text-[10px] shadow-sm">
+                    <SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-black uppercase text-[10px] shadow-sm">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border-none shadow-2xl max-h-[300px]">
@@ -310,8 +310,8 @@ function ShowroomContent() {
                   </Select>
                 </div>
                 <div className="flex items-end">
-                  <Button variant="destructive" className="h-12 w-full rounded-xl font-black uppercase text-[10px] shadow-lg border-none hover:bg-red-700 transition-all active:scale-95" onClick={() => { if(confirm("¿Eliminar este registro permanentemente?")) { deleteDoc(doc(db, "vehiculos", selectedVehicle.id)); setSelectedVehicle(null); } }}>
-                    <Trash2 className="w-4 h-4 mr-2" /> ELIMINAR REGISTRO
+                  <Button variant="destructive" className="h-10 w-full rounded-xl font-black uppercase text-[10px] shadow-lg border-none hover:bg-red-700 transition-all active:scale-95" onClick={() => { if(confirm("¿Eliminar este registro permanentemente?")) { deleteDoc(doc(db, "vehiculos", selectedVehicle.id)); setSelectedVehicle(null); } }}>
+                    <Trash2 className="w-3.5 h-3.5 mr-2" /> ELIMINAR REGISTRO
                   </Button>
                 </div>
               </div>
