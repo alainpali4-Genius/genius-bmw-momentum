@@ -185,10 +185,10 @@ function ShowroomContent() {
           <span className="text-[10px] font-black uppercase text-slate-300 tracking-tighter">{id}</span>
         </div>
         {vehicle ? (
-          <div className="w-full h-full flex items-center justify-center p-0.5">
+          <div className="w-full h-full flex items-center justify-center p-1">
             <div className={cn(
               "relative flex items-center justify-center transition-all duration-300",
-              isVertical ? "h-[92%] w-full" : "w-[115%] h-full rotate-90"
+              isVertical ? "h-[85%] w-[90%]" : "w-[145%] h-[120%] rotate-90"
             )}>
               <CarSilhouette 
                 bodyType={vehicle.bodyType || 'SUV'} 
@@ -196,15 +196,15 @@ function ShowroomContent() {
                 className="w-full h-full max-h-full max-w-full"
               />
               <div className={cn(
-                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-4",
+                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-6",
                 !isVertical && "-rotate-90" 
               )}>
-                 <p className="text-[10px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-none mb-1 line-clamp-2 max-w-[85%]">
+                 <p className="text-[11px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-none mb-1 line-clamp-2 max-w-[85%]">
                    {vehicle.modelo}
                  </p>
                  <div className="flex flex-col items-center gap-0.5">
-                    <span className="text-[12px] font-mono font-black text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
-                    <Badge className="bg-black/60 text-white text-[8px] font-black border-none px-2 h-4 backdrop-blur-sm mt-0.5">
+                    <span className="text-[13px] font-mono font-black text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
+                    <Badge className="bg-black/60 text-white text-[9px] font-black border-none px-2 h-4 backdrop-blur-sm mt-0.5">
                       {colorObj?.code || '---'}
                     </Badge>
                  </div>
