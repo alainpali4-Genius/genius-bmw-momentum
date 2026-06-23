@@ -168,6 +168,7 @@ function ShowroomContent() {
     const isMovingTarget = !!movingVehicleId && movingVehicleId !== vehicle?.id;
     const colorObj = BMW_COLORS.find(c => c.code === (vehicle?.colorCodigo || vehicle?.colorBMW));
     const isVertical = id === 'P13';
+    const isP15 = id === 'P15';
     
     return (
       <div 
@@ -178,7 +179,8 @@ function ShowroomContent() {
           GRID_POSITIONS[id],
           vehicle ? "bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed border bg-white/30",
           isMovingTarget && "border-primary bg-primary/5 ring-4 ring-primary/20 z-50 scale-[1.02]",
-          isVertical && "border-4 border-slate-900 shadow-[inset_0_0_15px_rgba(0,0,0,0.1)]"
+          isVertical && "border-4 border-[#00AEEF] shadow-[0_0_20px_rgba(0,174,239,0.2)]",
+          isP15 && "border-4 border-[#ED1C24] shadow-[0_0_20px_rgba(237,28,36,0.15)]"
         )}
       >
         <div className="absolute top-2 left-2 z-30">
