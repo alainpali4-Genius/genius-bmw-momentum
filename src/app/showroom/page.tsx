@@ -65,8 +65,10 @@ function CarSilhouette({ bodyType, color, className }: { bodyType: string, color
         stroke="rgba(0,0,0,0.2)"
         strokeWidth="1.5"
       />
+      {/* Detalles lunas y capó */}
       <path d="M22,45 Q50,35 78,45 L75,80 Q50,70 25,80 Z" fill="url(#glassGrad)" />
       <path d="M28,150 Q50,160 72,150 L68,180 Q50,188 32,180 Z" fill="url(#glassGrad)" />
+      {/* Espejos */}
       <path d="M8,60 L1,67 Q-2,71 1,77 L8,73 Z" fill={color} filter="brightness(0.7)" />
       <path d="M92,60 L99,67 Q102,71 99,77 L92,73 Z" fill={color} filter="brightness(0.7)" />
     </svg>
@@ -137,6 +139,7 @@ function ShowroomContent() {
     const isMovingTarget = !!movingVehicleId && movingVehicleId !== vehicle?.id;
     const colorObj = BMW_COLORS.find(c => c.code === (vehicle?.colorCodigo || vehicle?.colorBMW));
     const isP13 = id === 'P13';
+    const isP15 = id === 'P15';
 
     return (
       <div 
@@ -161,18 +164,21 @@ function ShowroomContent() {
               <CarSilhouette 
                 bodyType={vehicle.bodyType || 'SUV'} 
                 color={colorObj?.hex || '#CBD5E1'} 
-                className={cn("transition-all", isP13 ? "h-[85%] w-auto" : "scale-[1.2]")} 
+                className={cn(
+                  "transition-all", 
+                  isP13 ? "h-[80%] w-auto" : (isP15 ? "scale-[1.2]" : "scale-[0.85]")
+                )} 
               />
               <div className={cn(
                 "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center",
                 isP13 ? "rotate-0 px-2" : "-rotate-90 px-12" 
               )}>
-                 <p className="text-[10px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-none mb-1 max-w-[100px] line-clamp-2">
+                 <p className="text-[9px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-none mb-1 max-w-[100px] line-clamp-2">
                    {vehicle.modelo}
                  </p>
                  <div className="flex flex-col items-center gap-0.5">
                     <span className="text-[10px] font-mono font-black text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
-                    <Badge className="bg-black/60 text-white text-[9px] font-black border-none px-2 h-4 backdrop-blur-sm">
+                    <Badge className="bg-black/60 text-white text-[8px] font-black border-none px-2 h-4 backdrop-blur-sm">
                       {colorObj?.code || '---'}
                     </Badge>
                  </div>
