@@ -146,29 +146,28 @@ function ShowroomContent() {
           "relative flex flex-col items-center justify-center transition-all h-full w-full rounded-2xl border overflow-hidden",
           vehicle ? "border-transparent bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed bg-white/30",
           isMovingTarget && "border-primary bg-primary/5 ring-4 ring-primary/20 z-50 scale-[1.02]",
-          isP13 && "row-span-2 bg-slate-50/50" 
         )}
       >
-        <div className="absolute top-2 left-3 z-30">
+        <div className="absolute top-2 left-2 z-30">
           <span className="text-[10px] font-black uppercase text-slate-300 tracking-tighter">{id}</span>
         </div>
         {vehicle ? (
-          <div className="w-full h-full flex flex-col items-center justify-center p-1 relative overflow-hidden">
+          <div className="w-full h-full flex flex-col items-center justify-center p-0.5 relative overflow-hidden">
             <div className={cn(
               "w-[180%] h-[180%] flex items-center justify-center relative transition-transform duration-500",
               isP13 ? "rotate-0" : "rotate-90" 
             )}>
-              <CarSilhouette bodyType={vehicle.bodyType || 'SUV'} color={colorObj?.hex || '#CBD5E1'} />
+              <CarSilhouette bodyType={vehicle.bodyType || 'SUV'} color={colorObj?.hex || '#CBD5E1'} className="scale-[1.1]" />
               <div className={cn(
-                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-8 text-center",
+                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-12 text-center",
                 isP13 ? "rotate-0" : "-rotate-90" 
               )}>
-                 <p className="text-[13px] font-black uppercase text-white drop-shadow-[0_2px_5px_rgba(0,0,0,1)] leading-none mb-1.5 max-w-[120px] line-clamp-2">
+                 <p className="text-[10px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-none mb-1 max-w-[100px] line-clamp-2">
                    {vehicle.modelo}
                  </p>
-                 <div className="flex flex-col items-center gap-1 mt-1">
-                    <span className="text-[12px] font-mono font-black text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
-                    <Badge className="bg-black/70 text-white text-[11px] font-black border-none px-3 h-5 backdrop-blur-md">
+                 <div className="flex flex-col items-center gap-0.5">
+                    <span className="text-[10px] font-mono font-black text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
+                    <Badge className="bg-black/60 text-white text-[9px] font-black border-none px-2 h-4 backdrop-blur-sm">
                       {colorObj?.code || '---'}
                     </Badge>
                  </div>
@@ -212,7 +211,7 @@ function ShowroomContent() {
           {renderPlaza("P5")} {renderPlaza("P6")} {renderPlaza("P7")} {renderPlaza("P8")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
 
-          {/* Fila 3 (Pasillo central - Limpio) */}
+          {/* Fila 3 (Pasillo central) */}
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
@@ -221,7 +220,7 @@ function ShowroomContent() {
           {renderPlaza("P9")} {renderPlaza("P10")} {renderPlaza("P11")} {renderPlaza("P12")}
           <div className="bg-transparent" /> {renderPlaza("P13")}
 
-          {/* Fila 5: P15 bajo P10, P14 bajo P12, P13 continúa por row-span */}
+          {/* Fila 5: P15 bajo P10, P14 bajo P12 */}
           <div className="bg-transparent" /> {renderPlaza("P15")}
           <div className="bg-transparent" /> {renderPlaza("P14")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
