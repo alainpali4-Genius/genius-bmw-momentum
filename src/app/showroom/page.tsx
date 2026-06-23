@@ -45,38 +45,37 @@ const OTHER_LOCATIONS = ["Stock", "Terraza", "Entreplanta", "Lavadero", "Zona En
 
 function CarSilhouette({ bodyType, color, className }: { bodyType: string, color: string, className?: string }) {
   return (
-    <svg viewBox="0 0 100 220" className={cn("w-full h-full drop-shadow-2xl", className)} xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 100 200" className={cn("w-full h-full drop-shadow-xl", className)} xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="glassGrad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="#1a1a1a" />
-          <stop offset="50%" stopColor="#333" />
+          <stop offset="50%" stopColor="#444" />
           <stop offset="100%" stopColor="#1a1a1a" />
         </linearGradient>
       </defs>
       {/* Sombra proyectada */}
-      <ellipse cx="50" cy="110" rx="46" ry="105" fill="black" opacity="0.15" />
+      <ellipse cx="50" cy="100" rx="48" ry="98" fill="black" opacity="0.1" />
       
-      {/* Cuerpo del vehículo con mayor detalle */}
+      {/* Cuerpo del vehículo maximizado */}
       <path 
         d={bodyType === 'SUV' 
-          ? "M15,12 Q15,2 30,2 L70,2 Q85,2 85,12 L92,55 Q92,75 88,195 Q85,218 70,218 L30,218 Q15,218 12,195 Q8,75 8,55 L15,12 Z"
+          ? "M10,15 Q10,2 30,2 L70,2 Q90,2 90,15 L95,60 Q95,85 92,185 Q90,198 75,198 L25,198 Q10,198 8,185 Q5,85 5,60 L10,15 Z"
           : bodyType === 'Coupe'
-          ? "M22,8 Q22,0 35,0 L65,0 Q78,0 78,8 L88,65 Q88,85 82,195 Q78,218 65,218 L35,218 Q22,218 18,195 Q12,85 12,65 L22,8 Z"
-          : "M18,10 Q18,2 32,2 L68,2 Q82,2 82,10 L88,60 Q88,80 84,200 Q80,218 68,218 L32,218 Q20,218 16,200 Q12,80 12,60 L18,10 Z"
+          ? "M20,10 Q20,0 35,0 L65,0 Q80,0 80,10 L92,70 Q92,95 86,190 Q82,200 65,200 L35,200 Q18,200 14,190 Q8,95 8,70 L20,10 Z"
+          : "M15,12 Q15,2 32,2 L68,2 Q85,2 85,12 L92,65 Q92,90 88,190 Q85,200 68,200 L32,200 Q15,200 12,190 Q8,90 8,65 L15,12 Z"
         }
         fill={color} 
-        stroke="rgba(0,0,0,0.2)"
+        stroke="rgba(0,0,0,0.15)"
         strokeWidth="1.5"
       />
       
       {/* Lunas y Techo */}
-      <path d="M24,55 Q50,45 76,55 L72,95 Q50,85 28,95 Z" fill="url(#glassGrad)" />
-      <path d="M28,100 L72,100 Q72,130 68,170 L32,170 Q28,130 28,100 Z" fill="rgba(0,0,0,0.1)" />
-      <path d="M32,175 Q50,185 68,175 L65,205 Q50,212 35,205 Z" fill="url(#glassGrad)" />
+      <path d="M22,50 Q50,40 78,50 L75,85 Q50,75 25,85 Z" fill="url(#glassGrad)" />
+      <path d="M28,155 Q50,165 72,155 L68,185 Q50,192 32,185 Z" fill="url(#glassGrad)" />
       
       {/* Retrovisores */}
-      <path d="M12,70 L2,78 Q0,82 2,88 L12,84 Z" fill={color} filter="brightness(0.8)" />
-      <path d="M88,70 L98,78 Q100,82 98,88 L88,84 Z" fill={color} filter="brightness(0.8)" />
+      <path d="M8,65 L1,72 Q-2,76 1,82 L8,78 Z" fill={color} filter="brightness(0.7)" />
+      <path d="M92,65 L99,72 Q102,76 99,82 L92,78 Z" fill={color} filter="brightness(0.7)" />
     </svg>
   );
 }
@@ -159,17 +158,17 @@ function ShowroomContent() {
           <span className="text-[10px] font-black uppercase text-slate-300 tracking-tighter">{id}</span>
         </div>
         {vehicle ? (
-          <div className="w-full h-full flex flex-col items-center justify-center p-1 relative overflow-visible">
-            <div className="w-[110%] h-[110%] rotate-90 flex items-center justify-center relative">
+          <div className="w-full h-full flex flex-col items-center justify-center p-0 relative overflow-visible">
+            <div className="w-[140%] h-[140%] rotate-90 flex items-center justify-center relative">
               <CarSilhouette bodyType={vehicle.bodyType || 'SUV'} color={colorObj?.hex || '#CBD5E1'} />
-              {/* Información dentro del coche con máxima legibilidad */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center -rotate-90 pointer-events-none px-4 text-center">
-                 <p className="text-[10px] font-black uppercase text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] leading-none mb-1 line-clamp-2 max-w-[80px]">
+              {/* Información dentro del coche maximizada */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center -rotate-90 pointer-events-none px-6 text-center">
+                 <p className="text-[11px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-none mb-1 max-w-[90px] line-clamp-2">
                    {vehicle.modelo}
                  </p>
-                 <div className="flex flex-col items-center gap-0.5">
-                    <span className="text-[9px] font-mono font-bold text-white drop-shadow-[0_1.5px_1.5px_rgba(0,0,0,0.8)]">{vehicle.vin7}</span>
-                    <Badge className="bg-black/40 text-white text-[8px] font-black border-none px-2 h-4 backdrop-blur-sm">
+                 <div className="flex flex-col items-center gap-0.5 mt-1">
+                    <span className="text-[10px] font-mono font-bold text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
+                    <Badge className="bg-black/60 text-white text-[9px] font-black border-none px-2 h-4 backdrop-blur-md">
                       {colorObj?.code || '---'}
                     </Badge>
                  </div>
@@ -204,8 +203,8 @@ function ShowroomContent() {
       </div>
 
       <div className="flex-1 p-6 overflow-hidden flex items-center justify-center">
-        {/* Grid de 6 columnas y 5 filas para respetar pasillos y alineación P14/P15 */}
-        <div className="w-full h-full max-[1600px] grid grid-cols-6 grid-rows-5 gap-3">
+        {/* Grid Blindado: 6 columnas para asegurar alineación vertical y pasillo */}
+        <div className="w-full h-full max-w-[1600px] grid grid-cols-6 grid-rows-5 gap-3">
           {/* Fila 1 */}
           {renderPlaza("P1")} {renderPlaza("P2")} {renderPlaza("P3")} {renderPlaza("P4")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
@@ -214,7 +213,7 @@ function ShowroomContent() {
           {renderPlaza("P5")} {renderPlaza("P6")} {renderPlaza("P7")} {renderPlaza("P8")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
 
-          {/* Fila 3: Pasillo / Genius */}
+          {/* Fila 3: Espacio central limpio */}
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
@@ -223,7 +222,7 @@ function ShowroomContent() {
           {renderPlaza("P9")} {renderPlaza("P10")} {renderPlaza("P11")} {renderPlaza("P12")}
           <div className="bg-transparent" /> {renderPlaza("P13")}
 
-          {/* Fila 5: P15 y P14 paralelos a P10 y P12 */}
+          {/* Fila 5: P15 y P14 alineadas bajo P10 y P12 */}
           <div className="bg-transparent" /> {renderPlaza("P15")}
           <div className="bg-transparent" /> {renderPlaza("P14")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
@@ -237,7 +236,7 @@ function ShowroomContent() {
           </SheetHeader>
           {selectedVehicle && (
             <div className="flex flex-col h-full">
-              <div className="bg-secondary p-8 text-white flex justify-between items-end">
+              <div className="bg-secondary p-8 text-white flex justify-between items-end shrink-0">
                 <div className="space-y-2">
                   <Badge className="bg-primary text-white text-[11px] font-black uppercase px-4 py-1">{selectedVehicle.estado}</Badge>
                   <h2 className="text-3xl font-black uppercase italic tracking-tighter leading-none">{selectedVehicle.modelo}</h2>
@@ -252,7 +251,7 @@ function ShowroomContent() {
                   </Button>
                 </div>
               </div>
-              <div className="p-10 grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="p-10 grid grid-cols-1 md:grid-cols-3 gap-8 overflow-y-auto">
                 <div className="space-y-3">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Actualizar Estado</Label>
                   <Select value={selectedVehicle.estado} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { estado: v })}>
