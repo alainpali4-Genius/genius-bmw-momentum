@@ -11,8 +11,8 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, doc, updateDoc, deleteDoc, addDoc, query, orderBy } from "firebase/firestore";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -50,25 +50,18 @@ function CarSilhouette({ bodyType, color, className }: { bodyType: string, color
   const getPath = () => {
     switch (bodyType) {
       case 'SUV':
-        // SUV: Más ancho y robusto
         return "M25,5 C15,5 10,15 10,25 L10,75 C10,85 15,95 25,95 L75,95 C85,95 90,85 90,75 L90,25 C90,15 85,5 75,5 Z M20,25 L80,25 L75,45 L25,45 Z M22,55 L78,55 L80,85 L20,85 Z";
       case 'Coupe':
-        // Coupe: Más estilizado, habitáculo corto
         return "M35,5 L65,5 C75,5 85,15 85,30 L85,70 C85,85 75,95 65,95 L35,95 C25,95 15,85 15,70 L15,30 C15,15 25,5 35,5 Z M20,35 L80,35 L75,55 L25,55 Z M30,12 L70,12 L70,25 L30,25 Z";
       case 'Berlina':
       default:
-        // Berlina estándar
         return "M30,5 L70,5 C80,5 88,12 88,25 L88,75 C88,88 80,95 70,95 L30,95 C20,95 12,88 12,75 L12,25 C12,12 20,5 30,5 Z M18,28 L82,28 L78,48 L22,48 Z M20,60 L80,60 L82,88 L18,88 Z";
     }
   };
 
   return (
-    <svg viewBox="0 0 100 100" className={cn("w-full h-full drop-shadow-lg", className)} fill={color}>
-      {/* Cuerpo principal */}
-      <path d={getPath()} fillOpacity="1" />
-      {/* Detalles de cristales (negro suave) */}
-      <path d="M25,30 L75,30 L70,45 L30,45 Z" fill="black" fillOpacity="0.15" />
-      <path d="M25,65 L75,65 L78,80 L22,80 Z" fill="black" fillOpacity="0.15" />
+    <svg viewBox="0 0 100 100" className={cn("w-full h-full drop-shadow-md", className)} fill={color}>
+      <path d={getPath()} />
     </svg>
   );
 }
@@ -109,7 +102,6 @@ function ShowroomContent() {
 
     let finalUpdates = { ...updates, updatedAt: new Date().toISOString() };
     
-    // Si el estado cambia y ya no es exposición, liberamos la plaza
     if (updates.estado && updates.estado !== 'Exposicion' && PLAZAS_LIST.includes(vehicle.ubicacion)) {
       finalUpdates.ubicacion = 'Stock';
       toast({ title: "Vehículo Movido a Stock", description: "Plaza liberada automáticamente por cambio de estado." });
@@ -137,13 +129,11 @@ function ShowroomContent() {
     const targetCar = vehiculos.find(v => v.ubicacion === targetPlaza);
 
     if (targetCar && targetCar.id !== sourceId) {
-      // Intercambio
       const oldLocation = PLAZAS_LIST.includes(sourceCar?.ubicacion) ? sourceCar.ubicacion : 'Stock';
       handleUpdateVehicle(sourceId, { ubicacion: targetPlaza, estado: 'Exposicion' });
       handleUpdateVehicle(targetCar.id, { ubicacion: oldLocation });
       toast({ title: "Intercambio Realizado", description: `Vehículos permutados entre plazas.` });
     } else {
-      // Movimiento simple
       handleUpdateVehicle(sourceId, { ubicacion: targetPlaza, estado: 'Exposicion' });
       toast({ title: "Vehículo Ubicado", description: `Asignado a la plaza ${targetPlaza}.` });
     }
@@ -170,7 +160,7 @@ function ShowroomContent() {
         </div>
         {vehicle ? (
           <div className="w-full h-full flex flex-col items-center justify-center p-3">
-            <div className="w-[85%] h-[65%] mb-2 rotate-90 flex items-center justify-center">
+            <div className="w-[85%] h-[60%] mb-2 rotate-90 flex items-center justify-center">
               <CarSilhouette bodyType={vehicle.bodyType || 'SUV'} color={colorObj?.hex || '#CBD5E1'} />
             </div>
             <div className="text-center px-1">
@@ -186,11 +176,7 @@ function ShowroomContent() {
   };
 
   const renderPasilloVertical = () => (
-    <div className="h-full w-full flex flex-col items-center justify-center bg-slate-50/50 border-x border-dashed border-slate-100">
-      <div className="rotate-90 flex items-center gap-2">
-        <span className="text-[8px] font-black uppercase tracking-[0.6em] text-slate-200">PASILLO</span>
-      </div>
-    </div>
+    <div className="h-full w-full flex flex-col items-center justify-center bg-slate-50/20 border-x border-dashed border-slate-100/10" />
   );
 
   const renderPuestoGenius = (num: number) => (
@@ -202,7 +188,6 @@ function ShowroomContent() {
 
   return (
     <div className="flex flex-col h-screen bg-[#f4f7fa] overflow-hidden">
-      {/* Header */}
       <div className="bg-white border-b px-8 py-5 flex items-center justify-between shrink-0 shadow-sm z-40">
         <div className="flex flex-col">
           <h1 className="text-2xl font-black text-secondary uppercase italic leading-none tracking-tighter">PLANO <span className="text-primary not-italic">EXPOSICIÓN</span></h1>
@@ -223,11 +208,9 @@ function ShowroomContent() {
         </div>
       </div>
 
-      {/* Grid de Plano */}
       <div className="flex-1 p-6 overflow-hidden flex items-center justify-center">
         <div className="w-full h-full max-w-[1400px] grid grid-rows-5 gap-3">
-          
-          {/* Fila 1 */}
+          {/* Fila 1: P1-P4 | Pasillo | Nada */}
           <div className="grid grid-cols-6 gap-3">
             {renderPlaza("P1")}
             {renderPlaza("P2")}
@@ -237,7 +220,7 @@ function ShowroomContent() {
             <div className="bg-transparent"></div>
           </div>
 
-          {/* Fila 2 */}
+          {/* Fila 2: P5-P8 | Pasillo | Nada */}
           <div className="grid grid-cols-6 gap-3">
             {renderPlaza("P5")}
             {renderPlaza("P6")}
@@ -247,7 +230,7 @@ function ShowroomContent() {
             <div className="bg-transparent"></div>
           </div>
 
-          {/* Fila 3: Mesas Genius */}
+          {/* Fila 3: Mesas 1-4 | Pasillo | Nada */}
           <div className="grid grid-cols-6 gap-3">
             {renderPuestoGenius(1)}
             {renderPuestoGenius(2)}
@@ -257,7 +240,7 @@ function ShowroomContent() {
             <div className="bg-transparent"></div>
           </div>
 
-          {/* Fila 4 */}
+          {/* Fila 4: P9-P12 | Pasillo | P13 */}
           <div className="grid grid-cols-6 gap-3">
             {renderPlaza("P9")}
             {renderPlaza("P10")}
@@ -267,7 +250,7 @@ function ShowroomContent() {
             {renderPlaza("P13")}
           </div>
 
-          {/* Fila 5: P14 y P15 paralelas a P12 y P10 a la izquierda del pasillo */}
+          {/* Fila 5: Nada, P15 (bajo P10), Nada, P14 (bajo P12) | Pasillo | Nada */}
           <div className="grid grid-cols-6 gap-3">
             <div className="bg-transparent"></div>
             {renderPlaza("P15")}
@@ -276,13 +259,15 @@ function ShowroomContent() {
             {renderPasilloVertical()}
             <div className="bg-transparent"></div>
           </div>
-
         </div>
       </div>
 
       {/* Detalles del Vehículo */}
       <Sheet open={!!selectedVehicle} onOpenChange={o => !o && setSelectedVehicle(null)}>
         <SheetContent side="bottom" className="h-[55vh] p-0 rounded-t-[3rem] border-none shadow-2xl overflow-hidden bg-slate-50">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Detalles del Vehículo</SheetTitle>
+          </SheetHeader>
           {selectedVehicle && (
             <div className="flex flex-col h-full">
               <div className="bg-secondary p-8 text-white flex justify-between items-end shrink-0">
@@ -337,6 +322,9 @@ function ShowroomContent() {
       {/* Stock Sidebar */}
       <Sheet open={isStockSheetOpen} onOpenChange={setIsStockSheetOpen}>
         <SheetContent side="right" className="w-[380px] p-0 border-none bg-white shadow-2xl">
+          <SheetHeader className="sr-only">
+            <SheetTitle>Stock Disponible</SheetTitle>
+          </SheetHeader>
           <div className="p-8 bg-slate-50 border-b flex flex-col gap-2">
             <h3 className="text-2xl font-black uppercase italic text-secondary leading-none">VEHÍCULOS <span className="text-primary not-italic">STOCK</span></h3>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">DISPONIBLES PARA EXPOSICIÓN</p>
@@ -366,7 +354,10 @@ function ShowroomContent() {
       {/* Nuevo Vehículo Dialog */}
       <Dialog open={isAddingNew} onOpenChange={setIsAddingNew}>
         <DialogContent className="p-0 border-none rounded-[2rem] overflow-hidden max-w-md shadow-2xl">
-          <div className="p-6 bg-secondary text-white font-black uppercase italic tracking-widest">NUEVO VEHÍCULO VN</div>
+          <DialogHeader className="sr-only">
+            <DialogTitle>Añadir Nuevo Vehículo</DialogTitle>
+          </DialogHeader>
+          <div className="p-6 bg-secondary text-white font-black uppercase italic tracking-widest text-center">NUEVO VEHÍCULO VN</div>
           <div className="p-8 space-y-5 bg-white">
             <div className="space-y-1">
               <Label className="text-[9px] font-black uppercase text-slate-400 px-1">Modelo</Label>
