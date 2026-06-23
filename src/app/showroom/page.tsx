@@ -43,9 +43,9 @@ const ESTADOS = ["Exposicion", "Stock", "Demo", "Reservado", "Preparacion Entreg
 const PLAZAS_LIST = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12", "P13", "P14", "P15"];
 const OTHER_LOCATIONS = ["Stock", "Terraza", "Entreplanta", "Lavadero", "Zona Entrega", "Taller", "Entregado"];
 
-function CarSilhouette({ bodyType, color, className }: { bodyType: string, color: string, className?: string }) {
+function CarSilhouette({ bodyType, color, className, style }: { bodyType: string, color: string, className?: string, style?: React.CSSProperties }) {
   return (
-    <svg viewBox="0 0 100 200" className={cn("w-full h-full drop-shadow-2xl", className)} xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 100 200" className={cn("w-full h-full drop-shadow-2xl", className)} style={style} xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="glassGrad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="#1a1a1a" />
@@ -107,7 +107,6 @@ function ShowroomContent() {
 
     let finalUpdates = { ...updates, updatedAt: new Date().toISOString() };
     
-    // Si se cambia el color, actualizamos también el nombre del color
     if (updates.colorCodigo) {
       const newColor = BMW_COLORS.find(c => c.code === updates.colorCodigo);
       if (newColor) {
@@ -147,10 +146,9 @@ function ShowroomContent() {
     const isMovingTarget = !!movingVehicleId && movingVehicleId !== vehicle?.id;
     const colorObj = BMW_COLORS.find(c => c.code === (vehicle?.colorCodigo || vehicle?.colorBMW));
     const isP13 = id === 'P13';
-    const isP15 = id === 'P15';
-
-    // Escala dinámica solicitada
-    const scale = isP15 ? 0.95 : isP13 ? 0.88 : 0.85;
+    
+    // Escala general reducida para limpieza, P13 algo mayor para rellenar su plataforma vertical
+    const scale = isP13 ? 0.90 : 0.85;
 
     return (
       <div 
@@ -160,7 +158,7 @@ function ShowroomContent() {
           "relative flex flex-col items-center justify-center transition-all h-full w-full rounded-2xl overflow-hidden",
           vehicle ? "bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed border bg-white/30",
           isMovingTarget && "border-primary bg-primary/5 ring-4 ring-primary/20 z-50 scale-[1.02]",
-          isP13 && "border-[3px] border-secondary h-full self-center"
+          isP13 && "border-[3px] border-secondary"
         )}
       >
         <div className="absolute top-2 left-2 z-30">
@@ -176,7 +174,10 @@ function ShowroomContent() {
                 bodyType={vehicle.bodyType || 'SUV'} 
                 color={colorObj?.hex || '#CBD5E1'} 
                 className="transition-all"
-                style={{ height: isP13 ? `${scale * 100}%` : 'auto', width: isP13 ? 'auto' : `${scale * 100}%` }}
+                style={{ 
+                  height: isP13 ? `${scale * 100}%` : 'auto', 
+                  width: isP13 ? 'auto' : `${scale * 100}%` 
+                }}
               />
               <div className={cn(
                 "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center",
@@ -221,8 +222,8 @@ function ShowroomContent() {
         </div>
       </div>
 
-      <div className="flex-1 p-6 overflow-hidden flex items-center justify-center">
-        <div className="w-full h-full max-w-[1600px] grid grid-cols-6 grid-rows-5 gap-3">
+      <div className="flex-1 p-6 overflow-auto flex items-center justify-center">
+        <div className="w-full h-full max-w-[1600px] min-w-[1000px] min-h-[600px] grid grid-cols-6 grid-rows-5 gap-3">
           {/* Fila 1 */}
           {renderPlaza("P1")} {renderPlaza("P2")} {renderPlaza("P3")} {renderPlaza("P4")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
@@ -231,7 +232,7 @@ function ShowroomContent() {
           {renderPlaza("P5")} {renderPlaza("P6")} {renderPlaza("P7")} {renderPlaza("P8")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
 
-          {/* Fila 3 */}
+          {/* Fila 3: Espacio vacío para pasillo central/mesas */}
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
@@ -240,7 +241,7 @@ function ShowroomContent() {
           {renderPlaza("P9")} {renderPlaza("P10")} {renderPlaza("P11")} {renderPlaza("P12")}
           <div className="bg-transparent" /> {renderPlaza("P13")}
 
-          {/* Fila 5 */}
+          {/* Fila 5: P15 y P14 alineadas bajo P10 y P12 */}
           <div className="bg-transparent" /> {renderPlaza("P15")}
           <div className="bg-transparent" /> {renderPlaza("P14")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
@@ -274,9 +275,7 @@ function ShowroomContent() {
               </div>
               <div className="p-8 grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] px-1 flex items-center gap-2">
-                    ESTADO OPERATIVO
-                  </Label>
+                  <Label className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] px-1">ESTADO OPERATIVO</Label>
                   <Select value={selectedVehicle.estado} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { estado: v })}>
                     <SelectTrigger className="h-12 bg-slate-50 border-none rounded-xl font-black uppercase text-[10px] shadow-sm"><SelectValue /></SelectTrigger>
                     <SelectContent className="rounded-xl border-none shadow-2xl">{ESTADOS.map(e => <SelectItem key={e} value={e} className="text-[10px] font-bold">{e.toUpperCase()}</SelectItem>)}</SelectContent>
@@ -294,9 +293,7 @@ function ShowroomContent() {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] px-1 flex items-center gap-2">
-                    COLOR OFICIAL BMW
-                  </Label>
+                  <Label className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] px-1">COLOR OFICIAL BMW</Label>
                   <Select value={selectedVehicle.colorCodigo || selectedVehicle.colorBMW} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { colorCodigo: v })}>
                     <SelectTrigger className="h-12 bg-slate-50 border-none rounded-xl font-black uppercase text-[10px] shadow-sm">
                       <SelectValue />
