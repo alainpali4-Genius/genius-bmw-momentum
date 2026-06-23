@@ -65,10 +65,8 @@ function CarSilhouette({ bodyType, color, className }: { bodyType: string, color
         stroke="rgba(0,0,0,0.2)"
         strokeWidth="1.5"
       />
-      {/* Detalle Lunas */}
       <path d="M22,45 Q50,35 78,45 L75,80 Q50,70 25,80 Z" fill="url(#glassGrad)" />
       <path d="M28,150 Q50,160 72,150 L68,180 Q50,188 32,180 Z" fill="url(#glassGrad)" />
-      {/* Retrovisores */}
       <path d="M8,60 L1,67 Q-2,71 1,77 L8,73 Z" fill={color} filter="brightness(0.7)" />
       <path d="M92,60 L99,67 Q102,71 99,77 L92,73 Z" fill={color} filter="brightness(0.7)" />
     </svg>
@@ -148,7 +146,7 @@ function ShowroomContent() {
           "relative flex flex-col items-center justify-center transition-all h-full w-full rounded-2xl border overflow-hidden",
           vehicle ? "border-transparent bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed bg-white/30",
           isMovingTarget && "border-primary bg-primary/5 ring-4 ring-primary/20 z-50 scale-[1.02]",
-          isP13 && "bg-slate-50/50" // Color base ligeramente distinto para P13 si se desea
+          isP13 && "row-span-2 bg-slate-50/50" 
         )}
       >
         <div className="absolute top-2 left-3 z-30">
@@ -157,20 +155,20 @@ function ShowroomContent() {
         {vehicle ? (
           <div className="w-full h-full flex flex-col items-center justify-center p-1 relative overflow-hidden">
             <div className={cn(
-              "w-[160%] h-[160%] flex items-center justify-center relative transition-transform duration-500",
-              isP13 ? "rotate-0" : "rotate-90" // P13 mirando arriba (0), resto horizontal (90)
+              "w-[180%] h-[180%] flex items-center justify-center relative transition-transform duration-500",
+              isP13 ? "rotate-0" : "rotate-90" 
             )}>
               <CarSilhouette bodyType={vehicle.bodyType || 'SUV'} color={colorObj?.hex || '#CBD5E1'} />
               <div className={cn(
                 "absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-8 text-center",
-                isP13 ? "rotate-0" : "-rotate-90" // Contra-rotación del texto
+                isP13 ? "rotate-0" : "-rotate-90" 
               )}>
-                 <p className="text-[12px] font-black uppercase text-white drop-shadow-[0_2px_5px_rgba(0,0,0,1)] leading-none mb-1.5 max-w-[100px] line-clamp-2">
+                 <p className="text-[13px] font-black uppercase text-white drop-shadow-[0_2px_5px_rgba(0,0,0,1)] leading-none mb-1.5 max-w-[120px] line-clamp-2">
                    {vehicle.modelo}
                  </p>
                  <div className="flex flex-col items-center gap-1 mt-1">
-                    <span className="text-[11px] font-mono font-black text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
-                    <Badge className="bg-black/70 text-white text-[10px] font-black border-none px-3 h-5 backdrop-blur-md">
+                    <span className="text-[12px] font-mono font-black text-white drop-shadow-[0_1.5px_4px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
+                    <Badge className="bg-black/70 text-white text-[11px] font-black border-none px-3 h-5 backdrop-blur-md">
                       {colorObj?.code || '---'}
                     </Badge>
                  </div>
@@ -214,7 +212,7 @@ function ShowroomContent() {
           {renderPlaza("P5")} {renderPlaza("P6")} {renderPlaza("P7")} {renderPlaza("P8")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
 
-          {/* Fila 3 (Pasillo central / Mesas - Vacío) */}
+          {/* Fila 3 (Pasillo central - Limpio) */}
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
@@ -223,7 +221,7 @@ function ShowroomContent() {
           {renderPlaza("P9")} {renderPlaza("P10")} {renderPlaza("P11")} {renderPlaza("P12")}
           <div className="bg-transparent" /> {renderPlaza("P13")}
 
-          {/* Fila 5: P15 bajo P10, P14 bajo P12 */}
+          {/* Fila 5: P15 bajo P10, P14 bajo P12, P13 continúa por row-span */}
           <div className="bg-transparent" /> {renderPlaza("P15")}
           <div className="bg-transparent" /> {renderPlaza("P14")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
