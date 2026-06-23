@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 export const BMW_COLORS = [
   {"code":"300","name":"Alpine White III","hex":"#F5F5F5"},
@@ -99,6 +99,7 @@ function ShowroomContent() {
   const { toast } = useToast();
   const db = useFirestore();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const { data: vehiculosRaw, loading } = useCollection(query(collection(db, "vehiculos"), orderBy("createdAt", "desc")));
   
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
@@ -121,7 +122,14 @@ function ShowroomContent() {
       const found = vehiculos.find(v => v.vin7 === searchStr || v.vin === searchStr);
       if (found) setSelectedVehicleId(found.id);
     }
-  }, [searchParams, vehiculos]);
+  }, [searchParams, vehiculos.length]);
+
+  const handleCloseDetail = () => {
+    setSelectedVehicleId(null);
+    if (searchParams.has('s') || searchParams.has('add')) {
+      router.replace('/showroom', { scroll: false });
+    }
+  };
 
   const handleUpdateVehicle = (vehicleId: string, updates: any) => {
     const docRef = doc(db, "vehiculos", vehicleId);
@@ -248,7 +256,7 @@ function ShowroomContent() {
         </div>
       </div>
 
-      <Sheet open={!!selectedVehicleId} onOpenChange={o => !o && setSelectedVehicleId(null)}>
+      <Sheet open={!!selectedVehicleId} onOpenChange={o => !o && handleCloseDetail()}>
         <SheetContent side="bottom" className="h-auto max-h-[85vh] p-0 rounded-t-[2.5rem] border-none shadow-2xl overflow-hidden bg-white">
           <SheetHeader className="px-8 pt-6 pb-2 flex flex-row justify-between items-center">
             <SheetTitle className="text-xs font-black uppercase tracking-widest text-slate-400">DETALLE DEL VEHÍCULO</SheetTitle>
@@ -270,10 +278,10 @@ function ShowroomContent() {
                   <p className="text-white/40 font-mono text-[9px] font-bold tracking-widest">VIN: {selectedVehicle.vin}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="ghost" onClick={() => { setMovingVehicleId(selectedVehicle.id); setSelectedVehicleId(null); }} className="h-10 w-10 rounded-xl bg-white/5 text-white hover:bg-white/10">
+                  <Button variant="ghost" onClick={() => { setMovingVehicleId(selectedVehicle.id); handleCloseDetail(); }} className="h-10 w-10 rounded-xl bg-white/5 text-white hover:bg-white/10">
                     <Move className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" onClick={() => setSelectedVehicleId(null)} className="h-10 w-10 rounded-xl bg-white/5 text-white hover:bg-white/10">
+                  <Button variant="ghost" onClick={() => handleCloseDetail()} className="h-10 w-10 rounded-xl bg-white/5 text-white hover:bg-white/10">
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
@@ -316,7 +324,7 @@ function ShowroomContent() {
                   </Select>
                 </div>
                 <div className="flex items-end">
-                  <Button variant="destructive" className="h-10 w-full rounded-xl font-black uppercase text-[10px] shadow-lg border-none hover:bg-red-700 transition-all active:scale-95" onClick={() => { if(confirm("¿Eliminar este registro permanentemente?")) { deleteDoc(doc(db, "vehiculos", selectedVehicle.id)); setSelectedVehicleId(null); } }}>
+                  <Button variant="destructive" className="h-10 w-full rounded-xl font-black uppercase text-[10px] shadow-lg border-none hover:bg-red-700 transition-all active:scale-95" onClick={() => { if(confirm("¿Eliminar este registro permanentemente?")) { deleteDoc(doc(db, "vehiculos", selectedVehicle.id)); handleCloseDetail(); } }}>
                     <Trash2 className="w-3.5 h-3.5 mr-2" /> ELIMINAR REGISTRO
                   </Button>
                 </div>
