@@ -45,7 +45,13 @@ const OTHER_LOCATIONS = ["Stock", "Terraza", "Entreplanta", "Lavadero", "Zona En
 
 function CarSilhouette({ bodyType, color, className, style }: { bodyType: string, color: string, className?: string, style?: React.CSSProperties }) {
   return (
-    <svg viewBox="0 0 100 200" className={cn("w-full h-full drop-shadow-2xl", className)} style={style} xmlns="http://www.w3.org/2000/svg">
+    <svg 
+      viewBox="0 0 100 200" 
+      preserveAspectRatio="xMidYMid meet"
+      className={cn("drop-shadow-2xl", className)} 
+      style={style} 
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <defs>
         <linearGradient id="glassGrad" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stopColor="#1a1a1a" />
@@ -147,9 +153,6 @@ function ShowroomContent() {
     const colorObj = BMW_COLORS.find(c => c.code === (vehicle?.colorCodigo || vehicle?.colorBMW));
     const isP13 = id === 'P13';
     
-    // Escala optimizada para que los coches ajusten bien en escritorio y móvil
-    const scale = 0.90;
-
     return (
       <div 
         key={id}
@@ -165,29 +168,26 @@ function ShowroomContent() {
           <span className="text-[10px] font-black uppercase text-slate-300 tracking-tighter">{id}</span>
         </div>
         {vehicle ? (
-          <div className="w-full h-full flex items-center justify-center relative p-1 overflow-hidden">
+          <div className="w-full h-full flex items-center justify-center p-2">
             <div className={cn(
-              "flex items-center justify-center relative transition-transform duration-500",
-              isP13 ? "h-full w-auto" : "h-auto w-full rotate-90"
-            )} style={{ 
-                height: isP13 ? `${scale * 100}%` : 'auto', 
-                width: isP13 ? 'auto' : `${scale * 100}%` 
-            }}>
+              "relative flex items-center justify-center transition-all duration-500",
+              isP13 ? "h-[90%] w-auto" : "h-auto w-[90%] rotate-90"
+            )}>
               <CarSilhouette 
                 bodyType={vehicle.bodyType || 'SUV'} 
                 color={colorObj?.hex || '#CBD5E1'} 
-                className="w-full h-full"
+                className={cn("w-full h-full", isP13 ? "aspect-[1/2]" : "aspect-[2/1]")}
               />
               <div className={cn(
                 "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center",
-                isP13 ? "rotate-0" : "-rotate-90" 
+                isP13 ? "" : "-rotate-90" 
               )}>
-                 <p className="text-[9px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-tight mb-1 px-4 line-clamp-2">
+                 <p className="text-[10px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-tight mb-1 px-4 line-clamp-2">
                    {vehicle.modelo}
                  </p>
                  <div className="flex flex-col items-center gap-0.5">
-                    <span className="text-[10px] font-mono font-black text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
-                    <Badge className="bg-black/60 text-white text-[8px] font-black border-none px-2 h-4 backdrop-blur-sm mt-1">
+                    <span className="text-[12px] font-mono font-black text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
+                    <Badge className="bg-black/60 text-white text-[9px] font-black border-none px-2 h-5 backdrop-blur-sm mt-1">
                       {colorObj?.code || '---'}
                     </Badge>
                  </div>
@@ -231,7 +231,7 @@ function ShowroomContent() {
           {renderPlaza("P5")} {renderPlaza("P6")} {renderPlaza("P7")} {renderPlaza("P8")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
 
-          {/* Fila 3: Pasillo Central Limpio */}
+          {/* Fila 3: Pasillo */}
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
@@ -240,7 +240,7 @@ function ShowroomContent() {
           {renderPlaza("P9")} {renderPlaza("P10")} {renderPlaza("P11")} {renderPlaza("P12")}
           <div className="bg-transparent" /> {renderPlaza("P13")}
 
-          {/* Fila 5: P15 y P14 alineadas bajo P10 y P12 */}
+          {/* Fila 5: P15 bajo P10, P14 bajo P12 */}
           <div className="bg-transparent" /> {renderPlaza("P15")}
           <div className="bg-transparent" /> {renderPlaza("P14")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
