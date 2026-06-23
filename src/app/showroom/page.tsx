@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, Suspense, useEffect } from "react";
@@ -149,7 +148,7 @@ function ShowroomContent() {
           "relative flex flex-col items-center justify-center transition-all h-full w-full rounded-2xl overflow-hidden",
           vehicle ? "bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed border bg-white/30",
           isMovingTarget && "border-primary bg-primary/5 ring-4 ring-primary/20 z-50 scale-[1.02]",
-          isP13 && "border-[3px] border-secondary h-[130%] self-center"
+          isP13 && "border-[3px] border-secondary h-full self-center"
         )}
       >
         <div className="absolute top-2 left-2 z-30">
@@ -166,19 +165,19 @@ function ShowroomContent() {
                 color={colorObj?.hex || '#CBD5E1'} 
                 className={cn(
                   "transition-all", 
-                  isP13 ? "h-[80%] w-auto" : (isP15 ? "scale-[1.2]" : "scale-[0.85]")
+                  isP13 ? "h-[88%] w-auto" : "scale-[0.85]"
                 )} 
               />
               <div className={cn(
                 "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center",
                 isP13 ? "rotate-0 px-2" : "-rotate-90 px-12" 
               )}>
-                 <p className="text-[9px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-none mb-1 max-w-[100px] line-clamp-2">
+                 <p className="text-[8px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-tight mb-1 max-w-[90px] line-clamp-2">
                    {vehicle.modelo}
                  </p>
                  <div className="flex flex-col items-center gap-0.5">
-                    <span className="text-[10px] font-mono font-black text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
-                    <Badge className="bg-black/60 text-white text-[8px] font-black border-none px-2 h-4 backdrop-blur-sm">
+                    <span className="text-[9px] font-mono font-black text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
+                    <Badge className="bg-black/60 text-white text-[7px] font-black border-none px-1.5 h-3.5 backdrop-blur-sm">
                       {colorObj?.code || '---'}
                     </Badge>
                  </div>
