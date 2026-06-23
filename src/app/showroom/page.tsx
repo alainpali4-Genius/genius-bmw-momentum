@@ -43,7 +43,6 @@ const ESTADOS = ["Exposicion", "Stock", "Demo", "Reservado", "Preparacion Entreg
 const PLAZAS_LIST = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12", "P13", "P14", "P15"];
 const OTHER_LOCATIONS = ["Stock", "Terraza", "Entreplanta", "Lavadero", "Zona Entrega", "Taller", "Entregado"];
 
-// Mapeo explícito de posiciones para evitar que desaparezcan coches
 const GRID_POSITIONS: Record<string, string> = {
   P1: "col-start-1 row-start-1",
   P2: "col-start-2 row-start-1",
@@ -57,9 +56,9 @@ const GRID_POSITIONS: Record<string, string> = {
   P10: "col-start-2 row-start-4",
   P11: "col-start-3 row-start-4",
   P12: "col-start-4 row-start-4",
-  P13: "col-start-6 row-start-4 row-span-2", // Plaza vertical
-  P15: "col-start-2 row-start-5", // Bajo P10
-  P14: "col-start-4 row-start-5", // Bajo P12
+  P13: "col-start-6 row-start-4 row-span-2", 
+  P15: "col-start-2 row-start-5", 
+  P14: "col-start-4 row-start-5", 
 };
 
 function CarSilhouette({ bodyType, color, className, style }: { bodyType: string, color: string, className?: string, style?: React.CSSProperties }) {
@@ -179,17 +178,17 @@ function ShowroomContent() {
           GRID_POSITIONS[id],
           vehicle ? "bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed border bg-white/30",
           isMovingTarget && "border-primary bg-primary/5 ring-4 ring-primary/20 z-50 scale-[1.02]",
-          isVertical && "border-2 border-slate-800"
+          isVertical && "border-4 border-slate-900 shadow-[inset_0_0_15px_rgba(0,0,0,0.1)]"
         )}
       >
         <div className="absolute top-2 left-2 z-30">
           <span className="text-[10px] font-black uppercase text-slate-300 tracking-tighter">{id}</span>
         </div>
         {vehicle ? (
-          <div className="w-full h-full flex items-center justify-center p-1">
+          <div className="w-full h-full flex items-center justify-center p-0.5">
             <div className={cn(
               "relative flex items-center justify-center transition-all duration-300",
-              isVertical ? "h-[90%] w-full" : "w-[90%] h-full rotate-90"
+              isVertical ? "h-[92%] w-full" : "w-[115%] h-full rotate-90"
             )}>
               <CarSilhouette 
                 bodyType={vehicle.bodyType || 'SUV'} 
@@ -197,14 +196,14 @@ function ShowroomContent() {
                 className="w-full h-full max-h-full max-w-full"
               />
               <div className={cn(
-                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center",
+                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-4",
                 !isVertical && "-rotate-90" 
               )}>
-                 <p className="text-[9px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-none mb-1 px-4 line-clamp-2">
+                 <p className="text-[10px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-none mb-1 line-clamp-2 max-w-[85%]">
                    {vehicle.modelo}
                  </p>
                  <div className="flex flex-col items-center gap-0.5">
-                    <span className="text-[11px] font-mono font-black text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
+                    <span className="text-[12px] font-mono font-black text-white drop-shadow-[0_1.5px_3px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
                     <Badge className="bg-black/60 text-white text-[8px] font-black border-none px-2 h-4 backdrop-blur-sm mt-0.5">
                       {colorObj?.code || '---'}
                     </Badge>
@@ -240,10 +239,9 @@ function ShowroomContent() {
       </div>
 
       <div className="flex-1 p-6 overflow-auto flex items-start justify-center">
-        <div className="w-full h-full max-w-[1600px] min-w-[1000px] grid grid-cols-6 grid-rows-5 gap-3">
+        <div className="w-full h-full max-w-[1600px] min-w-[1000px] grid grid-cols-6 grid-rows-5 gap-4">
           {PLAZAS_LIST.map(id => renderPlaza(id))}
-          {/* Relleno de pasillo y zonas vacías para que el grid no colapse */}
-          <div className="col-start-5 row-start-1 row-span-5 border-l border-slate-100 border-dashed" />
+          <div className="col-start-5 row-start-1 row-span-5 border-l border-slate-200 border-dashed mx-4" />
         </div>
       </div>
 
