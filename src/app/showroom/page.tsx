@@ -3,7 +3,7 @@
 
 import { useState, useMemo, Suspense, useEffect } from "react";
 import { 
-  Plus, Move, Loader2, X, Trash2, PlusCircle, Package
+  Plus, Move, Loader2, X, Trash2, Package
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,18 +45,15 @@ const OTHER_LOCATIONS = ["Stock", "Terraza", "Entreplanta", "Lavadero", "Zona En
 
 function CarSilhouette({ bodyType, color, className }: { bodyType: string, color: string, className?: string }) {
   return (
-    <svg viewBox="0 0 100 200" className={cn("w-full h-full drop-shadow-2xl", className)} xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 100 200" className={cn("w-full h-full drop-shadow-xl", className)} xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="glassGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#333" />
-          <stop offset="50%" stopColor="#555" />
-          <stop offset="100%" stopColor="#333" />
+          <stop offset="0%" stopColor="#222" />
+          <stop offset="50%" stopColor="#444" />
+          <stop offset="100%" stopColor="#222" />
         </linearGradient>
       </defs>
-      {/* Sombra proyectada */}
-      <ellipse cx="50" cy="110" rx="45" ry="95" fill="black" opacity="0.15" />
-      
-      {/* Cuerpo principal */}
+      <ellipse cx="50" cy="105" rx="42" ry="92" fill="black" opacity="0.1" />
       <path 
         d={bodyType === 'SUV' 
           ? "M18,15 Q18,5 30,5 L70,5 Q82,5 82,15 L88,50 Q88,65 86,180 Q84,198 70,202 L30,202 Q16,198 14,180 Q12,65 12,50 L18,15 Z"
@@ -65,25 +62,14 @@ function CarSilhouette({ bodyType, color, className }: { bodyType: string, color
           : "M20,12 Q20,2 32,2 L68,2 Q80,2 80,12 L86,55 Q86,75 82,185 Q78,202 68,204 L32,204 Q22,202 18,185 Q14,75 14,55 L20,12 Z"
         }
         fill={color} 
-        stroke="rgba(0,0,0,0.1)"
-        strokeWidth="1"
+        stroke="rgba(0,0,0,0.15)"
+        strokeWidth="1.5"
       />
-
-      {/* Parabrisas delantero */}
-      <path d="M26,52 Q50,44 74,52 L70,85 Q50,78 30,85 Z" fill="url(#glassGradient)" opacity="0.8" />
-      
-      {/* Techo / Líneas de estructura */}
-      <path d="M30,88 L70,88 Q70,125 66,155 L34,155 Q30,125 30,88 Z" fill="rgba(0,0,0,0.05)" />
-      
-      {/* Luna trasera */}
-      <path d="M34,160 Q50,168 66,160 L63,185 Q50,192 37,185 Z" fill="url(#glassGradient)" opacity="0.8" />
-      
-      {/* Retrovisores */}
-      <path d="M14,68 L4,76 Q2,80 4,86 L14,82 Z" fill={color} filter="brightness(0.8)" />
-      <path d="M86,68 L96,76 Q98,80 96,86 L86,82 Z" fill={color} filter="brightness(0.8)" />
-      
-      {/* Detalles capó */}
-      <path d="M42,10 L42,35 M58,10 L58,35" stroke="rgba(0,0,0,0.1)" strokeWidth="0.8" fill="none" />
+      <path d="M26,52 Q50,44 74,52 L70,85 Q50,78 30,85 Z" fill="url(#glassGradient)" opacity="0.85" />
+      <path d="M30,88 L70,88 Q70,125 66,155 L34,155 Q30,125 30,88 Z" fill="rgba(0,0,0,0.08)" />
+      <path d="M34,160 Q50,168 66,160 L63,185 Q50,192 37,185 Z" fill="url(#glassGradient)" opacity="0.85" />
+      <path d="M14,68 L4,76 Q2,80 4,86 L14,82 Z" fill={color} filter="brightness(0.85)" />
+      <path d="M86,68 L96,76 Q98,80 96,86 L86,82 Z" fill={color} filter="brightness(0.85)" />
     </svg>
   );
 }
@@ -157,23 +143,30 @@ function ShowroomContent() {
         key={id}
         onClick={() => movingVehicleId ? handleSwapOrMove(movingVehicleId, id) : vehicle && setSelectedVehicle(vehicle)}
         className={cn(
-          "relative flex flex-col items-center justify-center transition-all h-full w-full rounded-2xl border-2 overflow-hidden bg-white",
-          vehicle ? "border-transparent shadow-sm cursor-pointer hover:shadow-md" : "border-slate-50 border-dashed bg-white/40",
+          "relative flex flex-col items-center justify-center transition-all h-full w-full rounded-2xl border overflow-hidden",
+          vehicle ? "border-transparent bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed bg-white/30",
           isMovingTarget && "border-primary bg-primary/5 ring-4 ring-primary/20 z-50 scale-[1.02]"
         )}
       >
-        <div className="absolute top-2 left-3 z-20">
+        <div className="absolute top-2 left-3 z-30">
           <span className="text-[10px] font-black uppercase text-slate-300 tracking-tighter">{id}</span>
         </div>
         {vehicle ? (
-          <div className="w-full h-full flex flex-col items-center justify-center p-4">
-            <div className="w-[60%] h-[45%] mb-3 rotate-90 flex items-center justify-center">
+          <div className="w-full h-full flex flex-col items-center justify-center p-2 relative">
+            <div className="w-[85%] h-[85%] rotate-90 flex items-center justify-center relative">
               <CarSilhouette bodyType={vehicle.bodyType || 'SUV'} color={colorObj?.hex || '#CBD5E1'} />
-            </div>
-            <div className="text-center px-1 space-y-0.5">
-              <p className="text-[10px] font-black uppercase text-secondary truncate max-w-[140px] leading-tight">{vehicle.modelo}</p>
-              <p className="text-[8px] font-black uppercase text-primary leading-tight">{colorObj?.name || 'COLOR DESCONOCIDO'}</p>
-              <p className="text-[7.5px] font-mono font-bold text-slate-400">{vehicle.vin7 || vehicle.vin?.slice(-7)}</p>
+              {/* Información dentro del coche */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center -rotate-90 pointer-events-none px-2 text-center">
+                 <p className="text-[8px] font-black uppercase text-white drop-shadow-md leading-none mb-0.5 line-clamp-1">
+                   {vehicle.modelo.split(' ')[0]} {vehicle.modelo.split(' ')[1] || ''}
+                 </p>
+                 <div className="flex flex-col items-center">
+                    <span className="text-[7px] font-mono font-bold text-white/90 drop-shadow-sm">{vehicle.vin7}</span>
+                    <Badge className="bg-white/20 text-white text-[6px] font-black border-none px-1 h-3 mt-0.5 backdrop-blur-sm">
+                      {colorObj?.code || '---'}
+                    </Badge>
+                 </div>
+              </div>
             </div>
           </div>
         ) : null}
@@ -186,7 +179,7 @@ function ShowroomContent() {
       <div className="bg-white border-b px-8 py-4 flex items-center justify-between shrink-0 shadow-sm z-40">
         <div className="flex flex-col">
           <h1 className="text-2xl font-black text-secondary uppercase italic leading-none tracking-tighter">PLANO <span className="text-primary not-italic">EXPOSICIÓN</span></h1>
-          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">SISTEMA LOGÍSTICO MOMENTUM NAVARRA</p>
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">MOMENTUM NAVARRA</p>
         </div>
         <div className="flex gap-2">
           {movingVehicleId && (
@@ -204,41 +197,35 @@ function ShowroomContent() {
       </div>
 
       <div className="flex-1 p-6 overflow-hidden flex items-center justify-center">
-        <div className="w-full h-full max-w-[1600px] grid grid-rows-5 gap-3">
-          {/* Fila 1 */}
-          <div className="grid grid-cols-6 gap-3">
-            {renderPlaza("P1")} {renderPlaza("P2")} {renderPlaza("P3")} {renderPlaza("P4")}
-            <div className="bg-transparent" /> <div className="bg-transparent" />
-          </div>
-          {/* Fila 2 */}
-          <div className="grid grid-cols-6 gap-3">
-            {renderPlaza("P5")} {renderPlaza("P6")} {renderPlaza("P7")} {renderPlaza("P8")}
-            <div className="bg-transparent" /> <div className="bg-transparent" />
-          </div>
-          {/* Fila 3: Espacio Mesas Limpio */}
-          <div className="grid grid-cols-6 gap-3">
-            <div className="bg-transparent" /> <div className="bg-transparent" />
-            <div className="bg-transparent" /> <div className="bg-transparent" />
-            <div className="bg-transparent" /> <div className="bg-transparent" />
-          </div>
-          {/* Fila 4 */}
-          <div className="grid grid-cols-6 gap-3">
-            {renderPlaza("P9")} {renderPlaza("P10")} {renderPlaza("P11")} {renderPlaza("P12")}
-            <div className="bg-transparent" /> {renderPlaza("P13")}
-          </div>
-          {/* Fila 5: P15 bajo P10, P14 bajo P12 (Izquierda del pasillo) */}
-          <div className="grid grid-cols-6 gap-3">
-            <div className="bg-transparent" /> {renderPlaza("P15")}
-            <div className="bg-transparent" /> {renderPlaza("P14")}
-            <div className="bg-transparent" /> <div className="bg-transparent" />
-          </div>
+        <div className="w-full h-full max-[1600px] grid grid-cols-6 grid-rows-5 gap-3">
+          {/* Fila 1: P1-P4 | Pasillo | Bloque B Vacío */}
+          {renderPlaza("P1")} {renderPlaza("P2")} {renderPlaza("P3")} {renderPlaza("P4")}
+          <div className="bg-transparent" /> <div className="bg-transparent" />
+
+          {/* Fila 2: P5-P8 | Pasillo | Bloque B Vacío */}
+          {renderPlaza("P5")} {renderPlaza("P6")} {renderPlaza("P7")} {renderPlaza("P8")}
+          <div className="bg-transparent" /> <div className="bg-transparent" />
+
+          {/* Fila 3: Genius 1-4 | Pasillo | Zona Mesas Vacía */}
+          <div className="bg-transparent" /> <div className="bg-transparent" />
+          <div className="bg-transparent" /> <div className="bg-transparent" />
+          <div className="bg-transparent" /> <div className="bg-transparent" />
+
+          {/* Fila 4: P9-P12 | Pasillo | P13 */}
+          {renderPlaza("P9")} {renderPlaza("P10")} {renderPlaza("P11")} {renderPlaza("P12")}
+          <div className="bg-transparent" /> {renderPlaza("P13")}
+
+          {/* Fila 5: P15 (bajo P10) y P14 (bajo P12) | Pasillo | Bloque B Vacío */}
+          <div className="bg-transparent" /> {renderPlaza("P15")}
+          <div className="bg-transparent" /> {renderPlaza("P14")}
+          <div className="bg-transparent" /> <div className="bg-transparent" />
         </div>
       </div>
 
       <Sheet open={!!selectedVehicle} onOpenChange={o => !o && setSelectedVehicle(null)}>
         <SheetContent side="bottom" className="h-[45vh] p-0 rounded-t-[3rem] border-none shadow-2xl overflow-hidden bg-white">
-          <SheetHeader className="sr-only">
-            <SheetTitle>Detalles del Vehículo</SheetTitle>
+          <SheetHeader className="px-8 pt-8">
+            <SheetTitle className="sr-only">Detalles del Vehículo</SheetTitle>
           </SheetHeader>
           {selectedVehicle && (
             <div className="flex flex-col h-full">
@@ -289,13 +276,9 @@ function ShowroomContent() {
 
       <Sheet open={isStockSheetOpen} onOpenChange={setIsStockSheetOpen}>
         <SheetContent side="right" className="w-[400px] p-0 border-none bg-white shadow-2xl">
-          <SheetHeader className="sr-only">
-            <SheetTitle>Inventario de Stock Pendiente</SheetTitle>
+          <SheetHeader className="p-8 bg-slate-50 border-b">
+            <SheetTitle className="text-2xl font-black uppercase italic text-secondary">STOCK PENDIENTE</SheetTitle>
           </SheetHeader>
-          <div className="p-8 bg-slate-50 border-b flex flex-col gap-1">
-            <h3 className="text-2xl font-black uppercase italic text-secondary">STOCK PENDIENTE</h3>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">VEHÍCULOS SIN PLAZA ASIGNADA</p>
-          </div>
           <div className="p-6 space-y-3 overflow-y-auto h-[calc(100vh-120px)] scrollbar-none">
             {pendingStock.length === 0 ? (
               <div className="text-center py-20 text-slate-300 font-black uppercase text-xs">Todo el stock ubicado</div>
@@ -317,10 +300,9 @@ function ShowroomContent() {
 
       <Dialog open={isAddingNew} onOpenChange={setIsAddingNew}>
         <DialogContent className="p-0 border-none rounded-[2.5rem] overflow-hidden max-w-md shadow-2xl">
-          <DialogHeader className="sr-only">
-            <DialogTitle>Nueva Alta de Vehículo</DialogTitle>
+          <DialogHeader className="p-6 bg-secondary text-white font-black uppercase italic text-center">
+            <DialogTitle className="text-lg">ALTA DE VEHÍCULO VN</DialogTitle>
           </DialogHeader>
-          <div className="p-6 bg-secondary text-white font-black uppercase italic text-center text-lg">ALTA DE VEHÍCULO VN</div>
           <div className="p-8 space-y-5 bg-white">
             <div className="space-y-1.5">
               <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Modelo</Label>
