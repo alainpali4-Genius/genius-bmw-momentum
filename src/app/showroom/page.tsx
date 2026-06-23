@@ -45,31 +45,38 @@ const OTHER_LOCATIONS = ["Stock", "Terraza", "Entreplanta", "Lavadero", "Zona En
 
 function CarSilhouette({ bodyType, color, className }: { bodyType: string, color: string, className?: string }) {
   return (
-    <svg viewBox="0 0 100 200" className={cn("w-full h-full drop-shadow-xl", className)} xmlns="http://www.w3.org/2000/svg">
+    <svg viewBox="0 0 100 220" className={cn("w-full h-full drop-shadow-2xl", className)} xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <linearGradient id="glassGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#222" />
-          <stop offset="50%" stopColor="#444" />
-          <stop offset="100%" stopColor="#222" />
+        <linearGradient id="glassGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#1a1a1a" />
+          <stop offset="50%" stopColor="#333" />
+          <stop offset="100%" stopColor="#1a1a1a" />
         </linearGradient>
       </defs>
-      <ellipse cx="50" cy="105" rx="42" ry="92" fill="black" opacity="0.1" />
+      {/* Sombra proyectada */}
+      <ellipse cx="50" cy="110" rx="46" ry="105" fill="black" opacity="0.15" />
+      
+      {/* Cuerpo del vehículo con mayor detalle */}
       <path 
         d={bodyType === 'SUV' 
-          ? "M18,15 Q18,5 30,5 L70,5 Q82,5 82,15 L88,50 Q88,65 86,180 Q84,198 70,202 L30,202 Q16,198 14,180 Q12,65 12,50 L18,15 Z"
+          ? "M15,12 Q15,2 30,2 L70,2 Q85,2 85,12 L92,55 Q92,75 88,195 Q85,218 70,218 L30,218 Q15,218 12,195 Q8,75 8,55 L15,12 Z"
           : bodyType === 'Coupe'
-          ? "M25,10 Q25,0 35,0 L65,0 Q75,0 75,10 L84,60 Q84,80 80,180 Q76,200 65,202 L35,202 Q24,200 20,180 Q16,80 16,60 L25,10 Z"
-          : "M20,12 Q20,2 32,2 L68,2 Q80,2 80,12 L86,55 Q86,75 82,185 Q78,202 68,204 L32,204 Q22,202 18,185 Q14,75 14,55 L20,12 Z"
+          ? "M22,8 Q22,0 35,0 L65,0 Q78,0 78,8 L88,65 Q88,85 82,195 Q78,218 65,218 L35,218 Q22,218 18,195 Q12,85 12,65 L22,8 Z"
+          : "M18,10 Q18,2 32,2 L68,2 Q82,2 82,10 L88,60 Q88,80 84,200 Q80,218 68,218 L32,218 Q20,218 16,200 Q12,80 12,60 L18,10 Z"
         }
         fill={color} 
-        stroke="rgba(0,0,0,0.15)"
+        stroke="rgba(0,0,0,0.2)"
         strokeWidth="1.5"
       />
-      <path d="M26,52 Q50,44 74,52 L70,85 Q50,78 30,85 Z" fill="url(#glassGradient)" opacity="0.85" />
-      <path d="M30,88 L70,88 Q70,125 66,155 L34,155 Q30,125 30,88 Z" fill="rgba(0,0,0,0.08)" />
-      <path d="M34,160 Q50,168 66,160 L63,185 Q50,192 37,185 Z" fill="url(#glassGradient)" opacity="0.85" />
-      <path d="M14,68 L4,76 Q2,80 4,86 L14,82 Z" fill={color} filter="brightness(0.85)" />
-      <path d="M86,68 L96,76 Q98,80 96,86 L86,82 Z" fill={color} filter="brightness(0.85)" />
+      
+      {/* Lunas y Techo */}
+      <path d="M24,55 Q50,45 76,55 L72,95 Q50,85 28,95 Z" fill="url(#glassGrad)" />
+      <path d="M28,100 L72,100 Q72,130 68,170 L32,170 Q28,130 28,100 Z" fill="rgba(0,0,0,0.1)" />
+      <path d="M32,175 Q50,185 68,175 L65,205 Q50,212 35,205 Z" fill="url(#glassGrad)" />
+      
+      {/* Retrovisores */}
+      <path d="M12,70 L2,78 Q0,82 2,88 L12,84 Z" fill={color} filter="brightness(0.8)" />
+      <path d="M88,70 L98,78 Q100,82 98,88 L88,84 Z" fill={color} filter="brightness(0.8)" />
     </svg>
   );
 }
@@ -152,17 +159,17 @@ function ShowroomContent() {
           <span className="text-[10px] font-black uppercase text-slate-300 tracking-tighter">{id}</span>
         </div>
         {vehicle ? (
-          <div className="w-full h-full flex flex-col items-center justify-center p-2 relative">
-            <div className="w-[85%] h-[85%] rotate-90 flex items-center justify-center relative">
+          <div className="w-full h-full flex flex-col items-center justify-center p-1 relative overflow-visible">
+            <div className="w-[110%] h-[110%] rotate-90 flex items-center justify-center relative">
               <CarSilhouette bodyType={vehicle.bodyType || 'SUV'} color={colorObj?.hex || '#CBD5E1'} />
-              {/* Información dentro del coche */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center -rotate-90 pointer-events-none px-2 text-center">
-                 <p className="text-[8px] font-black uppercase text-white drop-shadow-md leading-none mb-0.5 line-clamp-1">
-                   {vehicle.modelo.split(' ')[0]} {vehicle.modelo.split(' ')[1] || ''}
+              {/* Información dentro del coche con máxima legibilidad */}
+              <div className="absolute inset-0 flex flex-col items-center justify-center -rotate-90 pointer-events-none px-4 text-center">
+                 <p className="text-[10px] font-black uppercase text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] leading-none mb-1 line-clamp-2 max-w-[80px]">
+                   {vehicle.modelo}
                  </p>
-                 <div className="flex flex-col items-center">
-                    <span className="text-[7px] font-mono font-bold text-white/90 drop-shadow-sm">{vehicle.vin7}</span>
-                    <Badge className="bg-white/20 text-white text-[6px] font-black border-none px-1 h-3 mt-0.5 backdrop-blur-sm">
+                 <div className="flex flex-col items-center gap-0.5">
+                    <span className="text-[9px] font-mono font-bold text-white drop-shadow-[0_1.5px_1.5px_rgba(0,0,0,0.8)]">{vehicle.vin7}</span>
+                    <Badge className="bg-black/40 text-white text-[8px] font-black border-none px-2 h-4 backdrop-blur-sm">
                       {colorObj?.code || '---'}
                     </Badge>
                  </div>
@@ -197,25 +204,26 @@ function ShowroomContent() {
       </div>
 
       <div className="flex-1 p-6 overflow-hidden flex items-center justify-center">
+        {/* Grid de 6 columnas y 5 filas para respetar pasillos y alineación P14/P15 */}
         <div className="w-full h-full max-[1600px] grid grid-cols-6 grid-rows-5 gap-3">
-          {/* Fila 1: P1-P4 | Pasillo | Bloque B Vacío */}
+          {/* Fila 1 */}
           {renderPlaza("P1")} {renderPlaza("P2")} {renderPlaza("P3")} {renderPlaza("P4")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
 
-          {/* Fila 2: P5-P8 | Pasillo | Bloque B Vacío */}
+          {/* Fila 2 */}
           {renderPlaza("P5")} {renderPlaza("P6")} {renderPlaza("P7")} {renderPlaza("P8")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
 
-          {/* Fila 3: Genius 1-4 | Pasillo | Zona Mesas Vacía */}
+          {/* Fila 3: Pasillo / Genius */}
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
 
-          {/* Fila 4: P9-P12 | Pasillo | P13 */}
+          {/* Fila 4: Bloque P9-P12 + Pasillo + P13 */}
           {renderPlaza("P9")} {renderPlaza("P10")} {renderPlaza("P11")} {renderPlaza("P12")}
           <div className="bg-transparent" /> {renderPlaza("P13")}
 
-          {/* Fila 5: P15 (bajo P10) y P14 (bajo P12) | Pasillo | Bloque B Vacío */}
+          {/* Fila 5: P15 y P14 paralelos a P10 y P12 */}
           <div className="bg-transparent" /> {renderPlaza("P15")}
           <div className="bg-transparent" /> {renderPlaza("P14")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
@@ -225,7 +233,7 @@ function ShowroomContent() {
       <Sheet open={!!selectedVehicle} onOpenChange={o => !o && setSelectedVehicle(null)}>
         <SheetContent side="bottom" className="h-[45vh] p-0 rounded-t-[3rem] border-none shadow-2xl overflow-hidden bg-white">
           <SheetHeader className="px-8 pt-8">
-            <SheetTitle className="sr-only">Detalles del Vehículo</SheetTitle>
+            <SheetTitle className="text-xl font-black uppercase italic text-secondary">DETALLE VEHÍCULO</SheetTitle>
           </SheetHeader>
           {selectedVehicle && (
             <div className="flex flex-col h-full">
