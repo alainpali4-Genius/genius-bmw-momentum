@@ -53,10 +53,7 @@ function CarSilhouette({ bodyType, color, className }: { bodyType: string, color
           <stop offset="100%" stopColor="#1a1a1a" />
         </linearGradient>
       </defs>
-      {/* Sombra proyectada */}
       <ellipse cx="50" cy="100" rx="48" ry="98" fill="black" opacity="0.1" />
-      
-      {/* Cuerpo del vehículo maximizado */}
       <path 
         d={bodyType === 'SUV' 
           ? "M10,15 Q10,2 30,2 L70,2 Q90,2 90,15 L95,60 Q95,85 92,185 Q90,198 75,198 L25,198 Q10,198 8,185 Q5,85 5,60 L10,15 Z"
@@ -68,12 +65,8 @@ function CarSilhouette({ bodyType, color, className }: { bodyType: string, color
         stroke="rgba(0,0,0,0.15)"
         strokeWidth="1.5"
       />
-      
-      {/* Lunas y Techo */}
       <path d="M22,50 Q50,40 78,50 L75,85 Q50,75 25,85 Z" fill="url(#glassGrad)" />
       <path d="M28,155 Q50,165 72,155 L68,185 Q50,192 32,185 Z" fill="url(#glassGrad)" />
-      
-      {/* Retrovisores */}
       <path d="M8,65 L1,72 Q-2,76 1,82 L8,78 Z" fill={color} filter="brightness(0.7)" />
       <path d="M92,65 L99,72 Q102,76 99,82 L92,78 Z" fill={color} filter="brightness(0.7)" />
     </svg>
@@ -159,10 +152,15 @@ function ShowroomContent() {
         </div>
         {vehicle ? (
           <div className="w-full h-full flex flex-col items-center justify-center p-0 relative overflow-visible">
-            <div className="w-[140%] h-[140%] rotate-90 flex items-center justify-center relative">
+            <div className={cn(
+              "w-[140%] h-[140%] flex items-center justify-center relative",
+              id === 'P13' ? "rotate-0" : "rotate-90"
+            )}>
               <CarSilhouette bodyType={vehicle.bodyType || 'SUV'} color={colorObj?.hex || '#CBD5E1'} />
-              {/* Información dentro del coche maximizada */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center -rotate-90 pointer-events-none px-6 text-center">
+              <div className={cn(
+                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-6 text-center",
+                id === 'P13' ? "rotate-0" : "-rotate-90"
+              )}>
                  <p className="text-[11px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-none mb-1 max-w-[90px] line-clamp-2">
                    {vehicle.modelo}
                  </p>
@@ -203,26 +201,20 @@ function ShowroomContent() {
       </div>
 
       <div className="flex-1 p-6 overflow-hidden flex items-center justify-center">
-        {/* Grid Blindado: 6 columnas para asegurar alineación vertical y pasillo */}
         <div className="w-full h-full max-w-[1600px] grid grid-cols-6 grid-rows-5 gap-3">
-          {/* Fila 1 */}
           {renderPlaza("P1")} {renderPlaza("P2")} {renderPlaza("P3")} {renderPlaza("P4")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
 
-          {/* Fila 2 */}
           {renderPlaza("P5")} {renderPlaza("P6")} {renderPlaza("P7")} {renderPlaza("P8")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
 
-          {/* Fila 3: Espacio central limpio */}
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
 
-          {/* Fila 4: Bloque P9-P12 + Pasillo + P13 */}
           {renderPlaza("P9")} {renderPlaza("P10")} {renderPlaza("P11")} {renderPlaza("P12")}
           <div className="bg-transparent" /> {renderPlaza("P13")}
 
-          {/* Fila 5: P15 y P14 alineadas bajo P10 y P12 */}
           <div className="bg-transparent" /> {renderPlaza("P15")}
           <div className="bg-transparent" /> {renderPlaza("P14")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
