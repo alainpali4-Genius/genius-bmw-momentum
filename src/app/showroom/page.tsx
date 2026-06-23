@@ -147,8 +147,8 @@ function ShowroomContent() {
     const colorObj = BMW_COLORS.find(c => c.code === (vehicle?.colorCodigo || vehicle?.colorBMW));
     const isP13 = id === 'P13';
     
-    // Escala general reducida para limpieza, P13 algo mayor para rellenar su plataforma vertical
-    const scale = isP13 ? 0.90 : 0.85;
+    // Escala optimizada para que los coches ajusten bien en escritorio y móvil
+    const scale = 0.90;
 
     return (
       <div 
@@ -165,25 +165,24 @@ function ShowroomContent() {
           <span className="text-[10px] font-black uppercase text-slate-300 tracking-tighter">{id}</span>
         </div>
         {vehicle ? (
-          <div className="w-full h-full flex flex-col items-center justify-center p-1 relative overflow-hidden">
+          <div className="w-full h-full flex items-center justify-center relative p-1 overflow-hidden">
             <div className={cn(
               "flex items-center justify-center relative transition-transform duration-500",
-              isP13 ? "w-full h-full rotate-0" : "w-[200%] h-[200%] rotate-90" 
-            )}>
+              isP13 ? "h-full w-auto" : "h-auto w-full rotate-90"
+            )} style={{ 
+                height: isP13 ? `${scale * 100}%` : 'auto', 
+                width: isP13 ? 'auto' : `${scale * 100}%` 
+            }}>
               <CarSilhouette 
                 bodyType={vehicle.bodyType || 'SUV'} 
                 color={colorObj?.hex || '#CBD5E1'} 
-                className="transition-all"
-                style={{ 
-                  height: isP13 ? `${scale * 100}%` : 'auto', 
-                  width: isP13 ? 'auto' : `${scale * 100}%` 
-                }}
+                className="w-full h-full"
               />
               <div className={cn(
                 "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center",
-                isP13 ? "rotate-0 px-2" : "-rotate-90 px-12" 
+                isP13 ? "rotate-0" : "-rotate-90" 
               )}>
-                 <p className="text-[9px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-tight mb-1 max-w-[100px] line-clamp-2">
+                 <p className="text-[9px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-tight mb-1 px-4 line-clamp-2">
                    {vehicle.modelo}
                  </p>
                  <div className="flex flex-col items-center gap-0.5">
@@ -222,8 +221,8 @@ function ShowroomContent() {
         </div>
       </div>
 
-      <div className="flex-1 p-6 overflow-auto flex items-center justify-center">
-        <div className="w-full h-full max-w-[1600px] min-w-[1000px] min-h-[600px] grid grid-cols-6 grid-rows-5 gap-3">
+      <div className="flex-1 p-6 overflow-auto flex items-start justify-center">
+        <div className="w-full h-full max-w-[1600px] min-w-[1000px] min-h-[700px] grid grid-cols-6 grid-rows-5 gap-3">
           {/* Fila 1 */}
           {renderPlaza("P1")} {renderPlaza("P2")} {renderPlaza("P3")} {renderPlaza("P4")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
@@ -232,7 +231,7 @@ function ShowroomContent() {
           {renderPlaza("P5")} {renderPlaza("P6")} {renderPlaza("P7")} {renderPlaza("P8")}
           <div className="bg-transparent" /> <div className="bg-transparent" />
 
-          {/* Fila 3: Espacio vacío para pasillo central/mesas */}
+          {/* Fila 3: Pasillo Central Limpio */}
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
           <div className="bg-transparent" /> <div className="bg-transparent" />
