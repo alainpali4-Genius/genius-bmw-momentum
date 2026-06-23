@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, doc, updateDoc, deleteDoc, addDoc, query, orderBy } from "firebase/firestore";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -101,7 +101,7 @@ function ShowroomContent() {
   const searchParams = useSearchParams();
   const { data: vehiculosRaw, loading } = useCollection(query(collection(db, "vehiculos"), orderBy("createdAt", "desc")));
   
-  const [selectedVehicle, setSelectedVehicle] = useState<any>(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [movingVehicleId, setMovingVehicleId] = useState<string | null>(null);
   const [isStockSheetOpen, setIsStockSheetOpen] = useState(false);
@@ -112,13 +112,14 @@ function ShowroomContent() {
 
   const vehiculos = useMemo(() => (vehiculosRaw || []) as any[], [vehiculosRaw]);
   const pendingStock = useMemo(() => vehiculos.filter(v => !PLAZAS_LIST.includes(v.ubicacion)), [vehiculos]);
+  const selectedVehicle = useMemo(() => vehiculos.find(v => v.id === selectedVehicleId), [vehiculos, selectedVehicleId]);
 
   useEffect(() => {
     if (searchParams.get('add') === 'true') setIsAddingNew(true);
     const searchStr = searchParams.get('s');
     if (searchStr && vehiculos.length > 0) {
       const found = vehiculos.find(v => v.vin7 === searchStr || v.vin === searchStr);
-      if (found) setSelectedVehicle(found);
+      if (found) setSelectedVehicleId(found.id);
     }
   }, [searchParams, vehiculos]);
 
@@ -173,7 +174,7 @@ function ShowroomContent() {
     return (
       <div 
         key={id}
-        onClick={() => movingVehicleId ? handleSwapOrMove(movingVehicleId, id) : vehicle && setSelectedVehicle(vehicle)}
+        onClick={() => movingVehicleId ? handleSwapOrMove(movingVehicleId, id) : vehicle && setSelectedVehicleId(vehicle.id)}
         className={cn(
           "relative flex flex-col items-center justify-center transition-all h-full w-full rounded-2xl overflow-hidden",
           GRID_POSITIONS[id],
@@ -190,7 +191,7 @@ function ShowroomContent() {
           <div className="w-full h-full flex items-center justify-center p-1">
             <div className={cn(
               "relative flex items-center justify-center transition-all duration-300",
-              isVertical ? "h-[85%] w-[90%]" : "w-[145%] h-[120%] rotate-90"
+              isVertical ? "h-[85%] w-[85%]" : "w-[145%] h-[120%] rotate-90"
             )}>
               <CarSilhouette 
                 bodyType={vehicle.bodyType || 'SUV'} 
@@ -247,10 +248,15 @@ function ShowroomContent() {
         </div>
       </div>
 
-      <Sheet open={!!selectedVehicle} onOpenChange={o => !o && setSelectedVehicle(null)}>
+      <Sheet open={!!selectedVehicleId} onOpenChange={o => !o && setSelectedVehicleId(null)}>
         <SheetContent side="bottom" className="h-auto max-h-[85vh] p-0 rounded-t-[2.5rem] border-none shadow-2xl overflow-hidden bg-white">
-          <SheetHeader className="px-8 pt-6 pb-2">
+          <SheetHeader className="px-8 pt-6 pb-2 flex flex-row justify-between items-center">
             <SheetTitle className="text-xs font-black uppercase tracking-widest text-slate-400">DETALLE DEL VEHÍCULO</SheetTitle>
+            <SheetClose asChild>
+              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 hover:bg-slate-100">
+                <X className="w-4 h-4 text-slate-400" />
+              </Button>
+            </SheetClose>
           </SheetHeader>
           {selectedVehicle && (
             <div className="flex flex-col">
@@ -264,10 +270,10 @@ function ShowroomContent() {
                   <p className="text-white/40 font-mono text-[9px] font-bold tracking-widest">VIN: {selectedVehicle.vin}</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button variant="ghost" onClick={() => { setMovingVehicleId(selectedVehicle.id); setSelectedVehicle(null); }} className="h-10 w-10 rounded-xl bg-white/5 text-white hover:bg-white/10">
+                  <Button variant="ghost" onClick={() => { setMovingVehicleId(selectedVehicle.id); setSelectedVehicleId(null); }} className="h-10 w-10 rounded-xl bg-white/5 text-white hover:bg-white/10">
                     <Move className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" onClick={() => setSelectedVehicle(null)} className="h-10 w-10 rounded-xl bg-white/5 text-white hover:bg-white/10">
+                  <Button variant="ghost" onClick={() => setSelectedVehicleId(null)} className="h-10 w-10 rounded-xl bg-white/5 text-white hover:bg-white/10">
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
@@ -310,7 +316,7 @@ function ShowroomContent() {
                   </Select>
                 </div>
                 <div className="flex items-end">
-                  <Button variant="destructive" className="h-10 w-full rounded-xl font-black uppercase text-[10px] shadow-lg border-none hover:bg-red-700 transition-all active:scale-95" onClick={() => { if(confirm("¿Eliminar este registro permanentemente?")) { deleteDoc(doc(db, "vehiculos", selectedVehicle.id)); setSelectedVehicle(null); } }}>
+                  <Button variant="destructive" className="h-10 w-full rounded-xl font-black uppercase text-[10px] shadow-lg border-none hover:bg-red-700 transition-all active:scale-95" onClick={() => { if(confirm("¿Eliminar este registro permanentemente?")) { deleteDoc(doc(db, "vehiculos", selectedVehicle.id)); setSelectedVehicleId(null); } }}>
                     <Trash2 className="w-3.5 h-3.5 mr-2" /> ELIMINAR REGISTRO
                   </Button>
                 </div>
