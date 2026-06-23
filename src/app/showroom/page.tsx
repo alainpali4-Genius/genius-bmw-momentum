@@ -146,22 +146,26 @@ function ShowroomContent() {
           "relative flex flex-col items-center justify-center transition-all h-full w-full rounded-2xl overflow-hidden",
           vehicle ? "bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed border bg-white/30",
           isMovingTarget && "border-primary bg-primary/5 ring-4 ring-primary/20 z-50 scale-[1.02]",
-          isP13 && "border-[3px] border-secondary h-[140%] self-center"
+          isP13 && "border-[3px] border-secondary h-[130%] self-center"
         )}
       >
         <div className="absolute top-2 left-2 z-30">
           <span className="text-[10px] font-black uppercase text-slate-300 tracking-tighter">{id}</span>
         </div>
         {vehicle ? (
-          <div className="w-full h-full flex flex-col items-center justify-center p-0.5 relative overflow-hidden">
+          <div className="w-full h-full flex flex-col items-center justify-center p-1 relative overflow-hidden">
             <div className={cn(
-              "w-[200%] h-[200%] flex items-center justify-center relative transition-transform duration-500",
-              isP13 ? "rotate-0" : "rotate-90" 
+              "flex items-center justify-center relative transition-transform duration-500",
+              isP13 ? "w-full h-full rotate-0" : "w-[200%] h-[200%] rotate-90" 
             )}>
-              <CarSilhouette bodyType={vehicle.bodyType || 'SUV'} color={colorObj?.hex || '#CBD5E1'} className="scale-[1.2]" />
+              <CarSilhouette 
+                bodyType={vehicle.bodyType || 'SUV'} 
+                color={colorObj?.hex || '#CBD5E1'} 
+                className={cn("transition-all", isP13 ? "h-[85%] w-auto" : "scale-[1.2]")} 
+              />
               <div className={cn(
-                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-12 text-center",
-                isP13 ? "rotate-0" : "-rotate-90" 
+                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center",
+                isP13 ? "rotate-0 px-2" : "-rotate-90 px-12" 
               )}>
                  <p className="text-[10px] font-black uppercase text-white drop-shadow-[0_2px_4px_rgba(0,0,0,1)] leading-none mb-1 max-w-[100px] line-clamp-2">
                    {vehicle.modelo}
