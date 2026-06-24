@@ -126,9 +126,7 @@ function ShowroomContent() {
 
   const handleCloseDetail = () => {
     setSelectedVehicleId(null);
-    if (searchParams.has('s') || searchParams.has('add')) {
-      router.replace('/showroom', { scroll: false });
-    }
+    router.replace('/showroom', { scroll: false });
   };
 
   const handleUpdateVehicle = (vehicleId: string, updates: any) => {
@@ -185,7 +183,7 @@ function ShowroomContent() {
         onClick={() => movingVehicleId ? handleSwapOrMove(movingVehicleId, id) : vehicle && setSelectedVehicleId(vehicle.id)}
         className={cn(
           "relative flex flex-col items-center justify-center transition-all h-full w-full overflow-hidden",
-          "rounded-lg md:rounded-2xl",
+          "rounded-md md:rounded-2xl",
           GRID_POSITIONS[id],
           vehicle ? "bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed border bg-white/30",
           isMovingTarget && "border-primary bg-primary/5 ring-2 ring-primary/20 z-50 scale-[1.02]",
@@ -193,8 +191,8 @@ function ShowroomContent() {
           isP15 && "border-2 md:border-4 border-[#ED1C24] shadow-[0_0_10px_rgba(237,28,36,0.2)]"
         )}
       >
-        <div className="absolute top-0.5 left-1 md:top-2 md:left-2 z-30">
-          <span className="text-[7px] md:text-[10px] font-black uppercase text-slate-300 tracking-tighter">{id}</span>
+        <div className="absolute top-0.5 left-0.5 md:top-2 md:left-2 z-30">
+          <span className="text-[5px] md:text-[10px] font-black uppercase text-slate-300 tracking-tighter">{id}</span>
         </div>
         {vehicle ? (
           <div className="w-full h-full flex items-center justify-center p-0.5">
@@ -208,15 +206,15 @@ function ShowroomContent() {
                 className="w-full h-full max-h-full max-w-full"
               />
               <div className={cn(
-                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-1 md:px-6",
+                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-0.5 md:px-6",
                 !isVertical && "-rotate-90" 
               )}>
-                 <p className="text-[6px] md:text-[11px] font-black uppercase text-white drop-shadow-[0_1px_2px_rgba(0,0,0,1)] leading-none mb-0.5 line-clamp-1 md:line-clamp-2 max-w-[90%]">
+                 <p className="text-[5px] md:text-[11px] font-black uppercase text-white drop-shadow-[0_1px_2px_rgba(0,0,0,1)] leading-none mb-0.5 line-clamp-1 md:line-clamp-2 max-w-[90%]">
                    {vehicle.modelo}
                  </p>
                  <div className="flex flex-col items-center gap-0">
-                    <span className="text-[7px] md:text-[13px] font-mono font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
-                    <Badge className="bg-black/60 text-white text-[5px] md:text-[9px] font-black border-none px-1 md:px-2 h-2.5 md:h-4 backdrop-blur-sm mt-0.5">
+                    <span className="text-[5px] md:text-[13px] font-mono font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
+                    <Badge className="bg-black/60 text-white text-[4px] md:text-[9px] font-black border-none px-0.5 md:px-2 h-2 md:h-4 backdrop-blur-sm mt-0.5">
                       {colorObj?.code || '---'}
                     </Badge>
                  </div>
@@ -230,30 +228,30 @@ function ShowroomContent() {
 
   return (
     <div className="flex flex-col h-screen bg-[#f4f7fa] overflow-hidden">
-      <div className="bg-white border-b px-4 md:px-8 py-2 md:py-4 flex items-center justify-between shrink-0 shadow-sm z-40">
+      <div className="bg-white border-b px-3 md:px-8 py-2 md:py-4 flex items-center justify-between shrink-0 shadow-sm z-40">
         <div className="flex flex-col">
-          <h1 className="text-sm md:text-2xl font-black text-secondary uppercase italic leading-none tracking-tighter">PLANO <span className="text-primary not-italic">EXPOSICIÓN</span></h1>
-          <p className="text-[7px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">MOMENTUM NAVARRA</p>
+          <h1 className="text-xs md:text-2xl font-black text-secondary uppercase italic leading-none tracking-tighter">PLANO <span className="text-primary not-italic">EXPOSICIÓN</span></h1>
+          <p className="text-[6px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-0.5">MOMENTUM NAVARRA</p>
         </div>
         <div className="flex gap-1 md:gap-2">
           {movingVehicleId && (
-            <Button onClick={() => setMovingVehicleId(null)} className="h-8 md:h-10 bg-primary animate-pulse text-white rounded-lg md:rounded-xl font-black uppercase text-[7px] md:text-[10px] px-2 md:px-6">
+            <Button onClick={() => setMovingVehicleId(null)} className="h-7 md:h-10 bg-primary animate-pulse text-white rounded-lg md:rounded-xl font-black uppercase text-[6px] md:text-[10px] px-2 md:px-6">
               MUEVE EL COCHE
             </Button>
           )}
-          <Button variant="outline" onClick={() => setIsStockSheetOpen(true)} className="h-8 md:h-10 rounded-lg md:rounded-xl font-black uppercase text-[7px] md:text-[10px] px-2 md:px-6 border-slate-200">
+          <Button variant="outline" onClick={() => setIsStockSheetOpen(true)} className="h-7 md:h-10 rounded-lg md:rounded-xl font-black uppercase text-[6px] md:text-[10px] px-2 md:px-6 border-slate-200">
             STOCK ({pendingStock.length})
           </Button>
-          <Button onClick={() => setIsAddingNew(true)} className="h-8 md:h-10 bg-secondary hover:bg-slate-800 text-white rounded-lg md:rounded-xl font-black uppercase text-[7px] md:text-[10px] px-2 md:px-6 shadow-lg">
-            <Plus className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" /> NUEVO
+          <Button onClick={() => setIsAddingNew(true)} className="h-7 md:h-10 bg-secondary hover:bg-slate-800 text-white rounded-lg md:rounded-xl font-black uppercase text-[6px] md:text-[10px] px-2 md:px-6 shadow-lg">
+            <Plus className="w-2.5 h-2.5 md:w-4 md:h-4 mr-1 md:mr-2" /> NUEVO
           </Button>
         </div>
       </div>
 
-      <div className="flex-1 p-2 md:p-6 overflow-hidden flex items-center justify-center">
-        <div className="w-full h-full max-w-[1600px] grid grid-cols-6 grid-rows-5 gap-1 md:gap-4 aspect-video md:aspect-auto">
+      <div className="flex-1 p-1 md:p-6 overflow-hidden flex items-center justify-center">
+        <div className="w-full h-full max-w-[1600px] grid grid-cols-6 grid-rows-5 gap-0.5 md:gap-4 aspect-auto">
           {PLAZAS_LIST.map(id => renderPlaza(id))}
-          <div className="col-start-5 row-start-1 row-span-5 border-l border-slate-200 border-dashed mx-1 md:mx-4" />
+          <div className="col-start-5 row-start-1 row-span-5 border-l border-slate-200 border-dashed mx-0.5 md:mx-4" />
         </div>
       </div>
 
