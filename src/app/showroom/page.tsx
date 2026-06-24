@@ -126,6 +126,7 @@ function ShowroomContent() {
 
   const handleCloseDetail = () => {
     setSelectedVehicleId(null);
+    // Limpiamos los parámetros de búsqueda al cerrar para evitar reaperturas automáticas
     if (searchParams.has('s') || searchParams.has('add')) {
       router.replace('/showroom', { scroll: false });
     }
@@ -188,6 +189,7 @@ function ShowroomContent() {
           GRID_POSITIONS[id],
           vehicle ? "bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed border bg-white/30",
           isMovingTarget && "border-primary bg-primary/5 ring-4 ring-primary/20 z-50 scale-[1.02]",
+          // Bordes especiales solicitados
           isVertical && "border-4 border-[#00AEEF] shadow-[0_0_20px_rgba(0,174,239,0.3)]",
           isP15 && "border-4 border-[#ED1C24] shadow-[0_0_20px_rgba(237,28,36,0.2)]"
         )}
@@ -199,6 +201,7 @@ function ShowroomContent() {
           <div className="w-full h-full flex items-center justify-center p-1">
             <div className={cn(
               "relative flex items-center justify-center transition-all duration-300",
+              // Proporciones bloqueadas
               isVertical ? "h-[85%] w-[85%]" : "w-[145%] h-[120%] rotate-90"
             )}>
               <CarSilhouette 
