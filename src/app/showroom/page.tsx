@@ -188,8 +188,8 @@ function ShowroomContent() {
           GRID_POSITIONS[id],
           vehicle ? "bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed border bg-white/30",
           isMovingTarget && "border-primary bg-primary/5 ring-4 ring-primary/20 z-50 scale-[1.02]",
-          isVertical && "border-4 border-[#00AEEF] shadow-[0_0_20px_rgba(0,174,239,0.2)]",
-          isP15 && "border-4 border-[#ED1C24] shadow-[0_0_20px_rgba(237,28,36,0.15)]"
+          isVertical && "border-4 border-[#00AEEF] shadow-[0_0_20px_rgba(0,174,239,0.3)]",
+          isP15 && "border-4 border-[#ED1C24] shadow-[0_0_20px_rgba(237,28,36,0.2)]"
         )}
       >
         <div className="absolute top-2 left-2 z-30">
@@ -249,7 +249,7 @@ function ShowroomContent() {
         </div>
       </div>
 
-      <div className="flex-1 p-6 overflow-auto flex items-start justify-center">
+      <div className="flex-1 p-6 overflow-auto flex items-start justify-center scrollbar-none">
         <div className="w-full h-full max-w-[1600px] min-w-[1000px] grid grid-cols-6 grid-rows-5 gap-4">
           {PLAZAS_LIST.map(id => renderPlaza(id))}
           <div className="col-start-5 row-start-1 row-span-5 border-l border-slate-200 border-dashed mx-4" />
@@ -261,7 +261,7 @@ function ShowroomContent() {
           <SheetHeader className="px-8 pt-6 pb-2 flex flex-row justify-between items-center">
             <SheetTitle className="text-xs font-black uppercase tracking-widest text-slate-400">DETALLE DEL VEHÍCULO</SheetTitle>
             <SheetClose asChild>
-              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 hover:bg-slate-100">
+              <Button variant="ghost" size="icon" className="rounded-full h-8 w-8 hover:bg-slate-100" onClick={handleCloseDetail}>
                 <X className="w-4 h-4 text-slate-400" />
               </Button>
             </SheetClose>
@@ -281,7 +281,7 @@ function ShowroomContent() {
                   <Button variant="ghost" onClick={() => { setMovingVehicleId(selectedVehicle.id); handleCloseDetail(); }} className="h-10 w-10 rounded-xl bg-white/5 text-white hover:bg-white/10">
                     <Move className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" onClick={() => handleCloseDetail()} className="h-10 w-10 rounded-xl bg-white/5 text-white hover:bg-white/10">
+                  <Button variant="ghost" onClick={handleCloseDetail} className="h-10 w-10 rounded-xl bg-white/5 text-white hover:bg-white/10">
                     <X className="w-4 h-4" />
                   </Button>
                 </div>
