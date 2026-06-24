@@ -209,12 +209,12 @@ function ShowroomContent() {
                 "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center px-0.5 md:px-6",
                 !isVertical && "-rotate-90" 
               )}>
-                 <p className="text-[4px] md:text-[11px] font-black uppercase text-white drop-shadow-[0_1px_1px_rgba(0,0,0,1)] leading-none mb-0.5 line-clamp-1 md:line-clamp-2 max-w-[95%]">
+                 <p className="text-[3px] md:text-[11px] font-black uppercase text-white drop-shadow-[0_1px_1px_rgba(0,0,0,1)] leading-none mb-0.5 line-clamp-1 md:line-clamp-2 max-w-[95%]">
                    {vehicle.modelo}
                  </p>
                  <div className="flex flex-col items-center gap-0">
-                    <span className="text-[4px] md:text-[13px] font-mono font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
-                    <Badge className="bg-black/60 text-white text-[3px] md:text-[9px] font-black border-none px-0.5 md:px-2 h-1.5 md:h-4 backdrop-blur-sm mt-0.5">
+                    <span className="text-[3px] md:text-[13px] font-mono font-black text-white drop-shadow-[0_1px_1px_rgba(0,0,0,1)]">{vehicle.vin7}</span>
+                    <Badge className="bg-black/60 text-white text-[2.5px] md:text-[9px] font-black border-none px-0.5 md:px-2 h-1 md:h-4 backdrop-blur-sm mt-0.5">
                       {colorObj?.code || '---'}
                     </Badge>
                  </div>
@@ -227,7 +227,7 @@ function ShowroomContent() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#f4f7fa] overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-[#f4f7fa] overflow-hidden">
       {/* Header Compacto */}
       <div className="bg-white border-b px-2 md:px-8 py-1 md:py-4 flex items-center justify-between shrink-0 shadow-sm z-40">
         <div className="flex flex-col">
@@ -249,11 +249,10 @@ function ShowroomContent() {
         </div>
       </div>
 
-      {/* Grid Líquido: Vista de Pájaro en una sola pantalla */}
-      <div className="flex-1 p-0.5 md:p-6 overflow-hidden flex items-center justify-center">
-        <div className="w-full h-full max-w-[1600px] max-h-full grid grid-cols-6 grid-rows-[repeat(5,minmax(0,1fr))] gap-0.5 md:gap-4">
+      {/* Grid Líquido: Vista de Pájaro en una sola pantalla sin scroll */}
+      <div className="flex-1 p-0.5 md:p-6 overflow-hidden flex items-center justify-center h-full w-full">
+        <div className="w-full h-full max-w-[1600px] grid grid-cols-6 grid-rows-5 gap-0.5 md:gap-4 overflow-hidden">
           {PLAZAS_LIST.map(id => renderPlaza(id))}
-          <div className="col-start-5 row-start-1 row-span-5 border-l border-slate-200 border-dashed mx-0.5 md:mx-4 hidden md:block" />
         </div>
       </div>
 
