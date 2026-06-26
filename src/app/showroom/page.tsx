@@ -179,23 +179,23 @@ function ShowroomContent() {
         key={id}
         onClick={() => movingVehicleId ? handleSwapOrMove(movingVehicleId, id) : vehicle && setSelectedVehicleId(vehicle.id)}
         className={cn(
-          "relative flex flex-col items-center justify-center transition-all h-full w-full overflow-hidden",
-          "rounded-sm md:rounded-2xl",
+          "relative flex flex-col items-center justify-center transition-all h-full w-full",
+          "rounded-sm md:rounded-2xl overflow-hidden",
           GRID_POSITIONS[id],
           vehicle ? "bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed border bg-white/20",
           isMovingTarget && "ring-2 ring-primary bg-primary/5 z-50",
-          id === 'P13' && "border-2 md:border-4 border-[#00AEEF]",
-          id === 'P15' && "border-2 md:border-4 border-[#ED1C24]"
+          id === 'P13' ? "border-2 md:border-4 border-[#00AEEF] shadow-[0_0_15px_rgba(0,174,239,0.2)]" : 
+          id === 'P15' ? "border-2 md:border-4 border-[#ED1C24] shadow-[0_0_15px_rgba(237,28,36,0.2)]" : ""
         )}
       >
         <div className="absolute top-0.5 left-0.5 md:top-1.5 md:left-1.5 z-30">
           <span className="text-[4px] md:text-[9px] font-black uppercase text-slate-300 tracking-tighter">{id}</span>
         </div>
         {vehicle ? (
-          <div className="w-full h-full flex items-center justify-center p-0.5 md:p-1 relative overflow-hidden">
+          <div className="w-full h-full flex items-center justify-center p-0.5 md:p-1">
             <div className={cn(
-              "relative flex items-center justify-center w-[90%] h-[90%] transition-transform duration-300",
-              !isVertical && "rotate-90"
+              "relative flex items-center justify-center transition-all duration-300",
+              isVertical ? "w-[85%] h-[85%]" : "w-[90%] h-[90%] rotate-90"
             )}>
               <CarSilhouette 
                 bodyType={vehicle.bodyType || 'SUV'} 
@@ -203,14 +203,14 @@ function ShowroomContent() {
                 className="w-full h-full"
               />
               <div className={cn(
-                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center",
+                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center p-1",
                 !isVertical && "-rotate-90" 
               )}>
-                 <p className="text-[2.5px] md:text-[10px] font-black uppercase text-white drop-shadow-[0_1px_1px_rgba(0,0,0,0.8)] leading-tight mb-0.5 line-clamp-1 max-w-[85%]">
+                 <p className="text-[2.5px] md:text-[10px] font-black uppercase text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] leading-tight mb-0.5 line-clamp-1 w-full px-1">
                    {vehicle.modelo}
                  </p>
-                 <span className="text-[3px] md:text-[12px] font-mono font-black text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{vehicle.vin7}</span>
-                 <Badge className="bg-black/50 text-white text-[2px] md:text-[8px] font-black border-none px-0.5 md:px-1.5 h-auto mt-0.5 md:mt-1">
+                 <span className="text-[3px] md:text-[12px] font-mono font-black text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">{vehicle.vin7}</span>
+                 <Badge className="bg-black/60 text-white text-[2px] md:text-[8px] font-black border-none px-0.5 md:px-1.5 h-auto mt-0.5 md:mt-1">
                    {colorObj?.code || '---'}
                  </Badge>
               </div>
@@ -223,7 +223,6 @@ function ShowroomContent() {
 
   return (
     <div className="flex flex-col h-full w-full bg-[#f4f7fa] overflow-hidden">
-      {/* Header Compacto */}
       <div className="bg-white border-b px-3 md:px-8 py-2 md:py-4 flex items-center justify-between shrink-0 shadow-sm z-40">
         <div className="flex flex-col">
           <h1 className="text-xs md:text-2xl font-black text-secondary uppercase italic leading-none tracking-tighter">PLANO <span className="text-primary not-italic">EXPOSICIÓN</span></h1>
@@ -232,7 +231,7 @@ function ShowroomContent() {
         <div className="flex gap-1">
           {movingVehicleId && (
             <Button onClick={() => setMovingVehicleId(null)} className="h-7 md:h-10 bg-primary animate-pulse text-white rounded-lg md:rounded-xl font-black uppercase text-[6px] md:text-[10px] px-2 md:px-6">
-              MOVER
+              CANCELAR
             </Button>
           )}
           <Button variant="outline" onClick={() => setIsStockSheetOpen(true)} className="h-7 md:h-10 rounded-lg md:rounded-xl font-black uppercase text-[6px] md:text-[10px] px-2 md:px-6 border-slate-200">
@@ -244,7 +243,6 @@ function ShowroomContent() {
         </div>
       </div>
 
-      {/* Grid Líquido: Vista de Pájaro en una sola pantalla */}
       <div className="flex-1 p-2 md:p-6 overflow-hidden flex items-center justify-center h-full w-full">
         <div className="w-full h-full max-w-[1400px] grid grid-cols-6 grid-rows-5 gap-1 md:gap-4 overflow-hidden">
           {PLAZAS_LIST.map(id => renderPlaza(id))}
@@ -278,7 +276,7 @@ function ShowroomContent() {
                   </Button>
                 </div>
               </div>
-              <div className="p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-6 grid grid-cols-2 md:grid-cols-4 gap-4 pb-20 md:pb-8">
                 <div className="space-y-1">
                   <Label className="text-[9px] font-black uppercase text-slate-400 tracking-[0.2em] px-1">ESTADO</Label>
                   <Select value={selectedVehicle.estado} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { estado: v })}>
@@ -331,7 +329,7 @@ function ShowroomContent() {
           <SheetHeader className="p-8 bg-slate-50 border-b">
             <SheetTitle className="text-2xl font-black uppercase italic text-secondary">STOCK PENDIENTE</SheetTitle>
           </SheetHeader>
-          <div className="p-6 space-y-3 overflow-y-auto h-[calc(100vh-120px)] scrollbar-none">
+          <div className="p-6 space-y-3 overflow-y-auto h-[calc(100vh-120px)] scrollbar-none pb-20">
             {pendingStock.length === 0 ? (
               <div className="text-center py-20 text-slate-300 font-black uppercase text-xs">Sin stock</div>
             ) : pendingStock.map(car => (
