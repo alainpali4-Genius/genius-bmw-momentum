@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, Suspense, useEffect } from "react";
@@ -175,10 +176,14 @@ function ShowroomContent() {
     const isMovingTarget = !!movingVehicleId && movingVehicleId !== vehicle?.id;
     const colorObj = BMW_COLORS.find(c => c.code === (vehicle?.colorCodigo || vehicle?.colorBMW));
     
-    // Determinamos si el color es claro para usar texto oscuro
-    const isLightColor = colorObj?.code === '300' || colorObj?.code === 'A96' || colorObj?.code === 'C4P' || colorObj?.code === 'C4W';
-    const textColor = isLightColor ? "text-secondary" : "text-white";
-    const textShadow = isLightColor ? "drop-shadow-none" : "drop-shadow-md";
+    // Si el coche es blanco (300 o A96), letras negras. Si no, letras blancas.
+    const isWhiteCar = colorObj?.code === '300' || colorObj?.code === 'A96';
+    const textColor = isWhiteCar ? "text-black" : "text-white";
+    const textShadow = isWhiteCar ? "drop-shadow-none" : "drop-shadow-md";
+
+    // P13 vertical (rotate-0), otros horizontal (rotate-90)
+    const carRotation = id === 'P13' ? "rotate-0" : "rotate-90";
+    const textRotation = id === 'P13' ? "rotate-0" : "-rotate-90";
 
     return (
       <div 
@@ -200,7 +205,8 @@ function ShowroomContent() {
         {vehicle && (
           <div className="w-full h-full flex items-center justify-center p-0.5 md:p-1 relative overflow-hidden">
             <div className={cn(
-              "relative flex items-center justify-center transition-all duration-300 w-full h-full rotate-90"
+              "relative flex items-center justify-center transition-all duration-300 w-full h-full",
+              carRotation
             )}>
               <CarSilhouette 
                 bodyType={vehicle.bodyType || 'SUV'} 
@@ -208,7 +214,8 @@ function ShowroomContent() {
                 className="h-[95%] w-auto max-w-[120%]"
               />
               <div className={cn(
-                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center p-0.5 -rotate-90"
+                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center p-0.5",
+                textRotation
               )}>
                  <p className={cn("text-[3px] md:text-[8px] font-black uppercase truncate w-[85%] leading-none mb-0.5", textColor, textShadow)}>
                    {vehicle.modelo}
