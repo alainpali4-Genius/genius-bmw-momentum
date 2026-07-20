@@ -72,7 +72,7 @@ function CarSilhouette({ bodyType, color, className, style }: { bodyType: string
     <svg 
       viewBox="0 0 100 200" 
       preserveAspectRatio="xMidYMid meet"
-      className={cn("drop-shadow-xl", className)} 
+      className={cn("drop-shadow-xl transition-all duration-300", className)} 
       style={style} 
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -83,18 +83,23 @@ function CarSilhouette({ bodyType, color, className, style }: { bodyType: string
           <stop offset="100%" stopColor="#1a1a1a" />
         </linearGradient>
       </defs>
-      <ellipse cx="50" cy="100" rx="45" ry="95" fill="black" opacity="0.3" />
+      {/* Sombra base */}
+      <ellipse cx="50" cy="100" rx="48" ry="98" fill="black" opacity="0.25" />
+      
+      {/* Carrocería ajustada para ocupar el máximo espacio del viewBox */}
       <path 
         d={bodyType === 'SUV' 
-          ? "M12,18 Q12,5 30,5 L70,5 Q88,5 88,18 L93,60 Q93,85 90,182 Q88,195 75,195 L25,195 Q12,195 10,182 Q7,85 7,60 L12,18 Z"
-          : "M15,12 Q15,2 32,2 L68,2 Q85,2 85,12 L92,65 Q92,90 88,190 Q85,200 68,200 L32,200 Q15,200 12,190 Q8,90 8,65 L15,12 Z"
+          ? "M8,12 Q8,2 25,2 L75,2 Q92,2 92,12 L96,60 Q96,85 94,185 Q92,198 75,198 L25,198 Q8,198 6,185 Q4,85 4,60 L8,12 Z"
+          : "M10,8 Q10,2 28,2 L72,2 Q90,2 90,8 L95,65 Q95,90 92,192 Q90,200 70,200 L30,200 Q10,200 8,192 Q5,90 5,65 L10,8 Z"
         }
         fill={color} 
-        stroke="rgba(0,0,0,0.2)"
-        strokeWidth="1.5"
+        stroke="rgba(0,0,0,0.15)"
+        strokeWidth="1"
       />
-      <path d="M22,45 Q50,35 78,45 L75,80 Q50,70 25,80 Z" fill="url(#glassGrad)" />
-      <path d="M28,150 Q50,160 72,150 L68,180 Q50,188 32,180 Z" fill="url(#glassGrad)" />
+      
+      {/* Cristales */}
+      <path d="M18,40 Q50,30 82,40 L78,75 Q50,65 22,75 Z" fill="url(#glassGrad)" />
+      <path d="M25,145 Q50,155 75,145 L72,175 Q50,183 28,175 Z" fill="url(#glassGrad)" />
     </svg>
   );
 }
@@ -176,12 +181,12 @@ function ShowroomContent() {
     const isMovingTarget = !!movingVehicleId && movingVehicleId !== vehicle?.id;
     const colorObj = BMW_COLORS.find(c => c.code === (vehicle?.colorCodigo || vehicle?.colorBMW));
     
-    // Si el coche es blanco (300 o A96), letras negras. Si no, letras blancas.
+    // Contraste: Negro solo en coches blancos (300 o A96). Blanco en el resto.
     const isWhiteCar = colorObj?.code === '300' || colorObj?.code === 'A96';
     const textColor = isWhiteCar ? "text-black" : "text-white";
     const textShadow = isWhiteCar ? "drop-shadow-none" : "drop-shadow-md";
 
-    // P13 vertical (rotate-0), otros horizontal (rotate-90)
+    // P13 vertical (mirando arriba), otros horizontal (rotación 90)
     const carRotation = id === 'P13' ? "rotate-0" : "rotate-90";
     const textRotation = id === 'P13' ? "rotate-0" : "-rotate-90";
 
@@ -191,7 +196,7 @@ function ShowroomContent() {
         onClick={() => movingVehicleId ? handleSwapOrMove(movingVehicleId, id) : vehicle && setSelectedVehicleId(vehicle.id)}
         className={cn(
           "relative flex flex-col items-center justify-center transition-all h-full w-full",
-          "rounded-md overflow-hidden",
+          "rounded-sm overflow-hidden",
           GRID_POSITIONS[id],
           vehicle ? "bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed border-2 bg-white/20",
           isMovingTarget && "ring-2 ring-primary bg-primary/5 z-50",
@@ -199,11 +204,11 @@ function ShowroomContent() {
           id === 'P15' ? "border-2 border-[#ED1C24]" : ""
         )}
       >
-        <div className="absolute top-0.5 left-0.5 z-30">
-          <span className="text-[5px] md:text-[9px] font-black uppercase text-slate-300">{id}</span>
+        <div className="absolute top-0 left-0 z-30 p-0.5">
+          <span className="text-[6px] md:text-[9px] font-black uppercase text-slate-300 leading-none">{id}</span>
         </div>
         {vehicle && (
-          <div className="w-full h-full flex items-center justify-center p-0.5 md:p-1 relative overflow-hidden">
+          <div className="w-full h-full flex items-center justify-center p-0.5 relative overflow-hidden">
             <div className={cn(
               "relative flex items-center justify-center transition-all duration-300 w-full h-full",
               carRotation
@@ -211,16 +216,16 @@ function ShowroomContent() {
               <CarSilhouette 
                 bodyType={vehicle.bodyType || 'SUV'} 
                 color={colorObj?.hex || '#CBD5E1'} 
-                className="h-[95%] w-auto max-w-[120%]"
+                className="h-[98%] w-auto max-w-[125%]"
               />
               <div className={cn(
-                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center p-0.5",
+                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center p-1",
                 textRotation
               )}>
-                 <p className={cn("text-[3px] md:text-[8px] font-black uppercase truncate w-[85%] leading-none mb-0.5", textColor, textShadow)}>
+                 <p className={cn("text-[4px] md:text-[10px] font-black uppercase truncate w-[90%] tracking-tighter leading-none mb-0.5", textColor, textShadow)}>
                    {vehicle.modelo}
                  </p>
-                 <span className={cn("text-[4px] md:text-[10px] font-mono font-black", textColor, textShadow)}>{vehicle.vin7}</span>
+                 <span className={cn("text-[5px] md:text-[12px] font-mono font-black tracking-tight", textColor, textShadow)}>{vehicle.vin7}</span>
               </div>
             </div>
           </div>
@@ -241,7 +246,7 @@ function ShowroomContent() {
       </div>
 
       <div className="flex-1 p-1 md:p-4 overflow-hidden flex items-center justify-center w-full h-full">
-        <div className="w-full h-full max-w-[1600px] grid grid-cols-6 grid-rows-5 gap-0.5 md:gap-3">
+        <div className="w-full h-full max-w-[1600px] grid grid-cols-6 grid-rows-5 gap-1 md:gap-2">
           {PLAZAS_LIST.map(id => renderPlaza(id))}
         </div>
       </div>
