@@ -61,7 +61,7 @@ const GRID_POSITIONS: Record<string, string> = {
   P10: "col-start-2 row-start-4",
   P11: "col-start-3 row-start-4",
   P12: "col-start-4 row-start-4",
-  P13: "col-start-6 row-start-4 row-span-2", 
+  P13: "col-start-6 row-start-4", 
   P15: "col-start-2 row-start-5", 
   P14: "col-start-4 row-start-5", 
 };
@@ -174,8 +174,12 @@ function ShowroomContent() {
     const vehicle = vehiculos.find(v => v.ubicacion === id);
     const isMovingTarget = !!movingVehicleId && movingVehicleId !== vehicle?.id;
     const colorObj = BMW_COLORS.find(c => c.code === (vehicle?.colorCodigo || vehicle?.colorBMW));
-    const isVertical = id === 'P13';
     
+    // Determinamos si el color es claro para usar texto oscuro
+    const isLightColor = colorObj?.code === '300' || colorObj?.code === 'A96' || colorObj?.code === 'C4P' || colorObj?.code === 'C4W';
+    const textColor = isLightColor ? "text-secondary" : "text-white";
+    const textShadow = isLightColor ? "drop-shadow-none" : "drop-shadow-md";
+
     return (
       <div 
         key={id}
@@ -196,22 +200,20 @@ function ShowroomContent() {
         {vehicle && (
           <div className="w-full h-full flex items-center justify-center p-0.5 md:p-1 relative overflow-hidden">
             <div className={cn(
-              "relative flex items-center justify-center transition-all duration-300 w-full h-full",
-              !isVertical && "rotate-90"
+              "relative flex items-center justify-center transition-all duration-300 w-full h-full rotate-90"
             )}>
               <CarSilhouette 
                 bodyType={vehicle.bodyType || 'SUV'} 
                 color={colorObj?.hex || '#CBD5E1'} 
-                className={cn("h-[95%] w-auto", !isVertical && "max-w-[120%]")}
+                className="h-[95%] w-auto max-w-[120%]"
               />
               <div className={cn(
-                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center p-0.5",
-                !isVertical && "-rotate-90" 
+                "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center p-0.5 -rotate-90"
               )}>
-                 <p className="text-[3px] md:text-[8px] font-black uppercase text-white drop-shadow-md truncate w-[85%]">
+                 <p className={cn("text-[3px] md:text-[8px] font-black uppercase truncate w-[85%] leading-none mb-0.5", textColor, textShadow)}>
                    {vehicle.modelo}
                  </p>
-                 <span className="text-[4px] md:text-[10px] font-mono font-black text-white drop-shadow-md">{vehicle.vin7}</span>
+                 <span className={cn("text-[4px] md:text-[10px] font-mono font-black", textColor, textShadow)}>{vehicle.vin7}</span>
               </div>
             </div>
           </div>
@@ -254,7 +256,6 @@ function ShowroomContent() {
               </div>
               <div className="p-6 grid grid-cols-2 gap-4 pb-24 md:pb-6">
                 
-                {/* 1. TIPO LOGÍSTICO (Y CLIENTE/EMPRESA) */}
                 <div className="col-span-2 space-y-1">
                   <Label className="text-[8px] font-black uppercase text-slate-400 px-1">TIPO LOGÍSTICO</Label>
                   <Select value={selectedVehicle.tipoLogistico || "Stock Expo"} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { tipoLogistico: v })}>
@@ -280,7 +281,6 @@ function ShowroomContent() {
                   </div>
                 )}
 
-                {/* 2. UBICACIÓN */}
                 <div className="space-y-1">
                   <Label className="text-[8px] font-black uppercase text-slate-400 px-1">UBICACIÓN</Label>
                   <Select value={selectedVehicle.ubicacion} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { ubicacion: v })}>
@@ -289,7 +289,6 @@ function ShowroomContent() {
                   </Select>
                 </div>
 
-                {/* 3. ESTADO */}
                 <div className="space-y-1">
                   <Label className="text-[8px] font-black uppercase text-slate-400 px-1">ESTADO</Label>
                   <Select value={selectedVehicle.estado} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { estado: v })}>
