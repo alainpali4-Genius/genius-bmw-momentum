@@ -160,20 +160,17 @@ function ShowroomContent() {
     const targetCar = vehiculos.find(v => v.ubicacion === targetPlaza);
     
     if (targetCar && targetCar.id !== sourceId) {
-      // Intercambio
       const oldLocation = PLAZAS_LIST.includes(sourceCar.ubicacion) ? sourceCar.ubicacion : 'Stock';
       await handleUpdateVehicle(sourceId, { ubicacion: targetPlaza, estado: 'Exposicion' });
       await handleUpdateVehicle(targetCar.id, { ubicacion: oldLocation });
       toast({ title: "Intercambio Realizado", description: `${sourceCar.modelo} ↔ ${targetCar.modelo}` });
     } else {
-      // Mover a plaza vacía
       await handleUpdateVehicle(sourceId, { ubicacion: targetPlaza, estado: 'Exposicion' });
       toast({ title: "Vehículo Ubicado", description: `${sourceCar.modelo} en ${targetPlaza}` });
     }
     setMovingVehicleId(null);
   };
 
-  // Handlers para Drag & Drop
   const handleDragStart = (e: React.DragEvent, vehicleId: string) => {
     setMovingVehicleId(vehicleId);
     e.dataTransfer.setData("vehicleId", vehicleId);
@@ -199,6 +196,7 @@ function ShowroomContent() {
     const isMovingTarget = (!!movingVehicleId && movingVehicleId !== vehicle?.id) || (draggedPlaza === id);
     const colorObj = BMW_COLORS.find(c => c.code === (vehicle?.colorCodigo || vehicle?.colorBMW));
     
+    // Lógica de color de texto: negro en blanco, blanco en el resto
     const isWhiteCar = colorObj?.code === '300' || colorObj?.code === 'A96';
     const textColor = isWhiteCar ? "text-black" : "text-white";
     const textShadow = isWhiteCar ? "drop-shadow-none" : "drop-shadow-md";
@@ -222,7 +220,7 @@ function ShowroomContent() {
         )}
       >
         <div className="absolute top-0 left-0 z-30 p-0.5">
-          <span className="text-[6px] md:text-[9px] font-black uppercase text-slate-300 leading-none">{id}</span>
+          <span className="text-[7px] md:text-[9px] font-black uppercase text-slate-300 leading-none">{id}</span>
         </div>
         {vehicle && (
           <div 
@@ -243,10 +241,10 @@ function ShowroomContent() {
                 "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center p-1",
                 textRotation
               )}>
-                 <p className={cn("text-[5px] md:text-[11px] font-black uppercase truncate w-[95%] tracking-tighter leading-none mb-0.5", textColor, textShadow)}>
+                 <p className={cn("text-[6px] md:text-[11px] font-black uppercase truncate w-[95%] tracking-tighter leading-none mb-0.5", textColor, textShadow)}>
                    {vehicle.modelo}
                  </p>
-                 <span className={cn("text-[6px] md:text-[14px] font-mono font-black tracking-tight", textColor, textShadow)}>{vehicle.vin7}</span>
+                 <span className={cn("text-[7px] md:text-[14px] font-mono font-black tracking-tight", textColor, textShadow)}>{vehicle.vin7}</span>
               </div>
             </div>
           </div>
@@ -257,21 +255,26 @@ function ShowroomContent() {
 
   return (
     <div className="flex flex-col h-screen w-full bg-[#f4f7fa] overflow-hidden">
+      {/* Cabecera optimizada */}
       <div className="bg-white border-b px-3 py-1.5 md:py-2 flex items-center justify-between shrink-0 shadow-sm z-40">
-        <h1 className="text-[10px] md:text-xl font-black text-secondary uppercase italic leading-none tracking-tighter">PLANO <span className="text-primary not-italic">EXPO</span></h1>
+        <h1 className="text-[11px] md:text-xl font-black text-secondary uppercase italic leading-none tracking-tighter">PLANO <span className="text-primary not-italic">EXPO</span></h1>
         <div className="flex gap-1">
-          {movingVehicleId && <Button onClick={() => setMovingVehicleId(null)} className="h-6 md:h-7 bg-red-600 text-white rounded-md font-black uppercase text-[6px] md:text-[7px] px-2">CANCELAR MOVIMIENTO</Button>}
-          <Button variant="outline" onClick={() => setIsStockSheetOpen(true)} className="h-6 md:h-7 rounded-md font-black uppercase text-[6px] md:text-[7px] px-2 border-slate-200">STOCK DISPONIBLE ({pendingStock.length})</Button>
-          <Button onClick={() => setIsAddingNew(true)} className="h-6 md:h-7 bg-secondary text-white rounded-md font-black uppercase text-[6px] md:text-[7px] px-2">NUEVO</Button>
+          {movingVehicleId && <Button onClick={() => setMovingVehicleId(null)} className="h-6 md:h-7 bg-red-600 text-white rounded-md font-black uppercase text-[7px] md:text-[8px] px-2">CANCELAR</Button>}
+          <Button variant="outline" onClick={() => setIsStockSheetOpen(true)} className="h-6 md:h-7 rounded-md font-black uppercase text-[7px] md:text-[8px] px-2 border-slate-200">STOCK ({pendingStock.length})</Button>
+          <Button onClick={() => setIsAddingNew(true)} className="h-6 md:h-7 bg-secondary text-white rounded-md font-black uppercase text-[7px] md:text-[8px] px-2">NUEVO</Button>
         </div>
       </div>
 
-      <div className="flex-1 p-1 md:p-4 overflow-hidden flex items-center justify-center w-full h-full">
-        <div className="w-full h-full max-w-[1600px] grid grid-cols-6 grid-rows-5 gap-1">
-          {PLAZAS_LIST.map(id => renderPlaza(id))}
+      {/* Grid de exposición: Vista de pájaro real optimizada para móvil vertical */}
+      <div className="flex-1 relative overflow-hidden bg-slate-50/30">
+        <div className="absolute inset-0 p-1 md:p-4">
+          <div className="w-full h-full grid grid-cols-6 grid-rows-5 gap-1">
+            {PLAZAS_LIST.map(id => renderPlaza(id))}
+          </div>
         </div>
       </div>
 
+      {/* Diálogos y Sheets */}
       <Sheet open={!!selectedVehicleId} onOpenChange={o => !o && handleCloseDetail()}>
         <SheetContent side="bottom" className="h-auto p-0 rounded-t-3xl border-none shadow-2xl overflow-hidden bg-white max-h-[90vh] overflow-y-auto">
           {selectedVehicle && (
