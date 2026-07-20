@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo } from "react";
@@ -10,7 +9,8 @@ import {
   Car,
   MapPin,
   Droplets,
-  ArrowRightCircle
+  ArrowRightCircle,
+  Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +51,7 @@ export default function StockManagement() {
     const s = searchTerm.toLowerCase();
     if (s) {
       result = result.filter(v => 
-        v.modelo?.toLowerCase().includes(s) || v.vin?.toLowerCase().includes(s) || v.vin7?.toLowerCase().includes(s)
+        v.modelo?.toLowerCase().includes(s) || v.vin?.toLowerCase().includes(s) || v.vin7?.toLowerCase().includes(s) || v.entidadRenting?.toLowerCase().includes(s)
       );
     }
     return result;
@@ -112,7 +112,7 @@ export default function StockManagement() {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300" />
         <Input 
           className="pl-9 h-9 bg-white border-none shadow-sm rounded-md text-[9px] font-black uppercase" 
-          placeholder="BUSCAR MODELO O BASTIDOR..." 
+          placeholder="BUSCAR MODELO, BASTIDOR O EMPRESA..." 
           value={searchTerm} 
           onChange={e => setSearchTerm(e.target.value)} 
         />
@@ -131,8 +131,8 @@ export default function StockManagement() {
               <Table>
                 <TableHeader className="bg-slate-50 sticky top-0">
                   <TableRow className="border-none h-10">
+                    <TableHead className="font-black text-[9px] uppercase">Categoría</TableHead>
                     <TableHead className="font-black text-[9px] uppercase">Modelo</TableHead>
-                    <TableHead className="font-black text-[9px] uppercase">Color</TableHead>
                     <TableHead className="font-black text-[9px] uppercase">Bastidor</TableHead>
                     <TableHead className="font-black text-[9px] uppercase">Ubicación</TableHead>
                     <TableHead className="font-black text-[9px] uppercase text-center">Días</TableHead>
@@ -145,11 +145,28 @@ export default function StockManagement() {
                     const colorObj = BMW_COLORS.find(c => c.code === (car.colorCodigo || car.colorBMW));
                     return (
                       <TableRow key={car.id} onClick={() => router.push(`/showroom?s=${car.vin7}`)} className="hover:bg-slate-50/50 cursor-pointer h-12 border-slate-50 group">
-                        <TableCell className="font-black text-[10px] uppercase text-secondary">{car.modelo}</TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-2.5 h-2.5 rounded-full border border-slate-200" style={{ backgroundColor: colorObj?.hex || '#F5F5F5' }} />
-                            <span className="text-[8px] uppercase font-bold text-slate-500 truncate max-w-[100px]">{car.colorExterior}</span>
+                          <div className="flex flex-col gap-0.5">
+                            <Badge className={cn(
+                              "text-[8px] font-black uppercase px-2 py-0.5 border-none w-fit",
+                              car.tipoLogistico?.includes('Renting') ? "bg-blue-100 text-blue-700" :
+                              car.tipoLogistico === 'Demo' ? "bg-orange-100 text-orange-700" :
+                              car.tipoLogistico === 'Entrega Cliente' ? "bg-emerald-100 text-emerald-700" :
+                              "bg-slate-100 text-slate-500"
+                            )}>
+                              {car.tipoLogistico || "Stock Expo"}
+                            </Badge>
+                            {car.entidadRenting && (
+                              <div className="flex items-center gap-1 text-[7px] font-black text-slate-400 uppercase ml-1">
+                                <Building2 className="w-2 h-2" /> {car.entidadRenting}
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-black text-[10px] uppercase text-secondary">
+                          <div className="flex items-center gap-2">
+                            {car.modelo}
+                            <div className="w-2 h-2 rounded-full border border-slate-200" style={{ backgroundColor: colorObj?.hex || '#F5F5F5' }} />
                           </div>
                         </TableCell>
                         <TableCell className="font-mono text-[9px] font-bold text-slate-400">{car.vin7}</TableCell>
@@ -178,10 +195,21 @@ export default function StockManagement() {
                   <Card key={car.id} onClick={() => router.push(`/showroom?s=${car.vin7}`)} className="bg-white border-none shadow-sm rounded-md active:scale-[0.99]">
                     <CardContent className="p-2 flex items-center justify-between gap-2">
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-black text-[9px] uppercase text-secondary leading-none truncate">{car.modelo}</h3>
-                        <div className="flex items-center gap-1.5 mt-0.5">
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-black text-[9px] uppercase text-secondary leading-none truncate">{car.modelo}</h3>
+                          <Badge className={cn(
+                            "text-[6px] font-black uppercase px-1 py-0 rounded-sm border-none h-3 leading-none",
+                            car.tipoLogistico?.includes('Renting') ? "bg-blue-50 text-blue-600" :
+                            car.tipoLogistico === 'Demo' ? "bg-orange-50 text-orange-600" :
+                            "bg-slate-50 text-slate-400"
+                          )}>
+                            {car.tipoLogistico || "STOCK"}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1">
                           <span className="font-mono text-[7px] font-bold text-slate-400">{car.vin7}</span>
                           <span className="text-[7px] font-black text-slate-300">{days}D</span>
+                          {car.entidadRenting && <span className="text-[6px] font-black text-blue-500 uppercase truncate max-w-[60px]">{car.entidadRenting}</span>}
                           <div className="w-1.5 h-1.5 rounded-full border border-slate-200 ml-1" style={{ backgroundColor: colorObj?.hex || '#F5F5F5' }} />
                         </div>
                       </div>

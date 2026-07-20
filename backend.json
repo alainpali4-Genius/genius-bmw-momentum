@@ -20,6 +20,12 @@
           "type": "string", 
           "enum": ["Exposicion", "Stock", "Demo", "Reservado", "Preparacion Entrega", "Entregado", "Cedido"] 
         },
+        "tipoLogistico": {
+          "type": "string",
+          "enum": ["Stock Expo", "Entrega Renting", "Entrega Cliente", "Demo", "Devolucion Renting"],
+          "description": "Propósito logístico del vehículo."
+        },
+        "entidadRenting": { "type": "string", "description": "Nombre de la empresa en caso de renting." },
         "ubicacion": { "type": "string" },
         "comercial": { "type": "string" },
         "fechaEntrada": { "type": "string" },

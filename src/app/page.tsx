@@ -1,9 +1,8 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from "react";
 import { 
-  Package, Grid3X3, Car, CalendarCheck, Clock, Search, Scan, Trash2
+  Package, Grid3X3, Car, CalendarCheck, Clock, Search, Scan, Trash2, Building2, User
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -52,7 +51,7 @@ export default function GeniusDashboard() {
   const stats = useMemo(() => {
     const total = vehiculos.length;
     const expo = vehiculos.filter(v => v.ubicacion?.startsWith('P')).length;
-    const demo = vehiculos.filter(v => v.estado === 'Demo').length;
+    const demo = vehiculos.filter(v => v.tipoLogistico === 'Demo' || v.estado === 'Demo').length;
     const reserved = vehiculos.filter(v => v.estado === 'Reservado').length;
     const prep = vehiculos.filter(v => v.estado === 'Preparacion Entrega').length;
     
@@ -139,6 +138,10 @@ export default function GeniusDashboard() {
             ) : (
               filteredStock.map((car) => {
                 const colorObj = BMW_COLORS.find(c => c.code === (car.colorCodigo || car.colorBMW));
+                const isRenting = car.tipoLogistico?.includes('Renting');
+                const isDemo = car.tipoLogistico === 'Demo';
+                const isParticular = car.tipoLogistico === 'Entrega Cliente';
+
                 return (
                   <Card key={car.id} onClick={() => router.push(`/showroom?s=${car.vin7}`)} className="border border-slate-50 bg-white hover:border-primary/20 transition-all rounded-md shadow-sm overflow-hidden active:scale-[0.99] group cursor-pointer">
                     <CardContent className="p-2 flex items-center justify-between gap-3">
@@ -147,9 +150,31 @@ export default function GeniusDashboard() {
                           <Car className="h-3.5 w-3.5 text-slate-300 group-hover:text-primary" />
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <h4 className="font-black text-[9px] uppercase text-secondary leading-none truncate">{car.modelo}</h4>
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-black text-[9px] uppercase text-secondary leading-none truncate">{car.modelo}</h4>
+                            {car.tipoLogistico && (
+                              <Badge className={cn(
+                                "text-[6px] font-black uppercase px-1 py-0 rounded-sm border-none leading-none h-3",
+                                isRenting ? "bg-blue-100 text-blue-700" :
+                                isDemo ? "bg-orange-100 text-orange-700" :
+                                isParticular ? "bg-emerald-100 text-emerald-700" :
+                                "bg-slate-100 text-slate-500"
+                              )}>
+                                {car.tipoLogistico === 'Entrega Renting' ? 'RENTING' : 
+                                 car.tipoLogistico === 'Entrega Cliente' ? 'PARTICULAR' :
+                                 car.tipoLogistico === 'Devolucion Renting' ? 'DEVOL. RENTING' :
+                                 car.tipoLogistico}
+                              </Badge>
+                            )}
+                          </div>
                           <div className="flex items-center gap-1.5 mt-0.5">
                             <span className="font-mono text-[7px] font-bold text-slate-400">{car.vin7}</span>
+                            {car.entidadRenting && (
+                              <div className="flex items-center gap-1 text-[6px] font-black text-blue-600 uppercase">
+                                <Building2 className="w-2 h-2" />
+                                <span className="truncate max-w-[80px]">{car.entidadRenting}</span>
+                              </div>
+                            )}
                             <div className="flex items-center gap-1">
                               <div className="w-1.5 h-1.5 rounded-full border border-slate-200" style={{ backgroundColor: colorObj?.hex || '#F5F5F5' }} />
                               <span className="text-[6px] font-black text-slate-400 uppercase truncate">{colorObj?.name.split(' ')[0]}</span>

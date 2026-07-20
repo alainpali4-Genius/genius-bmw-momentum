@@ -1,9 +1,8 @@
-
 'use client';
 
 import { useState, useMemo, Suspense, useEffect } from "react";
 import { 
-  Plus, Move, Loader2, X, Trash2, Package, Palette
+  Plus, Move, Loader2, X, Trash2, Package, Palette, Building2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +34,14 @@ export const BMW_COLORS = [
   {"code":"C6M","name":"Isle of Man Green Metallic","hex":"#006B43"},
   {"code":"C68","name":"Fire Red Metallic","hex":"#A5161A"},
   {"code":"C77","name":"Vegas Red Metallic","hex":"#B21A1A"}
+];
+
+export const TIPOS_LOGISTICOS = [
+  "Stock Expo",
+  "Entrega Renting",
+  "Entrega Cliente",
+  "Demo",
+  "Devolucion Renting"
 ];
 
 const ESTADOS = ["Exposicion", "Stock", "Demo", "Reservado", "Preparacion Entrega", "Entregado", "Cedido"];
@@ -104,7 +111,7 @@ function ShowroomContent() {
   const [isStockSheetOpen, setIsStockSheetOpen] = useState(false);
 
   const [formData, setFormData] = useState({
-    modelo: "", vin: "", colorBMW: "300", ubicacion: "Stock", motor: "sDrive20i", bodyType: "SUV", estado: "Stock"
+    modelo: "", vin: "", colorBMW: "300", ubicacion: "Stock", motor: "sDrive20i", bodyType: "SUV", estado: "Stock", tipoLogistico: "Stock Expo", entidadRenting: ""
   });
 
   const vehiculos = useMemo(() => (vehiculosRaw || []) as any[], [vehiculosRaw]);
@@ -231,7 +238,7 @@ function ShowroomContent() {
       </div>
 
       <Sheet open={!!selectedVehicleId} onOpenChange={o => !o && handleCloseDetail()}>
-        <SheetContent side="bottom" className="h-auto p-0 rounded-t-3xl border-none shadow-2xl overflow-hidden bg-white">
+        <SheetContent side="bottom" className="h-auto p-0 rounded-t-3xl border-none shadow-2xl overflow-hidden bg-white max-h-[90vh] overflow-y-auto">
           {selectedVehicle && (
             <div className="flex flex-col">
               <div className="bg-secondary p-4 text-white flex justify-between items-center shrink-0">
@@ -242,7 +249,7 @@ function ShowroomContent() {
                 </div>
                 <Button variant="ghost" onClick={() => { setMovingVehicleId(selectedVehicle.id); handleCloseDetail(); }} className="h-10 w-10 bg-white/5 text-white"><Move className="w-5 h-5" /></Button>
               </div>
-              <div className="p-6 grid grid-cols-2 gap-4 pb-20 md:pb-6">
+              <div className="p-6 grid grid-cols-2 gap-4 pb-24 md:pb-6">
                 <div className="space-y-1">
                   <Label className="text-[8px] font-black uppercase text-slate-400 px-1">ESTADO</Label>
                   <Select value={selectedVehicle.estado} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { estado: v })}>
@@ -250,6 +257,26 @@ function ShowroomContent() {
                     <SelectContent>{ESTADOS.map(e => <SelectItem key={e} value={e} className="text-[10px] uppercase font-bold">{e}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
+                <div className="space-y-1">
+                  <Label className="text-[8px] font-black uppercase text-slate-400 px-1">TIPO LOGÍSTICO</Label>
+                  <Select value={selectedVehicle.tipoLogistico || "Stock Expo"} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { tipoLogistico: v })}>
+                    <SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl text-[10px] font-black uppercase"><SelectValue/></SelectTrigger>
+                    <SelectContent>{TIPOS_LOGISTICOS.map(t => <SelectItem key={t} value={t} className="text-[10px] font-bold uppercase">{t}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+
+                {(selectedVehicle.tipoLogistico?.includes('Renting') || selectedVehicle.tipoLogistico === 'Entrega Renting' || selectedVehicle.tipoLogistico === 'Devolucion Renting') && (
+                  <div className="col-span-2 space-y-1">
+                    <Label className="text-[8px] font-black uppercase text-slate-400 px-1">EMPRESA RENTING</Label>
+                    <Input 
+                      placeholder="NOMBRE DE LA EMPRESA..." 
+                      value={selectedVehicle.entidadRenting || ""} 
+                      onChange={e => handleUpdateVehicle(selectedVehicle.id, { entidadRenting: e.target.value })} 
+                      className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]"
+                    />
+                  </div>
+                )}
+
                 <div className="space-y-1">
                   <Label className="text-[8px] font-black uppercase text-slate-400 px-1">UBICACIÓN</Label>
                   <Select value={selectedVehicle.ubicacion} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { ubicacion: v })}>
@@ -271,7 +298,14 @@ function ShowroomContent() {
             {pendingStock.map(car => (
               <div key={car.id} onClick={() => { setMovingVehicleId(car.id); setIsStockSheetOpen(false); }} className="p-4 bg-white border border-slate-100 rounded-xl hover:border-primary cursor-pointer active:scale-[0.98]">
                 <p className="font-black text-secondary text-[11px] uppercase truncate leading-none mb-2">{car.modelo}</p>
-                <div className="flex justify-between items-center"><span className="text-[9px] font-mono font-bold text-slate-400">{car.vin7}</span><Badge variant="outline" className="text-[8px] uppercase font-black px-2 py-0.5 bg-slate-50 border-none">{car.ubicacion}</Badge></div>
+                <div className="flex flex-col gap-1">
+                  <div className="flex justify-between items-center"><span className="text-[9px] font-mono font-bold text-slate-400">{car.vin7}</span><Badge variant="outline" className="text-[8px] uppercase font-black px-2 py-0.5 bg-slate-50 border-none">{car.ubicacion}</Badge></div>
+                  {car.tipoLogistico && (
+                    <Badge className="w-fit text-[7px] font-black uppercase bg-slate-100 text-slate-500 border-none mt-1">
+                      {car.tipoLogistico} {car.entidadRenting ? `| ${car.entidadRenting}` : ''}
+                    </Badge>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -281,13 +315,19 @@ function ShowroomContent() {
       <Dialog open={isAddingNew} onOpenChange={setIsAddingNew}>
         <DialogContent className="p-0 border-none rounded-3xl overflow-hidden max-w-[90vw] md:max-w-md shadow-2xl">
           <div className="p-6 bg-secondary text-white font-black uppercase italic text-center text-sm">ALTA DE VEHÍCULO VN</div>
-          <div className="p-6 space-y-4 bg-white">
+          <div className="p-6 space-y-4 bg-white max-h-[80vh] overflow-y-auto">
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Modelo</Label><Input placeholder="EJ: BMW X5..." value={formData.modelo} onChange={e => setFormData({...formData, modelo: e.target.value})} className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Bastidor (VIN)</Label><Input placeholder="WBA..." value={formData.vin} onChange={e => setFormData({...formData, vin: e.target.value})} className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Color</Label><Select value={formData.colorBMW} onValueChange={v => setFormData({...formData, colorBMW: v})}><SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent className="max-h-[250px]">{BMW_COLORS.map(c => <SelectItem key={c.code} value={c.code} className="text-[9px]">{c.name}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Carrocería</Label><Select value={formData.bodyType} onValueChange={v => setFormData({...formData, bodyType: v})}><SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent>{["SUV", "Berlina", "Coupe", "Roadster"].map(t => <SelectItem key={t} value={t} className="text-[9px]">{t}</SelectItem>)}</SelectContent></Select></div>
             </div>
+            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Tipo Logístico</Label><Select value={formData.tipoLogistico} onValueChange={v => setFormData({...formData, tipoLogistico: v})}><SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent>{TIPOS_LOGISTICOS.map(t => <SelectItem key={t} value={t} className="text-[9px] uppercase font-bold">{t}</SelectItem>)}</SelectContent></Select></div>
+            
+            {(formData.tipoLogistico.includes('Renting')) && (
+              <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Empresa Renting</Label><Input placeholder="NOMBRE DE LA EMPRESA..." value={formData.entidadRenting} onChange={e => setFormData({...formData, entidadRenting: e.target.value})} className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
+            )}
+
             <Button onClick={handleQuickAdd} className="w-full h-12 bg-primary text-white font-black uppercase text-[10px] rounded-xl mt-2">REGISTRAR EN INVENTARIO</Button>
           </div>
         </DialogContent>
@@ -303,7 +343,7 @@ function ShowroomContent() {
       await addDoc(collection(db, "vehiculos"), payload);
       toast({ title: "Vehículo Registrado" });
       setIsAddingNew(false);
-      setFormData({ modelo: "", vin: "", colorBMW: "300", ubicacion: "Stock", motor: "sDrive20i", bodyType: "SUV", estado: "Stock" });
+      setFormData({ modelo: "", vin: "", colorBMW: "300", ubicacion: "Stock", motor: "sDrive20i", bodyType: "SUV", estado: "Stock", tipoLogistico: "Stock Expo", entidadRenting: "" });
     } catch (e) {
       toast({ variant: "destructive", title: "Error al guardar" });
     }
