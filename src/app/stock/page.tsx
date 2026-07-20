@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from "react";
@@ -10,7 +11,8 @@ import {
   MapPin,
   Droplets,
   ArrowRightCircle,
-  Building2
+  Building2,
+  User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,19 +31,15 @@ type FilterType = 'all' | 'terraza' | 'entreplanta' | 'lavadero' | 'entrega' | '
 export default function StockManagement() {
   const db = useFirestore();
   const router = useRouter();
-  
   const vehiculosQuery = useMemo(() => query(collection(db, "vehiculos"), orderBy("createdAt", "desc")), [db]);
   const { data: vehiculosRaw, loading } = useCollection(vehiculosQuery);
-  
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
-
   const vehiculos = useMemo(() => (vehiculosRaw || []) as any[], [vehiculosRaw]);
 
   const filteredVehiculos = useMemo(() => {
     let result = vehiculos;
     const filter = activeFilter.toLowerCase();
-
     if (filter === 'terraza') result = result.filter(v => v.ubicacion?.toLowerCase() === 'terraza');
     else if (filter === 'entreplanta') result = result.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta');
     else if (filter === 'lavadero') result = result.filter(v => v.ubicacion?.toLowerCase() === 'lavadero');
@@ -51,7 +49,10 @@ export default function StockManagement() {
     const s = searchTerm.toLowerCase();
     if (s) {
       result = result.filter(v => 
-        v.modelo?.toLowerCase().includes(s) || v.vin?.toLowerCase().includes(s) || v.vin7?.toLowerCase().includes(s) || v.entidadRenting?.toLowerCase().includes(s)
+        v.modelo?.toLowerCase().includes(s) || 
+        v.vin?.toLowerCase().includes(s) || 
+        v.vin7?.toLowerCase().includes(s) || 
+        v.entidadRenting?.toLowerCase().includes(s)
       );
     }
     return result;
@@ -88,7 +89,6 @@ export default function StockManagement() {
 
   return (
     <div className="p-1.5 md:p-6 max-w-[1600px] mx-auto h-screen flex flex-col overflow-hidden">
-      {/* Header Compacto */}
       <div className="flex justify-between items-center gap-2 mb-2 shrink-0 px-1">
         <h1 className="text-sm md:text-2xl font-black text-secondary uppercase italic tracking-tighter">STOCK <span className="text-primary not-italic">VN</span></h1>
         <div className="flex gap-1.5">
@@ -98,8 +98,6 @@ export default function StockManagement() {
           </Button>
         </div>
       </div>
-
-      {/* Filtros Compactos */}
       <div className="grid grid-cols-5 gap-1 mb-2 shrink-0">
         <QuickFilterCard type="exposicion" label="EXPO" val={stats.exposicion} color="text-secondary" icon={Car} />
         <QuickFilterCard type="terraza" label="TERRAZA" val={stats.terraza} color="text-blue-500" icon={MapPin} />
@@ -107,18 +105,15 @@ export default function StockManagement() {
         <QuickFilterCard type="entrega" label="ENTREGA" val={stats.entrega} color="text-emerald-600" icon={ArrowRightCircle} />
         <QuickFilterCard type="lavadero" label="LAVADO" val={stats.lavadero} color="text-sky-500" icon={Droplets} />
       </div>
-
       <div className="relative mb-2 shrink-0">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300" />
         <Input 
           className="pl-9 h-9 bg-white border-none shadow-sm rounded-md text-[9px] font-black uppercase" 
-          placeholder="BUSCAR MODELO, BASTIDOR O EMPRESA..." 
+          placeholder="BUSCAR MODELO, BASTIDOR O CLIENTE..." 
           value={searchTerm} 
           onChange={e => setSearchTerm(e.target.value)} 
         />
       </div>
-
-      {/* Listado Principal */}
       <div className="flex-1 overflow-hidden">
         {loading ? (
           <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
@@ -126,7 +121,6 @@ export default function StockManagement() {
           <div className="text-center py-20 bg-white rounded-lg border-2 border-dashed border-slate-50 font-black uppercase text-[8px] text-slate-300">Sin resultados</div>
         ) : (
           <div className="h-full overflow-y-auto scrollbar-none pb-20">
-            {/* Desktop Table */}
             <div className="hidden md:block bg-white rounded-lg shadow-sm overflow-hidden">
               <Table>
                 <TableHeader className="bg-slate-50 sticky top-0">
@@ -143,6 +137,7 @@ export default function StockManagement() {
                   {filteredVehiculos.map((car) => {
                     const days = car.fechaEntrada ? differenceInDays(new Date(), parseISO(car.fechaEntrada)) : 0;
                     const colorObj = BMW_COLORS.find(c => c.code === (car.colorCodigo || car.colorBMW));
+                    const isParticular = car.tipoLogistico === 'Entrega Cliente';
                     return (
                       <TableRow key={car.id} onClick={() => router.push(`/showroom?s=${car.vin7}`)} className="hover:bg-slate-50/50 cursor-pointer h-12 border-slate-50 group">
                         <TableCell>
@@ -158,7 +153,7 @@ export default function StockManagement() {
                             </Badge>
                             {car.entidadRenting && (
                               <div className="flex items-center gap-1 text-[7px] font-black text-slate-400 uppercase ml-1">
-                                <Building2 className="w-2 h-2" /> {car.entidadRenting}
+                                {isParticular ? <User className="w-2 h-2" /> : <Building2 className="w-2 h-2" />} {car.entidadRenting}
                               </div>
                             )}
                           </div>
@@ -185,12 +180,11 @@ export default function StockManagement() {
                 </TableBody>
               </Table>
             </div>
-
-            {/* Mobile Cards */}
             <div className="md:hidden space-y-1">
               {filteredVehiculos.map((car) => {
                 const days = car.fechaEntrada ? differenceInDays(new Date(), parseISO(car.fechaEntrada)) : 0;
                 const colorObj = BMW_COLORS.find(c => c.code === (car.colorCodigo || car.colorBMW));
+                const isParticular = car.tipoLogistico === 'Entrega Cliente';
                 return (
                   <Card key={car.id} onClick={() => router.push(`/showroom?s=${car.vin7}`)} className="bg-white border-none shadow-sm rounded-md active:scale-[0.99]">
                     <CardContent className="p-2 flex items-center justify-between gap-2">
@@ -209,7 +203,12 @@ export default function StockManagement() {
                         <div className="flex items-center gap-1.5 mt-1">
                           <span className="font-mono text-[7px] font-bold text-slate-400">{car.vin7}</span>
                           <span className="text-[7px] font-black text-slate-300">{days}D</span>
-                          {car.entidadRenting && <span className="text-[6px] font-black text-blue-500 uppercase truncate max-w-[60px]">{car.entidadRenting}</span>}
+                          {car.entidadRenting && (
+                            <div className="flex items-center gap-1 text-[6px] font-black text-blue-500 uppercase truncate max-w-[80px]">
+                               {isParticular ? <User className="w-2 h-2" /> : <Building2 className="w-2 h-2" />}
+                               <span>{car.entidadRenting}</span>
+                            </div>
+                          )}
                           <div className="w-1.5 h-1.5 rounded-full border border-slate-200 ml-1" style={{ backgroundColor: colorObj?.hex || '#F5F5F5' }} />
                         </div>
                       </div>

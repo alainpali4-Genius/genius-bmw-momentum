@@ -63,8 +63,8 @@ const GRID_POSITIONS: Record<string, string> = {
   P11: "col-start-3 row-start-4",
   P12: "col-start-4 row-start-4",
   P13: "col-start-6 row-start-4", 
-  P15: "col-start-2 row-start-5", 
   P14: "col-start-4 row-start-5", 
+  P15: "col-start-2 row-start-5", 
 };
 
 function CarSilhouette({ bodyType, color, className, style }: { bodyType: string, color: string, className?: string, style?: React.CSSProperties }) {
@@ -83,10 +83,7 @@ function CarSilhouette({ bodyType, color, className, style }: { bodyType: string
           <stop offset="100%" stopColor="#1a1a1a" />
         </linearGradient>
       </defs>
-      {/* Sombra base */}
       <ellipse cx="50" cy="100" rx="48" ry="98" fill="black" opacity="0.25" />
-      
-      {/* Carrocería ajustada para ocupar el máximo espacio del viewBox */}
       <path 
         d={bodyType === 'SUV' 
           ? "M8,12 Q8,2 25,2 L75,2 Q92,2 92,12 L96,60 Q96,85 94,185 Q92,198 75,198 L25,198 Q8,198 6,185 Q4,85 4,60 L8,12 Z"
@@ -96,8 +93,6 @@ function CarSilhouette({ bodyType, color, className, style }: { bodyType: string
         stroke="rgba(0,0,0,0.15)"
         strokeWidth="1"
       />
-      
-      {/* Cristales */}
       <path d="M18,40 Q50,30 82,40 L78,75 Q50,65 22,75 Z" fill="url(#glassGrad)" />
       <path d="M25,145 Q50,155 75,145 L72,175 Q50,183 28,175 Z" fill="url(#glassGrad)" />
     </svg>
@@ -144,7 +139,6 @@ function ShowroomContent() {
   const handleUpdateVehicle = async (vehicleId: string, updates: any) => {
     const docRef = doc(db, "vehiculos", vehicleId);
     let finalUpdates = { ...updates, updatedAt: new Date().toISOString() };
-    
     if (updates.colorCodigo) {
       const newColor = BMW_COLORS.find(c => c.code === updates.colorCodigo);
       if (newColor) {
@@ -152,7 +146,6 @@ function ShowroomContent() {
         finalUpdates.colorBMW = newColor.code;
       }
     }
-
     try {
       await updateDoc(docRef, finalUpdates);
     } catch (e) {
@@ -163,7 +156,6 @@ function ShowroomContent() {
   const handleSwapOrMove = async (sourceId: string, targetPlaza: string) => {
     const sourceCar = vehiculos.find(v => v.id === sourceId);
     const targetCar = vehiculos.find(v => v.ubicacion === targetPlaza);
-
     if (targetCar && targetCar.id !== sourceId) {
       const oldLocation = PLAZAS_LIST.includes(sourceCar?.ubicacion) ? sourceCar.ubicacion : 'Stock';
       await handleUpdateVehicle(sourceId, { ubicacion: targetPlaza, estado: 'Exposicion' });
@@ -199,9 +191,7 @@ function ShowroomContent() {
           "rounded-sm overflow-hidden",
           GRID_POSITIONS[id],
           vehicle ? "bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed border-2 bg-white/20",
-          isMovingTarget && "ring-2 ring-primary bg-primary/5 z-50",
-          id === 'P13' ? "border-2 border-[#00AEEF]" : 
-          id === 'P15' ? "border-2 border-[#ED1C24]" : ""
+          isMovingTarget && "ring-2 ring-primary bg-primary/5 z-50"
         )}
       >
         <div className="absolute top-0 left-0 z-30 p-0.5">
@@ -222,10 +212,10 @@ function ShowroomContent() {
                 "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center p-1",
                 textRotation
               )}>
-                 <p className={cn("text-[4px] md:text-[10px] font-black uppercase truncate w-[90%] tracking-tighter leading-none mb-0.5", textColor, textShadow)}>
+                 <p className={cn("text-[5px] md:text-[11px] font-black uppercase truncate w-[95%] tracking-tighter leading-none mb-0.5", textColor, textShadow)}>
                    {vehicle.modelo}
                  </p>
-                 <span className={cn("text-[5px] md:text-[12px] font-mono font-black tracking-tight", textColor, textShadow)}>{vehicle.vin7}</span>
+                 <span className={cn("text-[6px] md:text-[14px] font-mono font-black tracking-tight", textColor, textShadow)}>{vehicle.vin7}</span>
               </div>
             </div>
           </div>
@@ -246,7 +236,7 @@ function ShowroomContent() {
       </div>
 
       <div className="flex-1 p-1 md:p-4 overflow-hidden flex items-center justify-center w-full h-full">
-        <div className="w-full h-full max-w-[1600px] grid grid-cols-6 grid-rows-5 gap-1 md:gap-2">
+        <div className="w-full h-full max-w-[1600px] grid grid-cols-6 grid-rows-5 gap-1">
           {PLAZAS_LIST.map(id => renderPlaza(id))}
         </div>
       </div>
@@ -267,7 +257,6 @@ function ShowroomContent() {
                 </div>
               </div>
               <div className="p-6 grid grid-cols-2 gap-4 pb-24 md:pb-6">
-                
                 <div className="col-span-2 space-y-1">
                   <Label className="text-[8px] font-black uppercase text-slate-400 px-1">TIPO LOGÍSTICO</Label>
                   <Select value={selectedVehicle.tipoLogistico || "Stock Expo"} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { tipoLogistico: v })}>
@@ -308,7 +297,6 @@ function ShowroomContent() {
                     <SelectContent>{ESTADOS.map(e => <SelectItem key={e} value={e} className="text-[10px] uppercase font-bold">{e}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-
                 <Button variant="destructive" className="col-span-2 h-10 font-black uppercase text-[10px] rounded-xl mt-4" onClick={() => { if(confirm("¿Eliminar?")) { deleteDoc(doc(db, "vehiculos", selectedVehicle.id)); handleCloseDetail(); } }}><Trash2 className="w-3.5 h-3.5 mr-2" /> ELIMINAR STOCK</Button>
               </div>
             </div>
@@ -343,9 +331,7 @@ function ShowroomContent() {
           <div className="p-6 space-y-4 bg-white max-h-[80vh] overflow-y-auto">
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Modelo</Label><Input placeholder="EJ: BMW X5..." value={formData.modelo} onChange={e => setFormData({...formData, modelo: e.target.value})} className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Bastidor (VIN)</Label><Input placeholder="WBA..." value={formData.vin} onChange={e => setFormData({...formData, vin: e.target.value})} className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
-            
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Tipo Logístico</Label><Select value={formData.tipoLogistico} onValueChange={v => setFormData({...formData, tipoLogistico: v})}><SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent>{TIPOS_LOGISTICOS.map(t => <SelectItem key={t} value={t} className="text-[9px] uppercase font-bold">{t}</SelectItem>)}</SelectContent></Select></div>
-            
             {(formData.tipoLogistico.includes('Renting') || formData.tipoLogistico === 'Entrega Cliente') && (
               <div className="space-y-1">
                 <Label className="text-[8px] font-black uppercase text-slate-400">
@@ -354,12 +340,10 @@ function ShowroomContent() {
                 <Input placeholder={formData.tipoLogistico === 'Entrega Cliente' ? "CLIENTE..." : "EMPRESA..."} value={formData.entidadRenting} onChange={e => setFormData({...formData, entidadRenting: e.target.value})} className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" />
               </div>
             )}
-
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Color</Label><Select value={formData.colorBMW} onValueChange={v => setFormData({...formData, colorBMW: v})}><SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent className="max-h-[250px]">{BMW_COLORS.map(c => <SelectItem key={c.code} value={c.code} className="text-[9px]">{c.name}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Carrocería</Label><Select value={formData.bodyType} onValueChange={v => setFormData({...formData, bodyType: v})}><SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent>{["SUV", "Berlina", "Coupe", "Roadster"].map(t => <SelectItem key={t} value={t} className="text-[9px]">{t}</SelectItem>)}</SelectContent></Select></div>
             </div>
-            
             <Button onClick={handleQuickAdd} className="w-full h-12 bg-primary text-white font-black uppercase text-[10px] rounded-xl mt-2">REGISTRAR EN INVENTARIO</Button>
           </div>
         </DialogContent>

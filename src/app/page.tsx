@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { 
   Package, Grid3X3, Car, CalendarCheck, Clock, Search, Scan, Trash2, Building2, User
 } from "lucide-react";
@@ -10,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFirestore, useCollection } from "@/firebase";
-import { collection, addDoc, query, orderBy, doc, deleteDoc } from "firebase/firestore";
+import { collection, query, orderBy, doc, deleteDoc } from "firebase/firestore";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { BMW_COLORS } from "./showroom/page";
@@ -28,7 +29,6 @@ export default function GeniusDashboard() {
 
   const filteredStock = useMemo(() => {
     let list = vehiculos;
-    
     if (activeLocation === 'EXPO') list = list.filter(v => v.ubicacion?.startsWith('P'));
     else if (activeLocation === 'TERRAZA') list = list.filter(v => v.ubicacion?.toLowerCase() === 'terraza');
     else if (activeLocation === 'ENTREPLANTA') list = list.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta');
@@ -41,10 +41,10 @@ export default function GeniusDashboard() {
       list = list.filter(v => 
         v.modelo?.toLowerCase().includes(s) || 
         v.vin?.toLowerCase().includes(s) || 
-        v.vin7?.toLowerCase().includes(s)
+        v.vin7?.toLowerCase().includes(s) ||
+        v.entidadRenting?.toLowerCase().includes(s)
       );
     }
-    
     return list;
   }, [vehiculos, activeLocation, fastSearch]);
 
@@ -54,7 +54,6 @@ export default function GeniusDashboard() {
     const demo = vehiculos.filter(v => v.tipoLogistico === 'Demo' || v.estado === 'Demo').length;
     const reserved = vehiculos.filter(v => v.estado === 'Reservado').length;
     const prep = vehiculos.filter(v => v.estado === 'Preparacion Entrega').length;
-    
     return { total, expo, demo, reserved, prep };
   }, [vehiculos]);
 
@@ -68,20 +67,18 @@ export default function GeniusDashboard() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[#f4f7fa]">
-      {/* Header Compacto */}
       <div className="p-1.5 md:p-3 space-y-1.5 shrink-0">
         <div className="bg-[#003399] rounded-lg p-2 md:p-3 text-white shadow-md">
           <div className="flex items-center justify-between gap-2">
             <h1 className="text-base md:text-xl font-black italic tracking-tighter leading-none shrink-0">
               MOMENTUM <span className="text-white not-italic">VN</span>
             </h1>
-
             <div className="flex gap-1.5 w-full max-w-[400px]">
               <div className="relative flex-1">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-white/40" />
                 <Input 
                   className="h-8 bg-white/10 border-none rounded-md text-[9px] font-black uppercase placeholder:text-white/20 pl-8 text-white" 
-                  placeholder="BUSCAR VIN7 O MODELO..."
+                  placeholder="BUSCAR VIN7, MODELO O CLIENTE..."
                   value={fastSearch}
                   onChange={(e) => setFastSearch(e.target.value)}
                 />
@@ -92,8 +89,6 @@ export default function GeniusDashboard() {
             </div>
           </div>
         </div>
-
-        {/* KPIs Compactos */}
         <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none">
           {kpis.map((kpi) => (
             <Card key={kpi.label} className="min-w-[75px] md:min-w-0 flex-1 h-12 bg-white border-none shadow-sm rounded-md">
@@ -109,27 +104,23 @@ export default function GeniusDashboard() {
         </div>
       </div>
 
-      {/* Listado de Stock Expandido */}
       <div className="flex-1 px-1.5 md:px-3 pb-2 overflow-hidden flex flex-col">
         <div className="bg-white rounded-lg shadow-sm border-none flex-1 overflow-hidden flex flex-col">
           <div className="p-1.5 md:p-2 border-b shrink-0 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Tabs value={activeLocation} onValueChange={(v: any) => setActiveLocation(v)}>
-                <TabsList className="bg-slate-50 p-0.5 rounded-md h-7">
-                  <TabsTrigger value="ALL" className="text-[7px] font-black uppercase px-2 h-6">STOCK</TabsTrigger>
-                  <TabsTrigger value="EXPO" className="text-[7px] font-black uppercase px-2 h-6">EXPO</TabsTrigger>
-                  <TabsTrigger value="TERRAZA" className="text-[7px] font-black uppercase px-2 h-6">TERRAZA</TabsTrigger>
-                  <TabsTrigger value="ENTREPLANTA" className="text-[7px] font-black uppercase px-2 h-6">PLANTA</TabsTrigger>
-                  <TabsTrigger value="LAVADERO" className="text-[7px] font-black uppercase px-2 h-6">LAVADO</TabsTrigger>
-                  <TabsTrigger value="ENTREGA" className="text-[7px] font-black uppercase px-2 h-6">ENTREGA</TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
+            <Tabs value={activeLocation} onValueChange={(v: any) => setActiveLocation(v)}>
+              <TabsList className="bg-slate-50 p-0.5 rounded-md h-7">
+                <TabsTrigger value="ALL" className="text-[7px] font-black uppercase px-2 h-6">STOCK</TabsTrigger>
+                <TabsTrigger value="EXPO" className="text-[7px] font-black uppercase px-2 h-6">EXPO</TabsTrigger>
+                <TabsTrigger value="TERRAZA" className="text-[7px] font-black uppercase px-2 h-6">TERRAZA</TabsTrigger>
+                <TabsTrigger value="ENTREPLANTA" className="text-[7px] font-black uppercase px-2 h-6">PLANTA</TabsTrigger>
+                <TabsTrigger value="LAVADERO" className="text-[7px] font-black uppercase px-2 h-6">LAVADO</TabsTrigger>
+                <TabsTrigger value="ENTREGA" className="text-[7px] font-black uppercase px-2 h-6">ENTREGA</TabsTrigger>
+              </TabsList>
+            </Tabs>
             <Badge variant="outline" className="text-[7px] font-black px-1.5 py-0.5 rounded-sm bg-slate-50 border-none">
               {filteredStock.length} U
             </Badge>
           </div>
-
           <div className="flex-1 overflow-y-auto p-1.5 md:p-2 space-y-1 scrollbar-none">
             {loading ? (
               <div className="flex justify-center py-10"><Clock className="animate-spin text-slate-200 h-5 w-5" /></div>
@@ -141,7 +132,6 @@ export default function GeniusDashboard() {
                 const isRenting = car.tipoLogistico?.includes('Renting');
                 const isDemo = car.tipoLogistico === 'Demo';
                 const isParticular = car.tipoLogistico === 'Entrega Cliente';
-
                 return (
                   <Card key={car.id} onClick={() => router.push(`/showroom?s=${car.vin7}`)} className="border border-slate-50 bg-white hover:border-primary/20 transition-all rounded-md shadow-sm overflow-hidden active:scale-[0.99] group cursor-pointer">
                     <CardContent className="p-2 flex items-center justify-between gap-3">
@@ -171,7 +161,7 @@ export default function GeniusDashboard() {
                             <span className="font-mono text-[7px] font-bold text-slate-400">{car.vin7}</span>
                             {car.entidadRenting && (
                               <div className="flex items-center gap-1 text-[6px] font-black text-blue-600 uppercase">
-                                <Building2 className="w-2 h-2" />
+                                {isParticular ? <User className="w-2 h-2" /> : <Building2 className="w-2 h-2" />}
                                 <span className="truncate max-w-[80px]">{car.entidadRenting}</span>
                               </div>
                             )}
@@ -182,7 +172,6 @@ export default function GeniusDashboard() {
                           </div>
                         </div>
                       </div>
-                      
                       <div className="flex items-center gap-2 shrink-0">
                         <Badge className={cn("text-[6px] font-black uppercase px-1 py-0.5 border-none rounded-md", 
                           car.ubicacion?.startsWith('P') ? "bg-primary text-white" : "bg-slate-100 text-secondary"

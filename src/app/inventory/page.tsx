@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BMW_COLORS } from "../showroom/page";
+import { BMW_COLORS, TIPOS_LOGISTICOS } from "../showroom/page";
 
 const compressImage = (file: File, maxWidth = 1024, quality = 0.6): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -68,11 +68,12 @@ export default function InventarioGenius() {
     vin7: "",
     colorBMW: "300",
     bodyType: "SUV",
-    ubicacion: "Stock"
+    ubicacion: "Stock",
+    tipoLogistico: "Stock Expo",
+    entidadRenting: ""
   });
 
   const vehiculos = (vehiculosRaw || []) as any[];
-  const auditLogs = (movements || []).filter(m => m.tipoAccion === 'Inventario');
 
   const handleAudit = async (vinToFind: string, aiResult?: { modelo?: string }) => {
     if (!vinToFind) return;
@@ -110,7 +111,9 @@ export default function InventarioGenius() {
         vin7: vin7,
         colorBMW: "300",
         bodyType: "SUV",
-        ubicacion: "Stock"
+        ubicacion: "Stock",
+        tipoLogistico: "Stock Expo",
+        entidadRenting: ""
       });
       setIsNewVehicleDialogOpen(true);
     }
@@ -119,14 +122,12 @@ export default function InventarioGenius() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
     setIsProcessing(true);
     setProcessStep("Optimizando imagen...");
     try {
       const compressedDataUri = await compressImage(file);
       setProcessStep("Analizando con Gemini...");
       const result = await scanVIN({ photoDataUri: compressedDataUri });
-      
       if (result?.vin) {
         setProcessStep("Verificando stock...");
         await handleAudit(result.vin, { modelo: result.modelo });
@@ -208,9 +209,6 @@ export default function InventarioGenius() {
                 <p className="font-mono text-[9px] font-bold text-slate-400 tracking-widest truncate">{lastAudit.vin}</p>
                 <p className={cn("text-[8px] font-black uppercase mt-2", lastAudit.status === 'success' ? 'text-emerald-600' : 'text-red-600')}>{lastAudit.message}</p>
               </div>
-              {lastAudit.status === 'success' && (
-                <Badge className="bg-secondary text-white text-[9px] font-black uppercase px-2 py-1 rounded-md">{lastAudit.ubicacion}</Badge>
-              )}
             </div>
           </CardContent>
         </Card>
@@ -219,8 +217,21 @@ export default function InventarioGenius() {
       <Dialog open={isNewVehicleDialogOpen} onOpenChange={setIsNewVehicleDialogOpen}>
         <DialogContent className="p-0 border-none rounded-3xl overflow-hidden max-w-[90vw] md:max-w-md shadow-2xl">
           <div className="p-6 bg-emerald-600 text-white text-center font-black uppercase italic text-sm tracking-tighter">ALTA POR ESCANEO IA</div>
-          <div className="p-6 space-y-4 bg-white">
+          <div className="p-6 space-y-4 bg-white max-h-[80vh] overflow-y-auto">
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Modelo Detectado</Label><Input value={newVehicleData.modelo} onChange={e => setNewVehicleData({...newVehicleData, modelo: e.target.value})} className="h-11 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
+            <div className="space-y-1">
+              <Label className="text-[8px] font-black uppercase text-slate-400 px-1">Tipo Logístico</Label>
+              <Select value={newVehicleData.tipoLogistico} onValueChange={v => setNewVehicleData({...newVehicleData, tipoLogistico: v})}>
+                <SelectTrigger className="h-11 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger>
+                <SelectContent>{TIPOS_LOGISTICOS.map(t => <SelectItem key={t} value={t} className="text-[9px] uppercase font-bold">{t}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            {(newVehicleData.tipoLogistico.includes('Renting') || newVehicleData.tipoLogistico === 'Entrega Cliente') && (
+              <div className="space-y-1">
+                <Label className="text-[8px] font-black uppercase text-slate-400 px-1">{newVehicleData.tipoLogistico === 'Entrega Cliente' ? 'Nombre Cliente' : 'Empresa Renting'}</Label>
+                <Input value={newVehicleData.entidadRenting} onChange={e => setNewVehicleData({...newVehicleData, entidadRenting: e.target.value})} className="h-11 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" />
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Color BMW</Label><Select value={newVehicleData.colorBMW} onValueChange={v => setNewVehicleData({...newVehicleData, colorBMW: v})}><SelectTrigger className="h-11 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent className="max-h-[200px]">{BMW_COLORS.map(c => <SelectItem key={c.code} value={c.code} className="text-[9px]">{c.name}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Ubicación</Label><Select value={newVehicleData.ubicacion} onValueChange={v => setNewVehicleData({...newVehicleData, ubicacion: v})}><SelectTrigger className="h-11 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent>{["Stock", "Terraza", "Entreplanta", "Lavadero"].map(u => <SelectItem key={u} value={u} className="text-[9px] uppercase">{u}</SelectItem>)}</SelectContent></Select></div>
