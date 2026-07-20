@@ -65,7 +65,7 @@ export default function StockManagement() {
     terraza: vehiculos.filter(v => v.ubicacion?.toLowerCase() === 'terraza').length,
     entreplanta: vehiculos.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta').length,
     lavadero: vehiculos.filter(v => v.ubicacion?.toLowerCase() === 'lavadero').length,
-    entrega: vehiculos.filter(v => v.ubicacion?.toLowerCase().includes('entrega').length,
+    entrega: vehiculos.filter(v => v.ubicacion?.toLowerCase().includes('entrega')).length,
     exposicion: vehiculos.filter(v => v.ubicacion?.startsWith('P')).length
   }), [vehiculos]);
 
@@ -132,7 +132,6 @@ export default function StockManagement() {
           <div className="text-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-100 font-black uppercase text-[10px] text-slate-300 tracking-widest">Sin resultados</div>
         ) : (
           <div className="h-full overflow-y-auto scrollbar-none pb-24 md:pb-0">
-            {/* Desktop Table View */}
             <div className="hidden md:block bg-white rounded-2xl shadow-sm border-none overflow-hidden">
               <Table>
                 <TableHeader className="bg-slate-50 sticky top-0 z-10">
@@ -182,7 +181,6 @@ export default function StockManagement() {
               </Table>
             </div>
 
-            {/* Mobile List View (Optimized) */}
             <div className="md:hidden space-y-3">
               {filteredVehiculos.map((car) => {
                 const days = car.fechaEntrada ? differenceInDays(new Date(), parseISO(car.fechaEntrada)) : 0;

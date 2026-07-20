@@ -195,7 +195,7 @@ function ShowroomContent() {
           <div className="w-full h-full flex items-center justify-center p-0.5 md:p-2">
             <div className={cn(
               "relative flex items-center justify-center transition-all duration-300",
-              isVertical ? "w-[85%] h-[85%]" : "w-[92%] h-[92%] rotate-90"
+              isVertical ? "w-[92%] h-[92%]" : "w-[92%] h-[92%] rotate-90"
             )}>
               <CarSilhouette 
                 bodyType={vehicle.bodyType || 'SUV'} 
@@ -417,4 +417,3 @@ export default function ShowroomFinal() {
     </Suspense>
   );
 }
-

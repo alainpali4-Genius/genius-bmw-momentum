@@ -16,7 +16,7 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BMW_COLORS } from "../showroom/page";
@@ -64,7 +64,6 @@ export default function InventarioGenius() {
   const [manualVin, setManualVin] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Estado para el diálogo de nueva alta
   const [isNewVehicleDialogOpen, setIsNewVehicleDialogOpen] = useState(false);
   const [newVehicleData, setNewVehicleData] = useState({
     modelo: "",
@@ -100,14 +99,13 @@ export default function InventarioGenius() {
       };
       try {
         await addDoc(collection(db, "movimientos"), payload);
-        setLastAudit({ ...vehicle, status: 'success', message: 'UBICACIÓN CONFIRMADA' });
+        setLastAudit({ ...vehicle, vin: vinNorm, status: 'success', message: 'UBICACIÓN CONFIRMADA' });
         setManualVin("");
         toast({ title: "Vehículo Localizado", description: `${vehicle.modelo} en ${vehicle.ubicacion}` });
       } catch (e) {
         toast({ variant: "destructive", title: "Error al registrar auditoría" });
       }
     } else {
-      // No encontrado: Ofrecer nueva alta
       setLastAudit({ vin: vinNorm, status: 'error', message: 'BASTIDOR NO ENCONTRADO EN STOCK' });
       setNewVehicleData({
         modelo: aiResult?.modelo || "",
@@ -120,7 +118,7 @@ export default function InventarioGenius() {
       setIsNewVehicleDialogOpen(true);
       toast({ 
         title: "Nuevo Vehículo Detectado", 
-        description: "El bastidor no está registrado. ¿Deseas darlo de alta ahora?",
+        description: "El bastidor no está registrado. Puedes darlo de alta ahora.",
         duration: 5000
       });
     }
@@ -152,7 +150,7 @@ export default function InventarioGenius() {
       toast({ 
         variant: "destructive", 
         title: "Error de procesamiento", 
-        description: err.message || "No se pudo conectar con el servicio de IA." 
+        description: "No se pudo conectar con el servicio de IA." 
       });
     } finally {
       setIsProcessing(false);
@@ -182,8 +180,6 @@ export default function InventarioGenius() {
 
     try {
       const docRef = await addDoc(collection(db, "vehiculos"), payload);
-      
-      // Registrar movimiento de alta inicial
       await addDoc(collection(db, "movimientos"), {
         vehiculoId: docRef.id,
         vehiculoInfo: `${payload.modelo} (${payload.vin7})`,
@@ -263,13 +259,12 @@ export default function InventarioGenius() {
         </Card>
       )}
 
-      {/* Diálogo de Alta de Vehículo Nuevo */}
       <Dialog open={isNewVehicleDialogOpen} onOpenChange={setIsNewVehicleDialogOpen}>
         <DialogContent className="p-0 border-none rounded-[3rem] overflow-hidden max-w-[95vw] md:max-w-md shadow-2xl">
           <div className="p-8 bg-emerald-600 text-white flex justify-between items-center">
             <div className="space-y-1">
               <h2 className="text-xl font-black uppercase italic tracking-tighter">ALTA POR ESCANEO</h2>
-              <p className="text-emerald-100 text-[9px] font-black uppercase tracking-widest">NUEVA UNIDAD DETECTADA EN CAMPA</p>
+              <p className="text-emerald-100 text-[9px] font-black uppercase tracking-widest">NUEVA UNIDAD DETECTADA</p>
             </div>
             <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center">
               <Plus className="w-6 h-6 text-white" />
@@ -278,15 +273,15 @@ export default function InventarioGenius() {
           <div className="p-8 space-y-6 bg-white">
             <div className="space-y-2">
               <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Modelo Detectado</Label>
-              <Input value={newVehicleData.modelo} onChange={e => setNewVehicleData({...newVehicleData, modelo: e.target.value})} className="h-14 bg-slate-50 border-none rounded-2xl font-bold uppercase text-xs" placeholder="EJ: BMW X1..." />
+              <Input value={newVehicleData.modelo} onChange={e => setNewVehicleData({...newVehicleData, modelo: e.target.value})} className="h-14 bg-slate-50 border-none rounded-2xl font-bold uppercase text-xs" />
             </div>
             <div className="space-y-2">
-              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">VIN7 (Confirmar)</Label>
-              <Input value={newVehicleData.vin7} onChange={e => setNewVehicleData({...newVehicleData, vin7: e.target.value.toUpperCase()})} className="h-14 bg-slate-50 border-none rounded-2xl font-black uppercase text-xs text-center tracking-[0.2em]" />
+              <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">VIN7</Label>
+              <Input value={newVehicleData.vin7} disabled className="h-14 bg-slate-50 border-none rounded-2xl font-black uppercase text-xs text-center tracking-[0.2em]" />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Color Base</Label>
+                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Color BMW</Label>
                 <Select value={newVehicleData.colorBMW} onValueChange={v => setNewVehicleData({...newVehicleData, colorBMW: v})}>
                   <SelectTrigger className="h-14 bg-slate-50 border-none rounded-2xl font-bold text-[10px] uppercase">
                     <SelectValue />
@@ -297,7 +292,7 @@ export default function InventarioGenius() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Ubicación Inicial</Label>
+                <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Ubicación</Label>
                 <Select value={newVehicleData.ubicacion} onValueChange={v => setNewVehicleData({...newVehicleData, ubicacion: v})}>
                   <SelectTrigger className="h-14 bg-slate-50 border-none rounded-2xl font-bold text-[10px] uppercase">
                     <SelectValue />
@@ -309,8 +304,8 @@ export default function InventarioGenius() {
               </div>
             </div>
             <div className="pt-4 flex gap-3">
-              <Button variant="ghost" onClick={() => setIsNewVehicleDialogOpen(false)} className="h-16 flex-1 rounded-2xl font-black uppercase text-xs text-slate-400 border-none">CANCELAR</Button>
-              <Button onClick={handleCreateNewVehicle} className="h-16 flex-2 bg-emerald-600 text-white font-black uppercase text-xs rounded-2xl shadow-xl flex-1 border-none hover:bg-emerald-700">GUARDAR UNIDAD</Button>
+              <Button variant="ghost" onClick={() => setIsNewVehicleDialogOpen(false)} className="h-16 flex-1 rounded-2xl font-black uppercase text-xs text-slate-400">CANCELAR</Button>
+              <Button onClick={handleCreateNewVehicle} className="h-16 flex-2 bg-emerald-600 text-white font-black uppercase text-xs rounded-2xl shadow-xl flex-1 hover:bg-emerald-700">GUARDAR UNIDAD</Button>
             </div>
           </div>
         </DialogContent>
