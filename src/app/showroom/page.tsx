@@ -2,7 +2,7 @@
 
 import { useState, useMemo, Suspense, useEffect } from "react";
 import { 
-  Plus, Move, Loader2, X, Trash2, Package, Palette, Building2
+  Plus, Move, Loader2, X, Trash2, Package, Palette, Building2, User
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -247,17 +247,15 @@ function ShowroomContent() {
                   <h2 className="text-base font-black uppercase italic tracking-tighter mt-1">{selectedVehicle.modelo}</h2>
                   <p className="text-white/40 font-mono text-[9px] font-bold">VIN7: {selectedVehicle.vin7}</p>
                 </div>
-                <Button variant="ghost" onClick={() => { setMovingVehicleId(selectedVehicle.id); handleCloseDetail(); }} className="h-10 w-10 bg-white/5 text-white"><Move className="w-5 h-5" /></Button>
+                <div className="flex gap-2">
+                  <Button variant="ghost" onClick={() => { setMovingVehicleId(selectedVehicle.id); handleCloseDetail(); }} className="h-10 w-10 bg-white/5 text-white"><Move className="w-5 h-5" /></Button>
+                  <Button variant="ghost" onClick={handleCloseDetail} className="h-10 w-10 bg-white/5 text-white"><X className="w-5 h-5" /></Button>
+                </div>
               </div>
               <div className="p-6 grid grid-cols-2 gap-4 pb-24 md:pb-6">
-                <div className="space-y-1">
-                  <Label className="text-[8px] font-black uppercase text-slate-400 px-1">ESTADO</Label>
-                  <Select value={selectedVehicle.estado} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { estado: v })}>
-                    <SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl text-[10px] font-black uppercase"><SelectValue/></SelectTrigger>
-                    <SelectContent>{ESTADOS.map(e => <SelectItem key={e} value={e} className="text-[10px] uppercase font-bold">{e}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1">
+                
+                {/* 1. TIPO LOGÍSTICO (Y CLIENTE/EMPRESA) */}
+                <div className="col-span-2 space-y-1">
                   <Label className="text-[8px] font-black uppercase text-slate-400 px-1">TIPO LOGÍSTICO</Label>
                   <Select value={selectedVehicle.tipoLogistico || "Stock Expo"} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { tipoLogistico: v })}>
                     <SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl text-[10px] font-black uppercase"><SelectValue/></SelectTrigger>
@@ -265,18 +263,24 @@ function ShowroomContent() {
                   </Select>
                 </div>
 
-                {(selectedVehicle.tipoLogistico?.includes('Renting') || selectedVehicle.tipoLogistico === 'Entrega Renting' || selectedVehicle.tipoLogistico === 'Devolucion Renting') && (
+                {(selectedVehicle.tipoLogistico?.includes('Renting') || selectedVehicle.tipoLogistico === 'Entrega Cliente') && (
                   <div className="col-span-2 space-y-1">
-                    <Label className="text-[8px] font-black uppercase text-slate-400 px-1">EMPRESA RENTING</Label>
-                    <Input 
-                      placeholder="NOMBRE DE LA EMPRESA..." 
-                      value={selectedVehicle.entidadRenting || ""} 
-                      onChange={e => handleUpdateVehicle(selectedVehicle.id, { entidadRenting: e.target.value })} 
-                      className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]"
-                    />
+                    <Label className="text-[8px] font-black uppercase text-slate-400 px-1">
+                      {selectedVehicle.tipoLogistico === 'Entrega Cliente' ? 'NOMBRE DEL CLIENTE' : 'EMPRESA RENTING'}
+                    </Label>
+                    <div className="relative">
+                      {selectedVehicle.tipoLogistico === 'Entrega Cliente' ? <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300" /> : <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300" />}
+                      <Input 
+                        placeholder={selectedVehicle.tipoLogistico === 'Entrega Cliente' ? "NOMBRE COMPLETO..." : "EMPRESA..."} 
+                        value={selectedVehicle.entidadRenting || ""} 
+                        onChange={e => handleUpdateVehicle(selectedVehicle.id, { entidadRenting: e.target.value })} 
+                        className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px] pl-9"
+                      />
+                    </div>
                   </div>
                 )}
 
+                {/* 2. UBICACIÓN */}
                 <div className="space-y-1">
                   <Label className="text-[8px] font-black uppercase text-slate-400 px-1">UBICACIÓN</Label>
                   <Select value={selectedVehicle.ubicacion} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { ubicacion: v })}>
@@ -284,7 +288,17 @@ function ShowroomContent() {
                     <SelectContent className="max-h-[250px]">{PLAZAS_LIST.map(p => <SelectItem key={p} value={p} className="text-[10px] font-bold">{p}</SelectItem>)}<Separator className="my-1"/>{OTHER_LOCATIONS.map(p => <SelectItem key={p} value={p} className="text-[10px] font-bold">{p.toUpperCase()}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <Button variant="destructive" className="col-span-2 h-10 font-black uppercase text-[10px] rounded-xl" onClick={() => { if(confirm("¿Eliminar?")) { deleteDoc(doc(db, "vehiculos", selectedVehicle.id)); handleCloseDetail(); } }}><Trash2 className="w-3.5 h-3.5 mr-2" /> ELIMINAR STOCK</Button>
+
+                {/* 3. ESTADO */}
+                <div className="space-y-1">
+                  <Label className="text-[8px] font-black uppercase text-slate-400 px-1">ESTADO</Label>
+                  <Select value={selectedVehicle.estado} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { estado: v })}>
+                    <SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl text-[10px] font-black uppercase"><SelectValue/></SelectTrigger>
+                    <SelectContent>{ESTADOS.map(e => <SelectItem key={e} value={e} className="text-[10px] uppercase font-bold">{e}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+
+                <Button variant="destructive" className="col-span-2 h-10 font-black uppercase text-[10px] rounded-xl mt-4" onClick={() => { if(confirm("¿Eliminar?")) { deleteDoc(doc(db, "vehiculos", selectedVehicle.id)); handleCloseDetail(); } }}><Trash2 className="w-3.5 h-3.5 mr-2" /> ELIMINAR STOCK</Button>
               </div>
             </div>
           )}
@@ -318,16 +332,23 @@ function ShowroomContent() {
           <div className="p-6 space-y-4 bg-white max-h-[80vh] overflow-y-auto">
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Modelo</Label><Input placeholder="EJ: BMW X5..." value={formData.modelo} onChange={e => setFormData({...formData, modelo: e.target.value})} className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Bastidor (VIN)</Label><Input placeholder="WBA..." value={formData.vin} onChange={e => setFormData({...formData, vin: e.target.value})} className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
+            
+            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Tipo Logístico</Label><Select value={formData.tipoLogistico} onValueChange={v => setFormData({...formData, tipoLogistico: v})}><SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent>{TIPOS_LOGISTICOS.map(t => <SelectItem key={t} value={t} className="text-[9px] uppercase font-bold">{t}</SelectItem>)}</SelectContent></Select></div>
+            
+            {(formData.tipoLogistico.includes('Renting') || formData.tipoLogistico === 'Entrega Cliente') && (
+              <div className="space-y-1">
+                <Label className="text-[8px] font-black uppercase text-slate-400">
+                  {formData.tipoLogistico === 'Entrega Cliente' ? 'Nombre del Cliente' : 'Empresa Renting'}
+                </Label>
+                <Input placeholder={formData.tipoLogistico === 'Entrega Cliente' ? "CLIENTE..." : "EMPRESA..."} value={formData.entidadRenting} onChange={e => setFormData({...formData, entidadRenting: e.target.value})} className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" />
+              </div>
+            )}
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Color</Label><Select value={formData.colorBMW} onValueChange={v => setFormData({...formData, colorBMW: v})}><SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent className="max-h-[250px]">{BMW_COLORS.map(c => <SelectItem key={c.code} value={c.code} className="text-[9px]">{c.name}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Carrocería</Label><Select value={formData.bodyType} onValueChange={v => setFormData({...formData, bodyType: v})}><SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent>{["SUV", "Berlina", "Coupe", "Roadster"].map(t => <SelectItem key={t} value={t} className="text-[9px]">{t}</SelectItem>)}</SelectContent></Select></div>
             </div>
-            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Tipo Logístico</Label><Select value={formData.tipoLogistico} onValueChange={v => setFormData({...formData, tipoLogistico: v})}><SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent>{TIPOS_LOGISTICOS.map(t => <SelectItem key={t} value={t} className="text-[9px] uppercase font-bold">{t}</SelectItem>)}</SelectContent></Select></div>
             
-            {(formData.tipoLogistico.includes('Renting')) && (
-              <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Empresa Renting</Label><Input placeholder="NOMBRE DE LA EMPRESA..." value={formData.entidadRenting} onChange={e => setFormData({...formData, entidadRenting: e.target.value})} className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
-            )}
-
             <Button onClick={handleQuickAdd} className="w-full h-12 bg-primary text-white font-black uppercase text-[10px] rounded-xl mt-2">REGISTRAR EN INVENTARIO</Button>
           </div>
         </DialogContent>
