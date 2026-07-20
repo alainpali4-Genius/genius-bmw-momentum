@@ -184,27 +184,27 @@ function ShowroomContent() {
         )}
       >
         <div className="absolute top-0.5 left-0.5 z-30">
-          <span className="text-[4px] md:text-[9px] font-black uppercase text-slate-300">{id}</span>
+          <span className="text-[5px] md:text-[9px] font-black uppercase text-slate-300">{id}</span>
         </div>
         {vehicle && (
-          <div className="w-full h-full flex items-center justify-center p-0.5">
+          <div className="w-full h-full flex items-center justify-center p-0.5 md:p-1 relative overflow-hidden">
             <div className={cn(
-              "relative flex items-center justify-center transition-all duration-300 w-[92%] h-[92%]",
+              "relative flex items-center justify-center transition-all duration-300 w-full h-full",
               !isVertical && "rotate-90"
             )}>
               <CarSilhouette 
                 bodyType={vehicle.bodyType || 'SUV'} 
                 color={colorObj?.hex || '#CBD5E1'} 
-                className="w-full h-full"
+                className={cn("h-[95%] w-auto", !isVertical && "max-w-[120%]")}
               />
               <div className={cn(
                 "absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center p-0.5",
                 !isVertical && "-rotate-90" 
               )}>
-                 <p className="text-[2.5px] md:text-[8px] font-black uppercase text-white drop-shadow-md truncate w-full px-0.5">
+                 <p className="text-[3px] md:text-[8px] font-black uppercase text-white drop-shadow-md truncate w-[85%]">
                    {vehicle.modelo}
                  </p>
-                 <span className="text-[3px] md:text-[10px] font-mono font-black text-white drop-shadow-md">{vehicle.vin7}</span>
+                 <span className="text-[4px] md:text-[10px] font-mono font-black text-white drop-shadow-md">{vehicle.vin7}</span>
               </div>
             </div>
           </div>
@@ -215,19 +215,17 @@ function ShowroomContent() {
 
   return (
     <div className="flex flex-col h-screen w-full bg-[#f4f7fa] overflow-hidden">
-      <div className="bg-white border-b px-3 py-2 flex items-center justify-between shrink-0 shadow-sm z-40">
-        <div className="flex flex-col">
-          <h1 className="text-xs md:text-xl font-black text-secondary uppercase italic leading-none tracking-tighter">PLANO <span className="text-primary not-italic">EXPO</span></h1>
-        </div>
+      <div className="bg-white border-b px-3 py-1.5 md:py-2 flex items-center justify-between shrink-0 shadow-sm z-40">
+        <h1 className="text-[10px] md:text-xl font-black text-secondary uppercase italic leading-none tracking-tighter">PLANO <span className="text-primary not-italic">EXPO</span></h1>
         <div className="flex gap-1">
-          {movingVehicleId && <Button onClick={() => setMovingVehicleId(null)} className="h-7 bg-red-600 text-white rounded-md font-black uppercase text-[7px] px-2">CANCELAR</Button>}
-          <Button variant="outline" onClick={() => setIsStockSheetOpen(true)} className="h-7 rounded-md font-black uppercase text-[7px] px-2 border-slate-200">STOCK ({pendingStock.length})</Button>
-          <Button onClick={() => setIsAddingNew(true)} className="h-7 bg-secondary text-white rounded-md font-black uppercase text-[7px] px-2">NUEVO</Button>
+          {movingVehicleId && <Button onClick={() => setMovingVehicleId(null)} className="h-6 md:h-7 bg-red-600 text-white rounded-md font-black uppercase text-[6px] md:text-[7px] px-2">CANCELAR</Button>}
+          <Button variant="outline" onClick={() => setIsStockSheetOpen(true)} className="h-6 md:h-7 rounded-md font-black uppercase text-[6px] md:text-[7px] px-2 border-slate-200">STOCK ({pendingStock.length})</Button>
+          <Button onClick={() => setIsAddingNew(true)} className="h-6 md:h-7 bg-secondary text-white rounded-md font-black uppercase text-[6px] md:text-[7px] px-2">NUEVO</Button>
         </div>
       </div>
 
-      <div className="flex-1 p-1 md:p-4 overflow-hidden flex items-center justify-center h-full w-full">
-        <div className="w-full h-full max-w-[1400px] grid grid-cols-6 grid-rows-5 gap-1 md:gap-3">
+      <div className="flex-1 p-1 md:p-4 overflow-hidden flex items-center justify-center w-full h-full">
+        <div className="w-full h-full max-w-[1600px] grid grid-cols-6 grid-rows-5 gap-0.5 md:gap-3">
           {PLAZAS_LIST.map(id => renderPlaza(id))}
         </div>
       </div>
@@ -244,7 +242,7 @@ function ShowroomContent() {
                 </div>
                 <Button variant="ghost" onClick={() => { setMovingVehicleId(selectedVehicle.id); handleCloseDetail(); }} className="h-10 w-10 bg-white/5 text-white"><Move className="w-5 h-5" /></Button>
               </div>
-              <div className="p-6 grid grid-cols-2 gap-4 pb-20">
+              <div className="p-6 grid grid-cols-2 gap-4 pb-20 md:pb-6">
                 <div className="space-y-1">
                   <Label className="text-[8px] font-black uppercase text-slate-400 px-1">ESTADO</Label>
                   <Select value={selectedVehicle.estado} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { estado: v })}>
