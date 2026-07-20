@@ -3,7 +3,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { 
-  Package, Grid3X3, Car, CalendarCheck, Clock, Search, ChevronRight, TrendingUp, Scan, ShieldCheck, History, MapPin, Droplets, ArrowRightCircle, Trash2
+  Package, Grid3X3, Car, CalendarCheck, Clock, Search, ChevronRight, Scan, History, Trash2
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -89,20 +89,7 @@ export default function GeniusDashboard() {
     const reserved = vehiculos.filter(v => v.estado === 'Reservado').length;
     const prep = vehiculos.filter(v => v.estado === 'Preparacion Entrega').length;
     
-    const aging = {
-      plus30: vehiculos.filter(v => v.fechaEntrada && differenceInDays(new Date(), parseISO(v.fechaEntrada)) > 30).length,
-      plus60: vehiculos.filter(v => v.fechaEntrada && differenceInDays(new Date(), parseISO(v.fechaEntrada)) > 60).length,
-      plus90: vehiculos.filter(v => v.fechaEntrada && differenceInDays(new Date(), parseISO(v.fechaEntrada)) > 90).length,
-    };
-
-    const avgDays = total > 0 
-      ? Math.round(vehiculos.reduce((acc, v) => {
-          const entry = v.fechaEntrada ? parseISO(v.fechaEntrada) : new Date();
-          return acc + Math.max(0, differenceInDays(new Date(), entry));
-        }, 0) / total)
-      : 0;
-
-    return { total, expo, demo, reserved, prep, aging, avgDays };
+    return { total, expo, demo, reserved, prep };
   }, [vehiculos]);
 
   const kpis = [
@@ -244,18 +231,15 @@ export default function GeniusDashboard() {
           </div>
         </div>
 
-        {/* Bottom Aging Stats Bar */}
+        {/* Bottom Navigation Bar */}
         <Card className="premium-card bg-white border-none shadow-sm rounded-2xl shrink-0">
           <CardContent className="p-4 flex items-center justify-between gap-4">
              <div className="flex-1 space-y-1">
-                <div className="flex justify-between text-[8px] font-black uppercase text-slate-400">
-                  <span>Aging Crítico (+60d)</span>
-                  <span>{stats.aging.plus60} UDS</span>
-                </div>
-                <Progress value={(stats.aging.plus60 / (stats.total || 1)) * 100} className="h-1 bg-slate-50" />
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Auditoría y Trazabilidad</p>
+                <p className="text-[11px] font-bold text-secondary uppercase">Acceso rápido al historial de movimientos</p>
              </div>
              <Link href="/history">
-               <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl bg-slate-50 text-slate-400">
+               <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl bg-slate-50 text-slate-400 hover:text-primary">
                  <History className="w-5 h-5" />
                </Button>
              </Link>
@@ -265,4 +249,3 @@ export default function GeniusDashboard() {
     </div>
   );
 }
-

@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { BMW_COLORS } from "../showroom/page";
 
-type FilterType = 'all' | 'terraza' | 'entreplanta' | 'lavadero' | 'entrega' | 'exposicion' | 'aging';
+type FilterType = 'all' | 'terraza' | 'entreplanta' | 'lavadero' | 'entrega' | 'exposicion';
 
 export default function StockManagement() {
   const db = useFirestore();
@@ -50,7 +50,6 @@ export default function StockManagement() {
     else if (filter === 'lavadero') result = result.filter(v => v.ubicacion?.toLowerCase() === 'lavadero');
     else if (filter === 'entrega') result = result.filter(v => v.ubicacion?.toLowerCase().includes('entrega'));
     else if (filter === 'exposicion') result = result.filter(v => v.ubicacion?.startsWith('P'));
-    else if (filter === 'aging') result = result.filter(v => v.fechaEntrada && differenceInDays(new Date(), parseISO(v.fechaEntrada)) > 60);
 
     const s = searchTerm.toLowerCase();
     if (s) {
@@ -66,9 +65,8 @@ export default function StockManagement() {
     terraza: vehiculos.filter(v => v.ubicacion?.toLowerCase() === 'terraza').length,
     entreplanta: vehiculos.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta').length,
     lavadero: vehiculos.filter(v => v.ubicacion?.toLowerCase() === 'lavadero').length,
-    entrega: vehiculos.filter(v => v.ubicacion?.toLowerCase().includes('entrega')).length,
-    exposicion: vehiculos.filter(v => v.ubicacion?.startsWith('P')).length,
-    aging: vehiculos.filter(v => v.fechaEntrada && differenceInDays(new Date(), parseISO(v.fechaEntrada)) > 60).length
+    entrega: vehiculos.filter(v => v.ubicacion?.toLowerCase().includes('entrega').length,
+    exposicion: vehiculos.filter(v => v.ubicacion?.startsWith('P')).length
   }), [vehiculos]);
 
   const QuickFilterCard = ({ type, label, val, color, icon: Icon }: any) => {
@@ -109,13 +107,12 @@ export default function StockManagement() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-6 gap-3 md:gap-4 shrink-0">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 shrink-0">
         <QuickFilterCard type="exposicion" label="EXPOSICIÓN" val={stats.exposicion} color="text-secondary" icon={Car} />
         <QuickFilterCard type="terraza" label="TERRAZA" val={stats.terraza} color="text-blue-500" icon={MapPin} />
         <QuickFilterCard type="entreplanta" label="ENTREPLANTA" val={stats.entreplanta} color="text-blue-700" icon={MapPin} />
         <QuickFilterCard type="entrega" label="ZONA ENTREGA" val={stats.entrega} color="text-emerald-600" icon={ArrowRightCircle} />
         <QuickFilterCard type="lavadero" label="LAVADERO" val={stats.lavadero} color="text-sky-500" icon={Droplets} />
-        <QuickFilterCard type="aging" label="STOCK AGING" val={stats.aging} color="text-red-600" icon={Clock} />
       </div>
 
       <div className="relative shrink-0">
@@ -229,4 +226,3 @@ export default function StockManagement() {
     </div>
   );
 }
-
