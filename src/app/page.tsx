@@ -102,46 +102,46 @@ export default function GeniusDashboard() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-[#f4f7fa]">
-      {/* Header & Search */}
-      <div className="p-4 md:p-6 space-y-4 shrink-0">
-        <div className="bg-[#003399] rounded-3xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full translate-x-32 -translate-y-32 blur-3xl" />
-          <div className="relative z-10 space-y-4">
+      {/* Header & Search Compacted */}
+      <div className="p-3 md:p-4 space-y-3 shrink-0">
+        <div className="bg-[#003399] rounded-2xl p-4 md:p-5 text-white shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full translate-x-16 -translate-y-16 blur-2xl" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex flex-col gap-0.5">
-              <h1 className="text-2xl md:text-3xl font-black tracking-tighter uppercase italic leading-none">
+              <h1 className="text-xl md:text-2xl font-black tracking-tighter uppercase italic leading-none">
                 MOMENTUM <span className="text-white not-italic">VN</span>
               </h1>
-              <p className="text-white/30 text-[8px] md:text-[9px] font-black uppercase tracking-[0.3em]">Operativa Premium Genius</p>
+              <p className="text-white/30 text-[7px] md:text-[8px] font-black uppercase tracking-[0.3em]">Operativa Genius</p>
             </div>
 
-            <div className="flex gap-2 max-w-lg">
+            <div className="flex gap-2 w-full md:w-[400px]">
               <div className="relative flex-1">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/40" />
                 <Input 
-                  className="h-12 bg-white/10 border-none rounded-2xl text-sm font-black uppercase placeholder:text-white/20 pl-11 focus:bg-white/15 transition-all text-white" 
+                  className="h-10 bg-white/10 border-none rounded-xl text-xs font-black uppercase placeholder:text-white/20 pl-10 focus:bg-white/15 transition-all text-white" 
                   placeholder="BUSCAR VIN7 O MODELO..."
                   value={fastSearch}
                   onChange={(e) => setFastSearch(e.target.value)}
                 />
               </div>
-              <Button onClick={() => router.push(`/showroom?s=${fastSearch}`)} className="h-12 w-12 rounded-2xl bg-[#ED1C24] hover:scale-105 shadow-lg border-none transition-all">
-                <Scan className="w-5 h-5 text-white" />
+              <Button onClick={() => router.push(`/showroom?s=${fastSearch}`)} className="h-10 w-10 rounded-xl bg-[#ED1C24] hover:scale-105 shadow-md border-none transition-all">
+                <Scan className="h-4 w-4 text-white" />
               </Button>
             </div>
           </div>
         </div>
 
-        {/* Quick KPIs - Mobile Horizontal Scroll */}
-        <div className="flex md:grid md:grid-cols-5 gap-3 overflow-x-auto pb-2 scrollbar-none">
+        {/* Quick KPIs - Compact height */}
+        <div className="flex md:grid md:grid-cols-5 gap-2 overflow-x-auto pb-1 scrollbar-none">
           {kpis.map((kpi) => (
-            <Link key={kpi.label} href={kpi.href} className="min-w-[120px] md:min-w-0">
-              <Card className="premium-card hover:border-[#ED1C24] transition-all border-none group h-20 flex items-center bg-white shadow-sm rounded-2xl">
-                <CardContent className="p-4 w-full">
+            <Link key={kpi.label} href={kpi.href} className="min-w-[100px] md:min-w-0 flex-1">
+              <Card className="premium-card hover:border-[#ED1C24] transition-all border-none group h-16 flex items-center bg-white shadow-sm rounded-xl">
+                <CardContent className="p-3 w-full">
                   <div className="flex flex-col">
-                    <p className="text-[7px] font-black text-slate-400 uppercase tracking-widest">{kpi.label}</p>
-                    <div className="flex justify-between items-end mt-1">
-                      <p className="text-xl font-black text-slate-800 leading-none">{kpi.value}</p>
-                      <kpi.icon className={cn("w-4 h-4 opacity-20", kpi.color)} />
+                    <p className="text-[6px] font-black text-slate-400 uppercase tracking-widest">{kpi.label}</p>
+                    <div className="flex justify-between items-end mt-0.5">
+                      <p className="text-lg font-black text-slate-800 leading-none">{kpi.value}</p>
+                      <kpi.icon className={cn("w-3.5 h-3.5 opacity-20", kpi.color)} />
                     </div>
                   </div>
                 </CardContent>
@@ -151,38 +151,49 @@ export default function GeniusDashboard() {
         </div>
       </div>
 
-      {/* Main Content Area: Stock List with Tabs */}
-      <div className="flex-1 px-4 md:px-6 pb-24 md:pb-6 overflow-hidden flex flex-col gap-4">
-        <div className="bg-white rounded-[2rem] shadow-sm border-none flex-1 overflow-hidden flex flex-col">
-          <div className="p-4 md:p-6 border-b shrink-0 space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
-                <Package className="w-4 h-4 text-[#00AEEF]" /> LISTADO DE STOCK VN
+      {/* Main Content Area: Maximize List View */}
+      <div className="flex-1 px-3 md:px-4 pb-20 md:pb-4 overflow-hidden flex flex-col gap-3">
+        <div className="bg-white rounded-[1.5rem] shadow-sm border-none flex-1 overflow-hidden flex flex-col">
+          <div className="p-3 md:p-4 border-b shrink-0 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <h3 className="text-[9px] font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
+                <Package className="h-3.5 w-3.5 text-[#00AEEF]" /> STOCK VN
               </h3>
-              <Badge variant="outline" className="text-[9px] font-black px-3 py-1 rounded-lg bg-slate-50 border-none">
-                {filteredStock.length} UNIDADES
-              </Badge>
-            </div>
-            
-            <div className="flex overflow-x-auto pb-1 scrollbar-none">
-              <Tabs value={activeLocation} onValueChange={(v: any) => setActiveLocation(v)} className="w-full">
-                <TabsList className="bg-slate-100/50 p-1 rounded-xl h-auto flex flex-nowrap w-fit">
-                  <TabsTrigger value="ALL" className="rounded-lg text-[8px] md:text-[9px] font-black uppercase px-3 py-1.5">TODOS</TabsTrigger>
-                  <TabsTrigger value="EXPO" className="rounded-lg text-[8px] md:text-[9px] font-black uppercase px-3 py-1.5">EXPO</TabsTrigger>
-                  <TabsTrigger value="TERRAZA" className="rounded-lg text-[8px] md:text-[9px] font-black uppercase px-3 py-1.5">TERRAZA</TabsTrigger>
-                  <TabsTrigger value="ENTREPLANTA" className="rounded-lg text-[8px] md:text-[9px] font-black uppercase px-3 py-1.5">PLANTA</TabsTrigger>
-                  <TabsTrigger value="LAVADERO" className="rounded-lg text-[8px] md:text-[9px] font-black uppercase px-3 py-1.5">LAVADO</TabsTrigger>
-                  <TabsTrigger value="ENTREGA" className="rounded-lg text-[8px] md:text-[9px] font-black uppercase px-3 py-1.5">ENTREGA</TabsTrigger>
+              <Tabs value={activeLocation} onValueChange={(v: any) => setActiveLocation(v)} className="hidden sm:block">
+                <TabsList className="bg-slate-100/50 p-0.5 rounded-lg h-8">
+                  <TabsTrigger value="ALL" className="rounded-md text-[8px] font-black uppercase px-3 h-7">TODOS</TabsTrigger>
+                  <TabsTrigger value="EXPO" className="rounded-md text-[8px] font-black uppercase px-3 h-7">EXPO</TabsTrigger>
+                  <TabsTrigger value="TERRAZA" className="rounded-md text-[8px] font-black uppercase px-3 h-7">TERRAZA</TabsTrigger>
+                  <TabsTrigger value="ENTREPLANTA" className="rounded-md text-[8px] font-black uppercase px-3 h-7">PLANTA</TabsTrigger>
+                  <TabsTrigger value="LAVADERO" className="rounded-md text-[8px] font-black uppercase px-3 h-7">LAVADO</TabsTrigger>
+                  <TabsTrigger value="ENTREGA" className="rounded-md text-[8px] font-black uppercase px-3 h-7">ENTREGA</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
+            
+            <Badge variant="outline" className="text-[8px] font-black px-2 py-0.5 rounded bg-slate-50 border-none shrink-0">
+              {filteredStock.length} UNIDADES
+            </Badge>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-3 scrollbar-none">
+          {/* Mobile Tab List (Alternative) */}
+          <div className="sm:hidden px-3 pt-2 overflow-x-auto scrollbar-none shrink-0">
+            <Tabs value={activeLocation} onValueChange={(v: any) => setActiveLocation(v)} className="w-full">
+              <TabsList className="bg-slate-100/50 p-0.5 rounded-lg h-7 flex w-fit">
+                <TabsTrigger value="ALL" className="text-[7px] font-black px-2 h-6">TODOS</TabsTrigger>
+                <TabsTrigger value="EXPO" className="text-[7px] font-black px-2 h-6">EXPO</TabsTrigger>
+                <TabsTrigger value="TERRAZA" className="text-[7px] font-black px-2 h-6">TERRAZA</TabsTrigger>
+                <TabsTrigger value="ENTREPLANTA" className="text-[7px] font-black px-2 h-6">PLT</TabsTrigger>
+                <TabsTrigger value="LAVADERO" className="text-[7px] font-black px-2 h-6">LAV</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-2 scrollbar-none">
             {loading ? (
-              <div className="flex justify-center py-10"><Clock className="animate-spin text-slate-200 w-8 h-8" /></div>
+              <div className="flex justify-center py-10"><Clock className="animate-spin text-slate-200 h-8 w-8" /></div>
             ) : filteredStock.length === 0 ? (
-              <div className="text-center py-20 text-[9px] font-black uppercase text-slate-300 tracking-widest italic">
+              <div className="text-center py-20 text-[8px] font-black uppercase text-slate-300 tracking-widest italic">
                 Sin unidades en esta ubicación
               </div>
             ) : (
@@ -190,38 +201,37 @@ export default function GeniusDashboard() {
                 const days = car.fechaEntrada ? differenceInDays(new Date(), parseISO(car.fechaEntrada)) : 0;
                 const colorObj = BMW_COLORS.find(c => c.code === (car.colorCodigo || car.colorBMW));
                 return (
-                  <Card key={car.id} onClick={() => router.push(`/showroom?s=${car.vin7}`)} className="border border-slate-50 bg-white hover:border-primary/20 transition-all rounded-2xl shadow-sm overflow-hidden active:scale-[0.98]">
-                    <CardContent className="p-4 flex flex-col gap-3">
-                      <div className="flex justify-between items-start">
-                        <div className="space-y-0.5">
-                          <h4 className="font-black text-[11px] md:text-xs uppercase text-secondary leading-tight truncate max-w-[200px]">{car.modelo}</h4>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-[9px] font-bold text-slate-400">{car.vin7}</span>
-                            <Badge className={cn("text-[8px] font-black px-2 py-0 h-auto border-none", 
-                              days > 60 ? "bg-red-50 text-red-600" : "bg-emerald-50 text-emerald-600"
-                            )}>{days} DÍAS</Badge>
+                  <Card key={car.id} onClick={() => router.push(`/showroom?s=${car.vin7}`)} className="border border-slate-50 bg-white hover:border-primary/20 transition-all rounded-xl shadow-sm overflow-hidden active:scale-[0.99] group">
+                    <CardContent className="p-3 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <div className="h-10 w-10 bg-slate-50 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-blue-50 transition-colors">
+                          <Car className="h-5 w-5 text-slate-300 group-hover:text-primary transition-colors" />
+                        </div>
+                        <div className="flex flex-col min-w-0">
+                          <h4 className="font-black text-[10px] md:text-[11px] uppercase text-secondary leading-none truncate">{car.modelo}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="font-mono text-[8px] font-bold text-slate-400">{car.vin7}</span>
+                            <div className="flex items-center gap-1">
+                              <div className="w-2 h-2 rounded-full border border-slate-200" style={{ backgroundColor: colorObj?.hex || '#F5F5F5' }} />
+                              <span className="text-[7px] font-black text-slate-400 uppercase">{colorObj?.name.split(' ')[0]}</span>
+                            </div>
                           </div>
                         </div>
-                        <Badge className={cn("text-[9px] font-black uppercase px-3 py-1 border-none rounded-lg", 
+                      </div>
+                      
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className="text-right hidden sm:block">
+                           <p className={cn("text-[9px] font-black", days > 60 ? "text-red-600" : "text-emerald-600")}>{days} DÍAS</p>
+                           <p className="text-[7px] font-black text-slate-300 uppercase">EN STOCK</p>
+                        </div>
+                        <Badge className={cn("text-[8px] font-black uppercase px-2 py-0.5 border-none rounded-lg", 
                           car.ubicacion?.startsWith('P') ? "bg-primary text-white" : "bg-slate-100 text-secondary"
                         )}>
                           {car.ubicacion}
                         </Badge>
-                      </div>
-                      
-                      <div className="flex items-center justify-between pt-2 border-t border-slate-50">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3.5 h-3.5 rounded-full border border-slate-200" style={{ backgroundColor: colorObj?.hex || '#F5F5F5' }} />
-                          <span className="text-[9px] uppercase font-black text-slate-400">{car.colorExterior?.split(' ')[0]}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl bg-slate-50 hover:text-red-600" onClick={(e) => { e.stopPropagation(); if(confirm("¿Eliminar?")) deleteDoc(doc(db, "vehiculos", car.id)); }}>
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                          <Button size="icon" className="h-8 w-8 rounded-xl bg-secondary text-white">
-                            <ChevronRight className="w-4 h-4" />
-                          </Button>
-                        </div>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg bg-slate-50 text-slate-300 hover:text-red-600 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); if(confirm("¿Eliminar?")) deleteDoc(doc(db, "vehiculos", car.id)); }}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
@@ -231,16 +241,16 @@ export default function GeniusDashboard() {
           </div>
         </div>
 
-        {/* Bottom Navigation Bar */}
-        <Card className="premium-card bg-white border-none shadow-sm rounded-2xl shrink-0">
-          <CardContent className="p-4 flex items-center justify-between gap-4">
-             <div className="flex-1 space-y-1">
-                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest">Auditoría y Trazabilidad</p>
-                <p className="text-[11px] font-bold text-secondary uppercase">Acceso rápido al historial de movimientos</p>
+        {/* Trazabilidad Bar - Compacted */}
+        <Card className="premium-card bg-white border-none shadow-sm rounded-xl shrink-0">
+          <CardContent className="p-2 px-4 flex items-center justify-between gap-4">
+             <div className="flex items-center gap-3">
+                <History className="h-4 w-4 text-slate-300" />
+                <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Auditoría Logística Momentum Navarra</p>
              </div>
              <Link href="/history">
-               <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl bg-slate-50 text-slate-400 hover:text-primary">
-                 <History className="w-5 h-5" />
+               <Button variant="ghost" className="h-8 text-[8px] font-black uppercase text-primary hover:bg-primary/5 px-3 rounded-lg">
+                 VER HISTORIAL <ChevronRight className="ml-1 h-3 w-3" />
                </Button>
              </Link>
           </CardContent>
