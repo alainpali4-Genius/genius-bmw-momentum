@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, Suspense, useEffect } from "react";
@@ -109,6 +108,7 @@ function ShowroomContent() {
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [movingVehicleId, setMovingVehicleId] = useState<string | null>(null);
+  const [draggedPlaza, setDraggedPlaza] = useState<string | null>(null);
   const [isStockSheetOpen, setIsStockSheetOpen] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -155,50 +155,81 @@ function ShowroomContent() {
 
   const handleSwapOrMove = async (sourceId: string, targetPlaza: string) => {
     const sourceCar = vehiculos.find(v => v.id === sourceId);
+    if (!sourceCar) return;
+    
     const targetCar = vehiculos.find(v => v.ubicacion === targetPlaza);
+    
     if (targetCar && targetCar.id !== sourceId) {
-      const oldLocation = PLAZAS_LIST.includes(sourceCar?.ubicacion) ? sourceCar.ubicacion : 'Stock';
+      // Intercambio
+      const oldLocation = PLAZAS_LIST.includes(sourceCar.ubicacion) ? sourceCar.ubicacion : 'Stock';
       await handleUpdateVehicle(sourceId, { ubicacion: targetPlaza, estado: 'Exposicion' });
       await handleUpdateVehicle(targetCar.id, { ubicacion: oldLocation });
-      toast({ title: "Intercambio Realizado" });
+      toast({ title: "Intercambio Realizado", description: `${sourceCar.modelo} ↔ ${targetCar.modelo}` });
     } else {
+      // Mover a plaza vacía
       await handleUpdateVehicle(sourceId, { ubicacion: targetPlaza, estado: 'Exposicion' });
-      toast({ title: "Vehículo Ubicado" });
+      toast({ title: "Vehículo Ubicado", description: `${sourceCar.modelo} en ${targetPlaza}` });
     }
     setMovingVehicleId(null);
   };
 
+  // Handlers para Drag & Drop
+  const handleDragStart = (e: React.DragEvent, vehicleId: string) => {
+    setMovingVehicleId(vehicleId);
+    e.dataTransfer.setData("vehicleId", vehicleId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, plazaId: string) => {
+    e.preventDefault();
+    setDraggedPlaza(plazaId);
+  };
+
+  const handleDrop = (e: React.DragEvent, plazaId: string) => {
+    e.preventDefault();
+    setDraggedPlaza(null);
+    const vehicleId = e.dataTransfer.getData("vehicleId") || movingVehicleId;
+    if (vehicleId) {
+      handleSwapOrMove(vehicleId, plazaId);
+    }
+  };
+
   const renderPlaza = (id: string) => {
     const vehicle = vehiculos.find(v => v.ubicacion === id);
-    const isMovingTarget = !!movingVehicleId && movingVehicleId !== vehicle?.id;
+    const isMovingTarget = (!!movingVehicleId && movingVehicleId !== vehicle?.id) || (draggedPlaza === id);
     const colorObj = BMW_COLORS.find(c => c.code === (vehicle?.colorCodigo || vehicle?.colorBMW));
     
-    // Contraste: Negro solo en coches blancos (300 o A96). Blanco en el resto.
     const isWhiteCar = colorObj?.code === '300' || colorObj?.code === 'A96';
     const textColor = isWhiteCar ? "text-black" : "text-white";
     const textShadow = isWhiteCar ? "drop-shadow-none" : "drop-shadow-md";
 
-    // P13 vertical (mirando arriba), otros horizontal (rotación 90)
     const carRotation = id === 'P13' ? "rotate-0" : "rotate-90";
     const textRotation = id === 'P13' ? "rotate-0" : "-rotate-90";
 
     return (
       <div 
         key={id}
+        onDragOver={(e) => handleDragOver(e, id)}
+        onDragLeave={() => setDraggedPlaza(null)}
+        onDrop={(e) => handleDrop(e, id)}
         onClick={() => movingVehicleId ? handleSwapOrMove(movingVehicleId, id) : vehicle && setSelectedVehicleId(vehicle.id)}
         className={cn(
           "relative flex flex-col items-center justify-center transition-all h-full w-full",
           "rounded-sm overflow-hidden",
           GRID_POSITIONS[id],
           vehicle ? "bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed border-2 bg-white/20",
-          isMovingTarget && "ring-2 ring-primary bg-primary/5 z-50"
+          isMovingTarget && "ring-4 ring-primary bg-primary/10 z-50 scale-[1.02]"
         )}
       >
         <div className="absolute top-0 left-0 z-30 p-0.5">
           <span className="text-[6px] md:text-[9px] font-black uppercase text-slate-300 leading-none">{id}</span>
         </div>
         {vehicle && (
-          <div className="w-full h-full flex items-center justify-center p-0.5 relative overflow-hidden">
+          <div 
+            draggable="true"
+            onDragStart={(e) => handleDragStart(e, vehicle.id)}
+            className="w-full h-full flex items-center justify-center p-0.5 relative overflow-hidden"
+          >
             <div className={cn(
               "relative flex items-center justify-center transition-all duration-300 w-full h-full",
               carRotation
@@ -229,8 +260,8 @@ function ShowroomContent() {
       <div className="bg-white border-b px-3 py-1.5 md:py-2 flex items-center justify-between shrink-0 shadow-sm z-40">
         <h1 className="text-[10px] md:text-xl font-black text-secondary uppercase italic leading-none tracking-tighter">PLANO <span className="text-primary not-italic">EXPO</span></h1>
         <div className="flex gap-1">
-          {movingVehicleId && <Button onClick={() => setMovingVehicleId(null)} className="h-6 md:h-7 bg-red-600 text-white rounded-md font-black uppercase text-[6px] md:text-[7px] px-2">CANCELAR</Button>}
-          <Button variant="outline" onClick={() => setIsStockSheetOpen(true)} className="h-6 md:h-7 rounded-md font-black uppercase text-[6px] md:text-[7px] px-2 border-slate-200">STOCK ({pendingStock.length})</Button>
+          {movingVehicleId && <Button onClick={() => setMovingVehicleId(null)} className="h-6 md:h-7 bg-red-600 text-white rounded-md font-black uppercase text-[6px] md:text-[7px] px-2">CANCELAR MOVIMIENTO</Button>}
+          <Button variant="outline" onClick={() => setIsStockSheetOpen(true)} className="h-6 md:h-7 rounded-md font-black uppercase text-[6px] md:text-[7px] px-2 border-slate-200">STOCK DISPONIBLE ({pendingStock.length})</Button>
           <Button onClick={() => setIsAddingNew(true)} className="h-6 md:h-7 bg-secondary text-white rounded-md font-black uppercase text-[6px] md:text-[7px] px-2">NUEVO</Button>
         </div>
       </div>
@@ -309,7 +340,13 @@ function ShowroomContent() {
           <SheetHeader className="p-6 bg-slate-50 border-b"><SheetTitle className="text-lg font-black uppercase italic text-secondary">STOCK DISPONIBLE</SheetTitle></SheetHeader>
           <div className="p-4 space-y-2 overflow-y-auto h-[calc(100vh-100px)] scrollbar-none pb-20">
             {pendingStock.map(car => (
-              <div key={car.id} onClick={() => { setMovingVehicleId(car.id); setIsStockSheetOpen(false); }} className="p-4 bg-white border border-slate-100 rounded-xl hover:border-primary cursor-pointer active:scale-[0.98]">
+              <div 
+                key={car.id} 
+                draggable="true"
+                onDragStart={(e) => handleDragStart(e, car.id)}
+                onClick={() => { setMovingVehicleId(car.id); setIsStockSheetOpen(false); }} 
+                className="p-4 bg-white border border-slate-100 rounded-xl hover:border-primary cursor-pointer active:scale-[0.98]"
+              >
                 <p className="font-black text-secondary text-[11px] uppercase truncate leading-none mb-2">{car.modelo}</p>
                 <div className="flex flex-col gap-1">
                   <div className="flex justify-between items-center"><span className="text-[9px] font-mono font-bold text-slate-400">{car.vin7}</span><Badge variant="outline" className="text-[8px] uppercase font-black px-2 py-0.5 bg-slate-50 border-none">{car.ubicacion}</Badge></div>
