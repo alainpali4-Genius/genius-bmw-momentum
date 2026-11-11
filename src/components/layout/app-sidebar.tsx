@@ -1,31 +1,14 @@
-
 "use client"
 
 import * as React from "react"
 import {
-  LayoutDashboard,
-  Grid3X3,
-  Car,
-  CalendarDays,
-  Package,
-  History,
-  Settings,
-  ShieldCheck,
-  LogOut,
-  X
+  LayoutDashboard, Grid3X3, Car, CalendarDays, Package,
+  History, Settings, ShieldAlert, LogOut, X, BarChart3
 } from "lucide-react"
-
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarGroup,
-  SidebarGroupLabel,
-  useSidebar
+  Sidebar, SidebarContent, SidebarFooter, SidebarHeader,
+  SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+  SidebarGroup, SidebarGroupLabel, useSidebar
 } from "@/components/ui/sidebar"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -33,150 +16,81 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { BrandLogo } from "./brand-logo"
 
-const items = [
-  {
-    title: "Panel de Control",
-    url: "/",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "Plano de Exposición",
-    url: "/showroom",
-    icon: Grid3X3,
-  },
-  {
-    title: "Gestión Stock VN",
-    url: "/stock",
-    icon: Package,
-  },
-  {
-    title: "Gestión de Entregas",
-    url: "/delivery",
-    icon: CalendarDays,
-  },
-  {
-    title: "Inventario",
-    url: "/inventory",
-    icon: Car,
-  },
+const operations = [
+  { title: "Inicio", url: "/", icon: LayoutDashboard },
+  { title: "Stock", url: "/stock", icon: Car },
+  { title: "Plano de exposición", url: "/showroom", icon: Grid3X3 },
+  { title: "Entregas", url: "/delivery", icon: CalendarDays },
+  { title: "Inventario", url: "/inventory", icon: Package },
 ]
-
-const administrationItems = [
-  {
-    title: "Incidencias",
-    url: "/incidents",
-    icon: ShieldCheck,
-  },
-  {
-    title: "Historial",
-    url: "/history",
-    icon: History,
-  },
-  {
-    title: "Configuración",
-    url: "/settings",
-    icon: Settings,
-  },
+const management = [
+  { title: "Incidencias", url: "/incidents", icon: ShieldAlert },
+  { title: "Historial", url: "/history", icon: History },
+  { title: "Estadísticas", url: "/statistics", icon: BarChart3 },
+  { title: "Configuración", url: "/settings", icon: Settings },
 ]
 
 export function AppSidebar() {
-  const pathname = usePathname();
-  const { isMobile, setOpenMobile, state } = useSidebar();
+  const pathname = usePathname()
+  const { isMobile, setOpenMobile, state } = useSidebar()
+  const handleLinkClick = () => { if (isMobile) setOpenMobile(false) }
 
-  const handleLinkClick = () => {
-    if (isMobile) {
-      setOpenMobile(false);
-    }
-  };
+  const renderItems = (items: typeof operations) => items.map((item) => {
+    const active = pathname === item.url || (item.url !== "/" && pathname.startsWith(item.url))
+    return (
+      <SidebarMenuItem key={item.url}>
+        <SidebarMenuButton asChild onClick={handleLinkClick}
+          className={cn(
+            "h-10 rounded-lg px-3 transition-colors text-slate-600 hover:bg-slate-100 hover:text-[#003399]",
+            active && "bg-[#eaf1fb] text-[#003399] font-semibold hover:bg-[#eaf1fb]"
+          )}>
+          <Link href={item.url} className="flex items-center gap-3">
+            <item.icon className={cn("h-[18px] w-[18px] shrink-0", active ? "text-[#003399]" : "text-slate-400")} />
+            <span className="text-[13px] font-medium tracking-normal">{item.title}</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    )
+  })
 
   return (
-    <Sidebar collapsible="icon" className="bg-[#003399] border-none text-white overflow-hidden">
-      <SidebarHeader className="h-64 flex flex-col justify-center px-4 shrink-0">
-        <div className="flex items-center justify-between w-full">
-          {state === 'expanded' ? (
-            <div className="px-2 flex flex-col items-center w-full text-center space-y-4">
-              <div className="flex flex-col items-center">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <span className="text-2xl font-black italic tracking-tighter text-white leading-none">GENIUS</span>
-                  <span className="text-2xl font-black italic tracking-tighter text-[#ED1C24] leading-none">VN</span>
+    <Sidebar collapsible="icon" className="border-r border-slate-200 bg-white text-slate-800">
+      <SidebarHeader className="h-[116px] justify-center border-b border-slate-100 px-5">
+        <div className="flex items-center justify-between gap-2">
+          {state === "expanded" ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#55c5e8]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#0877bd]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#e51b32]" />
                 </div>
-                <span className="text-[8px] font-black uppercase tracking-[0.4em] text-white/40 leading-none">MOMENTUM NAVARRA</span>
+                <span className="text-[17px] font-semibold tracking-tight text-slate-900">Momentum</span>
               </div>
-              <div className="pt-2">
-                <BrandLogo variant="sidebar" className="w-[180px] md:w-[200px]" />
-              </div>
+              <span className="pl-[34px] text-[9px] font-medium uppercase tracking-[0.25em] text-slate-400">GENIUS SHOWROOM</span>
             </div>
           ) : (
-            <div className="w-full flex justify-center">
-              <div className="w-8 h-8 bg-[#ED1C24] rounded-lg flex items-center justify-center font-black italic text-white text-xs shadow-lg">G</div>
-            </div>
+            <div className="flex gap-1"><span className="h-2 w-2 rounded-full bg-[#55c5e8]" /><span className="h-2 w-2 rounded-full bg-[#0877bd]" /><span className="h-2 w-2 rounded-full bg-[#e51b32]" /></div>
           )}
-          {isMobile && (
-            <Button variant="ghost" size="icon" onClick={() => setOpenMobile(false)} className="text-white hover:bg-white/10 ml-auto">
-              <X className="w-5 h-5" />
-            </Button>
-          )}
+          {isMobile && <Button variant="ghost" size="icon" onClick={() => setOpenMobile(false)} className="ml-auto text-slate-500 hover:bg-slate-100"><X className="h-5 w-5" /></Button>}
         </div>
       </SidebarHeader>
-      
-      <SidebarContent className="px-4 py-2 gap-2">
-        <SidebarGroup>
-          <SidebarGroupLabel className="text-white/40 text-[9px] uppercase font-black tracking-[0.2em] px-4 mb-4">Operaciones</SidebarGroupLabel>
-          <SidebarMenu className="gap-1">
-            {items.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton 
-                  asChild 
-                  className={cn(
-                    "transition-all h-12 text-white hover:bg-white/10 px-4 rounded-xl border-none group/btn",
-                    pathname === item.url && "bg-white/10"
-                  )}
-                  onClick={handleLinkClick}
-                >
-                  <Link href={item.url} className="flex items-center gap-4">
-                    <item.icon className="w-5 h-5 shrink-0 text-white/70 group-hover/btn:text-[#ED1C24] transition-colors" />
-                    <span className="text-[11px] uppercase font-black tracking-tight text-white group-hover/btn:text-[#ED1C24] transition-colors">
-                      {item.title}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
+      <SidebarContent className="gap-5 px-3 py-5">
+        <SidebarGroup className="p-0">
+          <SidebarGroupLabel className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Operaciones</SidebarGroupLabel>
+          <SidebarMenu className="gap-1">{renderItems(operations)}</SidebarMenu>
         </SidebarGroup>
-        
-        <SidebarGroup className="mt-8">
-          <SidebarGroupLabel className="text-white/40 text-[9px] uppercase font-black tracking-[0.2em] px-4 mb-4">Administración</SidebarGroupLabel>
-          <SidebarMenu className="gap-1">
-            {administrationItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton 
-                  asChild 
-                  className={cn(
-                    "transition-all h-12 text-white hover:bg-white/10 px-4 rounded-xl border-none group/adminbtn",
-                    pathname === item.url && "bg-white/10"
-                  )}
-                  onClick={handleLinkClick}
-                >
-                  <Link href={item.url} className="flex items-center gap-4">
-                    <item.icon className="w-5 h-5 shrink-0 text-white/70 group-hover/adminbtn:text-[#ED1C24] transition-colors" />
-                    <span className="text-[11px] uppercase font-black tracking-tight text-white group-hover/adminbtn:text-[#ED1C24] transition-colors">
-                      {item.title}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
+        <SidebarGroup className="border-t border-slate-100 pt-4">
+          <SidebarGroupLabel className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Gestión</SidebarGroupLabel>
+          <SidebarMenu className="gap-1">{renderItems(management)}</SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarFooter className="p-6 border-t border-white/10">
+      <SidebarFooter className="border-t border-slate-100 p-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton className="text-white/40 hover:text-white hover:bg-white/10 h-12 transition-colors px-4 rounded-xl border-none group/logout">
-              <LogOut className="w-5 h-5 text-white/40 group-hover/logout:text-[#ED1C24] transition-colors" />
-              <span className="text-[11px] font-black uppercase tracking-tight text-white group-hover/logout:text-[#ED1C24] transition-colors">Cerrar Sesión</span>
+            <SidebarMenuButton className="h-10 rounded-lg px-3 text-slate-500 hover:bg-slate-100 hover:text-slate-900">
+              <LogOut className="h-[18px] w-[18px]" />
+              <span className="text-[13px] font-medium">Cerrar sesión</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
