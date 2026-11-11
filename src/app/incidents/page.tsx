@@ -50,10 +50,11 @@ export default function IncidentsReports() {
   const vehiculos = (vehiculosRaw || []) as any[];
 
   const filteredIncidencias = useMemo(() => {
-    return incidencias.filter(i => 
-      i.vehiculoInfo?.toLowerCase().includes(searchTerm.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")) ||
-      i.vin?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      i.id?.toLowerCase().includes(searchTerm.toLowerCase())
+    const term = searchTerm.trim().toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
+    if (!term) return incidencias;
+    return incidencias.filter(i =>
+      [i.vehiculoInfo, i.vin, i.id, i.descripcion, i.matricula]
+        .some(value => String(value || "").toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").includes(term))
     );
   }, [incidencias, searchTerm]);
 
