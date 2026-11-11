@@ -53,7 +53,8 @@ export default function InventarioGenius() {
   const { toast } = useToast();
   const { data: vehiculosRaw } = useCollection(collection(db, "vehiculos"));
   const movementsQuery = useMemo(() => query(collection(db, "movimientos"), orderBy("fecha", "desc"), limit(20)), [db]);
-  const { data: movements } = useCollection(movementsQuery);
+  const { data: movementsRaw, loading: movementsLoading } = useCollection(movementsQuery);
+  const movements = (movementsRaw || []) as any[];
   
   const [isProcessing, setIsProcessing] = useState(false);
   const [processStep, setProcessStep] = useState<string | null>(null);
@@ -168,28 +169,29 @@ export default function InventarioGenius() {
   };
 
   return (
-    <div className="p-4 md:p-8 max-w-[1000px] mx-auto space-y-4 pb-24 h-screen overflow-y-auto">
+    <div className="h-full overflow-y-auto bg-slate-50"><div className="mx-auto max-w-[1200px] space-y-6 px-5 py-7 pb-10 md:px-8 md:py-9">
       <div className="flex flex-col gap-0.5">
-        <h1 className="text-xl md:text-2xl font-black tracking-tighter text-secondary uppercase italic leading-none">INVENTARIO <span className="text-emerald-600 not-italic">EXPRESS</span></h1>
-        <p className="text-muted-foreground text-[8px] font-black uppercase tracking-widest">IA DE VISIÓN LOGÍSTICA • MOMENTUM</p>
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0066b3]">Operaciones · Momentum Navarra</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Inventario y movimientos</h1>
+        <p className="mt-1 text-sm text-slate-500">Auditoría de vehículos mediante lectura de bastidor y registro de actividad.</p>
       </div>
 
-      <Card className="premium-card border-none shadow-xl bg-[#14284B] text-white overflow-hidden rounded-3xl">
-        <CardContent className="p-8 flex flex-col items-center text-center space-y-6">
-          <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border-2 border-white/10 relative">
+      <Card className="overflow-hidden rounded-xl border-slate-200/80 bg-white text-slate-900 shadow-sm">
+        <CardContent className="flex flex-col items-center space-y-5 p-7 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-blue-50 text-[#0066b3]">
             {isProcessing ? <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" /> : <Scan className="w-8 h-8 text-white" />}
           </div>
           <div className="space-y-1">
-            <h2 className="text-lg font-black uppercase italic tracking-tighter">{isProcessing ? "IA ANALIZANDO..." : "ESCANEAR PLACA VIN"}</h2>
-            <p className="text-white/40 text-[9px] font-black uppercase tracking-widest">{processStep || "Captura la chapa del bastidor"}</p>
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900">{isProcessing ? "IA ANALIZANDO..." : "ESCANEAR PLACA VIN"}</h2>
+            <p className="text-sm text-slate-500">{processStep || "Captura la chapa del bastidor"}</p>
           </div>
           <div className="w-full max-w-sm space-y-3">
-            <Button size="lg" className="w-full h-16 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-widest text-sm shadow-lg" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}>
+            <Button size="lg" className="h-12 w-full rounded-lg bg-[#0066b3] text-sm font-semibold text-white shadow-none hover:bg-[#00549a]" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}>
               <Camera className="mr-2 w-5 h-5" /> {isProcessing ? "AUDITANDO..." : "ABRIR CÁMARA"}
             </Button>
             <div className="flex gap-2">
-              <Input placeholder="VIN7 MANUAL..." className="h-11 bg-white/5 border-white/10 rounded-xl text-white font-black uppercase text-center text-xs placeholder:text-white/10" value={manualVin} onChange={e => setManualVin(e.target.value)} />
-              <Button onClick={() => handleAudit(manualVin)} className="h-11 w-11 rounded-xl bg-white/10 hover:bg-white/20 p-0 shrink-0"><ChevronRight className="w-5 h-5" /></Button>
+              <Input placeholder="VIN7 MANUAL..." className="h-11 rounded-lg border-slate-200 text-center text-sm text-slate-900 placeholder:text-slate-400" value={manualVin} onChange={e => setManualVin(e.target.value)} />
+              <Button onClick={() => handleAudit(manualVin)} className="h-11 w-11 shrink-0 rounded-lg bg-slate-100 p-0 text-slate-700 hover:bg-slate-200"><ChevronRight className="w-5 h-5" /></Button>
             </div>
           </div>
           <input type="file" ref={fileInputRef} className="hidden" accept="image/*" capture="environment" onChange={handleFileChange} />
@@ -214,9 +216,16 @@ export default function InventarioGenius() {
         </Card>
       )}
 
+      <Card className="overflow-hidden rounded-xl border-slate-200/80 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-slate-100 p-5"><div><h2 className="font-semibold text-slate-900">Actividad reciente</h2><p className="mt-1 text-xs text-slate-500">Últimos movimientos y auditorías registrados.</p></div><Badge variant="outline" className="rounded-full border-slate-200 bg-slate-50 text-slate-600">{movements.length} registros</Badge></div>
+        <div className="divide-y divide-slate-100">
+          {movementsLoading ? <p className="p-6 text-sm text-slate-400">Cargando actividad…</p> : movements.length === 0 ? <p className="p-6 text-sm text-slate-400">Todavía no hay movimientos registrados.</p> : movements.map((movement: any) => <div key={movement.id} className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"><div className="min-w-0"><p className="truncate text-sm font-medium text-slate-800">{movement.vehiculoInfo || 'Movimiento de vehículo'}</p><p className="mt-1 text-xs text-slate-500">{movement.detalles || movement.tipoAccion || 'Actividad registrada'}</p></div><div className="flex shrink-0 items-center gap-2"><Badge variant="outline" className="border-slate-200 text-[10px]">{movement.tipoAccion || 'Movimiento'}</Badge><span className="text-xs text-slate-400">{movement.fecha ? format(new Date(movement.fecha), 'dd/MM/yyyy HH:mm', { locale: es }) : '—'}</span></div></div>)}
+        </div>
+      </Card>
+
       <Dialog open={isNewVehicleDialogOpen} onOpenChange={setIsNewVehicleDialogOpen}>
         <DialogContent className="p-0 border-none rounded-3xl overflow-hidden max-w-[90vw] md:max-w-md shadow-2xl">
-          <div className="p-6 bg-emerald-600 text-white text-center font-black uppercase italic text-sm tracking-tighter">ALTA POR ESCANEO IA</div>
+          <div className="bg-[#0066b3] p-5 text-center text-sm font-semibold text-white">ALTA POR ESCANEO IA</div>
           <div className="p-6 space-y-4 bg-white max-h-[80vh] overflow-y-auto">
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Modelo Detectado</Label><Input value={newVehicleData.modelo} onChange={e => setNewVehicleData({...newVehicleData, modelo: e.target.value})} className="h-11 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
             <div className="space-y-1">
@@ -236,10 +245,10 @@ export default function InventarioGenius() {
               <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Color BMW</Label><Select value={newVehicleData.colorBMW} onValueChange={v => setNewVehicleData({...newVehicleData, colorBMW: v})}><SelectTrigger className="h-11 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent className="max-h-[200px]">{BMW_COLORS.map(c => <SelectItem key={c.code} value={c.code} className="text-[9px]">{c.name}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Ubicación</Label><Select value={newVehicleData.ubicacion} onValueChange={v => setNewVehicleData({...newVehicleData, ubicacion: v})}><SelectTrigger className="h-11 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent>{["Stock", "Terraza", "Entreplanta", "Lavadero"].map(u => <SelectItem key={u} value={u} className="text-[9px] uppercase">{u}</SelectItem>)}</SelectContent></Select></div>
             </div>
-            <Button onClick={handleCreateNewVehicle} className="w-full h-14 bg-emerald-600 text-white font-black uppercase text-[10px] rounded-xl mt-2">CONFIRMAR ALTA UNIDAD</Button>
+            <Button onClick={handleCreateNewVehicle} className="mt-2 h-12 w-full rounded-lg bg-[#0066b3] text-sm font-semibold text-white hover:bg-[#00549a]">CONFIRMAR ALTA UNIDAD</Button>
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+      </div></div>
   );
 }
