@@ -391,6 +391,18 @@ export default function DeliveryManagement() {
                                 <DropdownMenuItem className="gap-3 rounded-xl py-3 text-[10px] font-black uppercase" onClick={() => toggleActa(delivery.id, !!delivery.actaEnviada)}>
                                   <Mail className="w-4 h-4 text-primary" /> {delivery.actaEnviada ? "Marcar Acta Pendiente" : "Marcar Acta Enviada"}
                                 </DropdownMenuItem>
+                                {delivery.estado !== 'Entregado' && (["Pendiente de fecha","Fecha confirmada","En preparación","Preparado"] as const).filter(stage => stage !== delivery.estado).map(stage => (
+                                  <DropdownMenuItem key={stage} className="gap-3 rounded-xl py-3 text-[10px] font-semibold" onClick={async () => {
+                                    const progress = stage === "Pendiente de fecha" ? 0 : stage === "Fecha confirmada" ? 25 : stage === "En preparación" ? 60 : 90;
+                                    const updates:any = { estado: stage, progress, updatedAt: new Date().toISOString() };
+                                    if(stage === "En preparación" && !delivery.fechaInicioPreparacion) updates.fechaInicioPreparacion = new Date().toISOString().slice(0,10);
+                                    if(stage === "Preparado" && !delivery.fechaPreparado) updates.fechaPreparado = new Date().toISOString().slice(0,10);
+                                    await updateDoc(doc(db, "entregas", delivery.id), updates);
+                                    toast({ title: "Fase actualizada", description: stage });
+                                  }}>
+                                    <RefreshCw className="w-4 h-4 text-primary" /> Marcar: {stage}
+                                  </DropdownMenuItem>
+                                ))}
                                 {delivery.estado !== 'Entregado' && (
                                   <DropdownMenuItem className="gap-3 rounded-xl py-3 text-[10px] font-black uppercase text-emerald-600" onClick={() => handleCompleteDelivery(delivery.id, delivery.vehiculoId, delivery.vehiculoInfo)}>
                                     <CheckCircle className="w-4 h-4" /> Marcar como Entregado
