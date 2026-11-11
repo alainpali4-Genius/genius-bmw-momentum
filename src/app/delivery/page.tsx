@@ -348,6 +348,8 @@ export default function DeliveryManagement() {
                             <h3 className="font-black text-lg text-secondary uppercase italic leading-none mb-1">{delivery.cliente}</h3>
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="text-[10px] font-black text-muted-foreground uppercase">{delivery.vehiculoInfo}</span>
+                              {delivery.matricula && <Badge variant="outline" className="text-[9px]">{delivery.matricula}</Badge>}
+                              {delivery.zonaEntrega && <Badge variant="outline" className="text-[9px]">{delivery.zonaEntrega}</Badge>}
                               {delivery.recogidaRenting && (
                                 <Badge className="bg-orange-50 text-orange-600 text-[8px] font-black uppercase border-orange-100">
                                   <ArrowDownCircle className="w-2.5 h-2.5 mr-1" /> RECOGIDA
@@ -417,6 +419,12 @@ export default function DeliveryManagement() {
                         </div>
                       </div>
 
+                      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-400">
+                        {delivery.fechaPreentrega && <span>Preentrega: {delivery.fechaPreentrega}</span>}
+                        {delivery.fechaMatriculacion && <span>Matriculación: {delivery.fechaMatriculacion}</span>}
+                        {delivery.fechaInicioPreparacion && <span>En preparación desde: {delivery.fechaInicioPreparacion}</span>}
+                        {delivery.fechaPreparado && <span>Preparado el: {delivery.fechaPreparado}</span>}
+                      </div>
                       <div className="mt-6">
                         <div className="flex justify-between items-center mb-2">
                           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground">Estado de la Entrega</span>
