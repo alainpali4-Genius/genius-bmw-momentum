@@ -1,105 +1,55 @@
-
 "use client"
 
-import { useState } from 'react';
-import { Menu, Car, LayoutDashboard, Grid3X3, Package, CalendarDays, ShieldCheck, History, Settings, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { BrandLogo } from './brand-logo';
+import { useState } from "react"
+import { Menu, LayoutDashboard, Grid3X3, Car, CalendarDays, Package, ShieldAlert, History, Settings, X } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
 
 const navItems = [
-  { title: "Panel de Control", url: "/", icon: LayoutDashboard },
-  { title: "Plano de Exposición", url: "/showroom", icon: Grid3X3 },
-  { title: "Gestión Stock VN", url: "/stock", icon: Package },
-  { title: "Gestión de Entregas", url: "/delivery", icon: CalendarDays },
-  { title: "Inventario", url: "/inventory", icon: Car },
-];
-
-const adminItems = [
-  { title: "Incidencias", url: "/incidents", icon: ShieldCheck },
+  { title: "Inicio", url: "/", icon: LayoutDashboard },
+  { title: "Stock", url: "/stock", icon: Car },
+  { title: "Plano de exposición", url: "/showroom", icon: Grid3X3 },
+  { title: "Entregas", url: "/delivery", icon: CalendarDays },
+  { title: "Inventario", url: "/inventory", icon: Package },
+  { title: "Incidencias", url: "/incidents", icon: ShieldAlert },
   { title: "Historial", url: "/history", icon: History },
   { title: "Configuración", url: "/settings", icon: Settings },
-];
+]
 
 export function MobileHeader() {
-  const [open, setOpen] = useState(false);
-  const pathname = usePathname();
-
+  const [open, setOpen] = useState(false)
+  const pathname = usePathname()
   return (
-    <header className="h-14 border-b bg-[#003399] flex items-center px-4 md:hidden shrink-0 z-50">
+    <header className="z-50 flex h-14 shrink-0 items-center border-b border-slate-200 bg-white px-4 md:hidden">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="icon" className="md:hidden h-10 w-10 text-white z-10">
-            <Menu className="h-6 w-6" />
-          </Button>
+          <Button variant="ghost" size="icon" className="h-9 w-9 text-slate-600 hover:bg-slate-100"><Menu className="h-5 w-5" /></Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-[300px] p-0 bg-[#003399] border-none text-white">
-          <SheetHeader className="sr-only">
-            <SheetTitle>Menú de Navegación</SheetTitle>
+        <SheetContent side="left" className="w-[290px] border-r border-slate-200 bg-white p-0 text-slate-800">
+          <SheetHeader className="border-b border-slate-100 px-5 py-6 text-left">
+            <SheetTitle className="flex items-center gap-2 text-slate-900">
+              <span className="flex gap-1"><i className="h-2.5 w-2.5 rounded-full bg-[#55c5e8]"/><i className="h-2.5 w-2.5 rounded-full bg-[#0877bd]"/><i className="h-2.5 w-2.5 rounded-full bg-[#e51b32]"/></span>
+              Momentum <span className="text-xs font-normal tracking-widest text-slate-400">GENIUS</span>
+            </SheetTitle>
           </SheetHeader>
-          <div className="flex flex-col h-full">
-            <div className="h-40 flex flex-col items-center justify-center px-6 border-b border-white/10 shrink-0">
-              <div className="flex items-center gap-1.5 mb-3">
-                <span className="text-xl font-black italic tracking-tighter text-white">GENIUS</span>
-                <span className="text-xl font-black italic tracking-tighter text-[#ED1C24]">VN</span>
-              </div>
-              <BrandLogo variant="mobile" className="h-9" />
-            </div>
-            
-            <nav className="flex-1 overflow-y-auto px-2 py-6 space-y-8">
-              <div>
-                <p className="px-4 text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-4">Operaciones</p>
-                <div className="space-y-1">
-                  {navItems.map((item) => (
-                    <Link
-                      key={item.url}
-                      href={item.url}
-                      onClick={() => setOpen(false)}
-                      className={`flex items-center gap-4 px-4 py-4 rounded-xl transition-all group/mobile-item ${
-                        pathname === item.url ? 'bg-white/10 text-white' : 'text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <item.icon className={`w-5 h-5 transition-colors ${pathname === item.url ? 'text-white' : 'text-white/70'}`} />
-                      <span className="text-xs font-black uppercase tracking-wide group-hover/mobile-item:text-[#ED1C24] transition-colors">{item.title}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <p className="px-4 text-[9px] font-black text-white/40 uppercase tracking-[0.2em] mb-4">Administración</p>
-                <div className="space-y-1">
-                  {adminItems.map((item) => (
-                    <Link
-                      key={item.url}
-                      href={item.url}
-                      onClick={() => setOpen(false)}
-                      className={`flex items-center gap-4 px-4 py-4 rounded-xl transition-all group/mobile-admin ${
-                        pathname === item.url ? 'bg-white/10 text-white' : 'text-white hover:bg-white/5'
-                      }`}
-                    >
-                      <item.icon className={`w-5 h-5 transition-colors ${pathname === item.url ? 'text-white' : 'text-white/70'}`} />
-                      <span className="text-xs font-black uppercase tracking-wide group-hover/mobile-admin:text-[#ED1C24] transition-colors">{item.title}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            </nav>
-
-            <div className="p-6 border-t border-white/10 shrink-0">
-              <Button variant="ghost" className="w-full justify-start gap-4 text-white/60 hover:text-white uppercase font-black text-xs h-14 rounded-xl transition-colors group/mobile-logout">
-                <LogOut className="w-5 h-5 text-white/60" /> 
-                <span className="group-hover/mobile-logout:text-[#ED1C24] transition-colors text-white">Cerrar Sesión</span>
-              </Button>
-            </div>
-          </div>
+          <nav className="space-y-1 px-3 py-5">
+            <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-400">Navegación</p>
+            {navItems.map(item => {
+              const active = pathname === item.url || (item.url !== "/" && pathname.startsWith(item.url))
+              return <Link key={item.url} href={item.url} onClick={() => setOpen(false)} className={`flex h-10 items-center gap-3 rounded-lg px-3 text-[13px] font-medium transition-colors ${active ? "bg-[#eaf1fb] text-[#003399]" : "text-slate-600 hover:bg-slate-100"}`}>
+                <item.icon className={`h-[18px] w-[18px] ${active ? "text-[#003399]" : "text-slate-400"}`}/>{item.title}
+              </Link>
+            })}
+          </nav>
         </SheetContent>
       </Sheet>
-      <div className="absolute inset-x-0 flex items-center justify-center pointer-events-none">
-        <BrandLogo variant="mobile" className="h-9" />
+      <div className="ml-3 flex items-center gap-2">
+        <span className="flex gap-1"><i className="h-2 w-2 rounded-full bg-[#55c5e8]"/><i className="h-2 w-2 rounded-full bg-[#0877bd]"/><i className="h-2 w-2 rounded-full bg-[#e51b32]"/></span>
+        <span className="text-sm font-semibold tracking-tight text-slate-900">Momentum</span>
+        <span className="text-[9px] font-medium uppercase tracking-[0.2em] text-slate-400">Genius</span>
       </div>
     </header>
-  );
+  )
 }
