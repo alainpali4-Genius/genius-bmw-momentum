@@ -106,8 +106,8 @@ export default function DeliveryManagement() {
   }, [entregas]);
 
   const handleAddDelivery = async () => {
-    if (!formData.vehiculoId || !formData.cliente || !formData.fecha) {
-      toast({ variant: "destructive", title: "Faltan datos", description: "Completa los campos obligatorios." });
+    if (!formData.vehiculoId || !formData.cliente) {
+      toast({ variant: "destructive", title: "Faltan datos", description: "Selecciona un vehículo e indica el cliente." });
       return;
     }
 
@@ -115,8 +115,8 @@ export default function DeliveryManagement() {
     const payload = {
       ...formData,
       vehiculoInfo: vehicle ? `${vehicle.modelo} (${vehicle.vin7 || vehicle.vin?.slice(-7)})` : "Vehículo desconocido",
-      estado: "Preparación",
-      progress: 0,
+      estado: formData.fecha ? "Fecha confirmada" : "Pendiente de fecha",
+      progress: formData.fecha ? 25 : 0,
       createdAt: new Date().toISOString()
     };
 
@@ -320,7 +320,7 @@ export default function DeliveryManagement() {
                   <div className="flex flex-col md:flex-row h-full">
                     <div className={cn("w-1.5 shrink-0", 
                       delivery.estado === 'Entregado' ? 'bg-emerald-500' : 
-                      delivery.estado === 'Listo' ? 'bg-blue-500' : 'bg-primary'
+                      delivery.estado === 'Preparado' ? 'bg-emerald-500' : delivery.estado === 'En preparación' ? 'bg-amber-500' : delivery.estado === 'Fecha confirmada' ? 'bg-blue-500' : 'bg-slate-300'
                     )} />
                     <CardContent className="flex-1 p-6">
                       <div className="flex flex-col md:flex-row justify-between gap-4">
@@ -394,7 +394,7 @@ export default function DeliveryManagement() {
                           <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground">Estado de la Entrega</span>
                           <span className="text-[10px] font-black text-primary uppercase">{delivery.estado}</span>
                         </div>
-                        <Progress value={delivery.progress || (delivery.estado === 'Entregado' ? 100 : delivery.estado === 'Listo' ? 80 : 30)} className="h-1.5 bg-slate-100" />
+                        <Progress value={delivery.progress || (delivery.estado === 'Entregado' ? 100 : delivery.estado === 'Preparado' ? 90 : delivery.estado === 'En preparación' ? 60 : delivery.estado === 'Fecha confirmada' ? 25 : 0)} className="h-1.5 bg-slate-100" />
                       </div>
                     </CardContent>
                   </div>
