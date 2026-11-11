@@ -3,14 +3,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Grid3X3, Package, ClipboardCheck, PlusCircle } from 'lucide-react';
+import { Home, Grid3X3, Package, CalendarDays, PlusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { label: 'Inicio', icon: Home, href: '/' },
   { label: 'Expo', icon: Grid3X3, href: '/showroom' },
   { label: 'Stock', icon: Package, href: '/stock' },
-  { label: 'Inventario', icon: ClipboardCheck, href: '/inventory' },
+  { label: 'Entregas', icon: CalendarDays, href: '/delivery' },
 ];
 
 export function BottomNav() {
