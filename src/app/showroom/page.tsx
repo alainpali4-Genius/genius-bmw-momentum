@@ -470,7 +470,7 @@ function ShowroomContent() {
     const vin7 = formData.vin7.trim().toUpperCase();
     if (!formData.modelo.trim() || vin7.length !== 7) return toast({ variant: "destructive", title: "Faltan datos", description: "Indica el modelo y los últimos 7 caracteres del bastidor (VIN7)." });
     if (vin && (vin.length !== 17 || /[IOQ]/.test(vin))) return toast({ variant: "destructive", title: "Bastidor no válido", description: "El VIN completo debe tener 17 caracteres y no contener I, O ni Q." });
-    if (vehiculos.some(v => (v.vin7 || "").toUpperCase() === vin7 || (vin && (v.vin || "").toUpperCase() === vin))) return toast({ variant: "destructive", title: "Vehículo duplicado", description: "Ya existe un vehículo con ese VIN7 o bastidor." });
+    if (vehiculos.some(v => (v.vin7 || (String(v.vin || "").length===7 ? v.vin : "")).toUpperCase() === vin7 || (vin && (v.vin || "").toUpperCase() === vin))) return toast({ variant: "destructive", title: "Vehículo duplicado", description: "Ya existe un vehículo con ese VIN7 o bastidor." });
     const now = new Date().toISOString();
     const payload = { ...formData, modelo: formData.modelo.trim(), vin, vin7, kilometraje: null, precio: formData.precio === "" ? null : Number(formData.precio), colorCodigo: formData.colorBMW, colorExterior: BMW_COLORS.find(c => c.code === formData.colorBMW)?.name || "Alpine White", fechaEntrada: now.split('T')[0], createdAt: now, updatedAt: now };
     try {
