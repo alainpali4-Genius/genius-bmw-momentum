@@ -141,6 +141,7 @@ function ShowroomContent() {
 
   const handleUpdateVehicle = async (vehicleId: string, updates: any) => {
     const docRef = doc(db, "vehiculos", vehicleId);
+    const current = vehiculos.find(v => v.id === vehicleId);
     let finalUpdates = { ...updates, updatedAt: new Date().toISOString() };
     if (updates.colorCodigo) {
       const newColor = BMW_COLORS.find(c => c.code === updates.colorCodigo);
@@ -151,8 +152,35 @@ function ShowroomContent() {
     }
     try {
       await updateDoc(docRef, finalUpdates);
+      // Registrar en movimientos los cambios logísticos relevantes, sin generar
+      // entradas por cada letra escrita en los campos de texto.
+      const changedLocation = Object.prototype.hasOwnProperty.call(updates, "ubicacion") && updates.ubicacion !== current?.ubicacion;
+      const changedStatus = Object.prototype.hasOwnProperty.call(updates, "estado") && updates.estado !== current?.estado;
+      const changedType = Object.prototype.hasOwnProperty.call(updates, "tipoLogistico") && updates.tipoLogistico !== current?.tipoLogistico;
+      if (current && (changedLocation || changedStatus || changedType)) {
+        const details = [
+          changedLocation ? `Ubicación: ${current.ubicacion || "Sin ubicación"} → ${updates.ubicacion}` : "",
+          changedStatus ? `Estado: ${current.estado || "Sin estado"} → ${updates.estado}` : "",
+          changedType ? `Tipo: ${current.tipoLogistico || "Sin tipo"} → ${updates.tipoLogistico}` : ""
+        ].filter(Boolean).join(" · ");
+        try {
+          await addDoc(collection(db, "movimientos"), {
+            vehiculoId: vehicleId,
+            vehiculoInfo: `${current.modelo || "Vehículo"} (${current.vin7 || "Sin VIN7"})`,
+            tipoAccion: "Actualización logística",
+            fecha: new Date().toISOString(),
+            origen: current.ubicacion || "N/A",
+            destino: updates.ubicacion || current.ubicacion || "N/A",
+            usuario: "GENIUS",
+            detalles: details
+          });
+        } catch (historyError) {
+          console.error("No se pudo registrar el historial logístico", historyError);
+          toast({ variant: "destructive", title: "Datos guardados; historial pendiente", description: "El cambio se ha guardado, pero no se pudo registrar en movimientos." });
+        }
+      }
     } catch (e) {
-      toast({ variant: "destructive", title: "Error al actualizar" });
+      toast({ variant: "destructive", title: "Error al actualizar", description: "No se han podido guardar los cambios." });
     }
   };
 
