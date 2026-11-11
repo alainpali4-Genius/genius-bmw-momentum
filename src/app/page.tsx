@@ -51,8 +51,8 @@ export default function GeniusDashboard() {
 
   const locationCards = [
     { label: "Exposición", value: stats.expo, note: "Plazas P1–P15", icon: LayoutGrid, href: "/showroom" },
-    { label: "Entreplanta", value: stats.entreplanta, note: "Vehículos sobre piso", icon: Warehouse, href: "/stock" },
-    { label: "Terraza", value: stats.terraza, note: "Tercer piso", icon: MapPin, href: "/stock" },
+    { label: "Entreplanta", value: stats.entreplanta, note: "Vehículos sobre piso", icon: Warehouse, href: "/stock?filter=entreplanta" },
+    { label: "Terraza", value: stats.terraza, note: "Tercer piso", icon: MapPin, href: "/stock?filter=terraza" },
     { label: "Zona de entrega", value: stats.entrega, note: "Preparación / recogida", icon: Truck, href: "/delivery" },
   ];
   const useCards = [
