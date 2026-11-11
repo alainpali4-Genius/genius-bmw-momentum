@@ -39,8 +39,8 @@ export default function StockManagement() {
     else if (activeFilter === 'lavadero') result = result.filter(v => v.ubicacion?.toLowerCase() === 'lavadero');
     else if (activeFilter === 'entrega') result = result.filter(v => v.ubicacion?.toLowerCase().includes('entrega'));
     else if (activeFilter === 'exposicion') result = result.filter(v => v.ubicacion?.startsWith('P'));
-    const q = searchTerm.trim().toLowerCase();
-    if (q) result = result.filter(v => [v.modelo,v.vin,v.vin7,v.matricula,v.entidadRenting,v.motor].some(x => String(x || '').toLowerCase().includes(q)));
+    const q = searchTerm.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (q) result = result.filter(v => [v.modelo,v.vin,v.vin7,v.matricula,v.entidadRenting,v.motor,v.destinoLogistico,v.clienteLogistica,v.colorExterior].some(x => String(x || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q)));
     return result;
   }, [vehicles, activeFilter, searchTerm]);
 
