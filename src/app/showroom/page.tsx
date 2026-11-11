@@ -125,7 +125,7 @@ const PLAZAS_LIST = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10"
 const OTHER_LOCATIONS = ["Entreplanta", "Terraza", "Zona de entrega", "Demo en uso"];
 
 const GRID_POSITIONS: Record<string, string> = {
-  // Primer bloque: dos filas de cuatro vehículos junto al lateral derecho.
+  // Ocho vehículos del primer bloque: dos filas de cuatro.
   P1: "col-start-1 col-span-3 row-start-1",
   P2: "col-start-4 col-span-3 row-start-1",
   P3: "col-start-7 col-span-3 row-start-1",
@@ -134,15 +134,15 @@ const GRID_POSITIONS: Record<string, string> = {
   P6: "col-start-4 col-span-3 row-start-2",
   P7: "col-start-7 col-span-3 row-start-2",
   P8: "col-start-10 col-span-3 row-start-2",
-  // Segundo bloque, después de la zona central de clientes.
-  P9: "col-start-1 col-span-3 row-start-6",
-  P10: "col-start-4 col-span-3 row-start-6",
-  P11: "col-start-7 col-span-3 row-start-6",
-  P12: "col-start-10 col-span-3 row-start-6",
-  // Zona de plataformas del fondo; P13 mantiene la orientación inversa.
-  P13: "col-start-10 col-span-3 row-start-7",
-  P14: "col-start-4 col-span-3 row-start-7",
-  P15: "col-start-1 col-span-3 row-start-7",
+  // Cuatro vehículos del segundo bloque, tras el pasillo de clientes.
+  P9: "col-start-1 col-span-3 row-start-4",
+  P10: "col-start-4 col-span-3 row-start-4",
+  P11: "col-start-7 col-span-3 row-start-4",
+  P12: "col-start-10 col-span-3 row-start-4",
+  // Tres plataformas del fondo; la eléctrica conserva orientación transversal.
+  P15: "col-start-1 col-span-3 row-start-5",
+  P14: "col-start-4 col-span-3 row-start-5",
+  P13: "col-start-10 col-span-3 row-start-5",
 };
 
 function CarSilhouette({ bodyType, color, className, style }: { bodyType: string, color: string, className?: string, style?: React.CSSProperties }) {
@@ -385,35 +385,24 @@ function ShowroomContent() {
         </div>
       </div>
 
-      {/* Plano cenital de la exposición: vehículos, zona de clientes y plataformas */}
+      {/* Plano cenital compacto: prioridad a la lectura rápida de vehículos */}
       <div className="flex-1 relative overflow-auto bg-[#e9edf1]">
-        <div className="min-h-full min-w-[760px] p-3 md:p-6">
-          <div className="mx-auto max-w-[1500px] rounded-2xl border border-slate-300 bg-[#f8f9fa] p-3 md:p-5 shadow-inner">
-            <div className="mb-3 flex items-center justify-between rounded-lg bg-white px-4 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 shadow-sm">
-              <span>Exposición Momentum Navarra</span><span>Acceso principal ↑</span>
+        <div className="min-h-full min-w-[760px] p-2 md:p-4">
+          <div className="mx-auto max-w-[1500px] rounded-xl border border-slate-300 bg-[#f8f9fa] p-2 md:p-3 shadow-sm">
+            <div className="mb-2 flex items-center justify-between rounded-md bg-white px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">
+              <span>Momentum Navarra · Exposición</span><span>Acceso principal</span>
             </div>
-            <div className="grid h-[min(72vh,760px)] min-h-[570px] grid-cols-12 grid-rows-[1fr_1fr_0.35fr_0.8fr_0.8fr_1fr_0.9fr] gap-2">
+            <div className="grid min-h-[620px] h-[min(78vh,820px)] grid-cols-12 grid-rows-[1fr_1fr_0.30fr_1fr_0.85fr] gap-2">
               {PLAZAS_LIST.map(id => renderPlaza(id))}
-              <div className="col-span-12 row-start-3 flex items-center justify-center rounded-xl border border-dashed border-slate-300 bg-[#e7ebef] px-3 text-center">
-                <div className="flex items-center gap-3 text-slate-500">
-                  <div className="hidden h-px w-10 bg-slate-300 sm:block"/>
-                  <div><p className="text-[10px] font-bold uppercase tracking-[0.2em]">Pasillo principal</p><p className="text-[9px]">Circulación y acceso a la zona de clientes</p></div>
-                  <div className="hidden h-px w-10 bg-slate-300 sm:block"/>
-                </div>
+              <div className="col-span-12 row-start-3 flex items-center justify-center rounded-md border-y border-slate-300 bg-[#e4e8ec] px-2">
+                <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">Pasillo central · atención y circulación</span>
+                <span className="ml-3 hidden text-[9px] text-slate-400 sm:inline">Zona de espera / mesas comerciales</span>
               </div>
-              <div className="col-start-2 col-span-10 row-start-4 row-span-2 flex flex-col items-center justify-center rounded-xl border border-[#c9b9a4] bg-[#e9e1d6] p-3 text-center shadow-inner">
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#756451]">Zona de espera y atención al cliente</p>
-                <div className="mt-3 grid w-full max-w-2xl grid-cols-2 gap-3 md:grid-cols-4">
-                  {["Sillones","Mesas de clientes","Puestos comerciales","Recepción"].map((label,i)=><div key={label} className="flex min-h-12 items-center justify-center rounded-lg border border-[#cbbda9] bg-[#f7f3ed] px-2 py-2 text-[9px] font-semibold text-[#756451] shadow-sm">{label}</div>)}
-                </div>
-              </div>
-              <div className="col-span-12 row-start-5 -z-0 pointer-events-none"/>
             </div>
-            <div className="mt-3 flex items-center justify-between rounded-lg bg-[#172f50] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white"><span>Entrada showroom</span><span>Momentum BMW · MINI</span></div>
+            <div className="mt-2 flex items-center justify-between rounded-md bg-[#172f50] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-white"><span>Entrada showroom</span><span>BMW · MINI</span></div>
           </div>
         </div>
       </div>
-
       </>
       )}
 
