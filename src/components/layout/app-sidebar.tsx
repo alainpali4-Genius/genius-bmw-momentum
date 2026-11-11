@@ -3,7 +3,7 @@
 import * as React from "react"
 import {
   LayoutDashboard, Grid3X3, Car, CalendarDays, Package,
-  History, Settings, ShieldAlert, LogOut, X, BarChart3
+  History, Settings, ShieldAlert, LogOut, X
 } from "lucide-react"
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader,
@@ -26,7 +26,6 @@ const operations = [
 const management = [
   { title: "Incidencias", url: "/incidents", icon: ShieldAlert },
   { title: "Historial", url: "/history", icon: History },
-  { title: "Estadísticas", url: "/statistics", icon: BarChart3 },
   { title: "Configuración", url: "/settings", icon: Settings },
 ]
 
@@ -35,7 +34,7 @@ export function AppSidebar() {
   const { isMobile, setOpenMobile, state } = useSidebar()
   const handleLinkClick = () => { if (isMobile) setOpenMobile(false) }
 
-  const renderItems = (items: typeof operations) => items.map((item) => {
+  const renderItems = (items: any[]) => items.map((item) => {
     const active = pathname === item.url || (item.url !== "/" && pathname.startsWith(item.url))
     return (
       <SidebarMenuItem key={item.url}>
