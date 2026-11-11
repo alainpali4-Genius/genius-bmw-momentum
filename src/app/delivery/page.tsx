@@ -193,7 +193,19 @@ export default function DeliveryManagement() {
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Vehículo de Stock</Label>
                   <Input value={vehicleSearch} onChange={e => setVehicleSearch(e.target.value)} className="h-11 bg-white border-slate-200 rounded-xl text-xs" placeholder="Buscar por bastidor, VIN, matrícula o modelo…" />
-                  <Select value={formData.vehiculoId} onValueChange={(v) => { setFormData({...formData, vehiculoId: v}); setVehicleSearch(""); }}>
+                  <Select value={formData.vehiculoId} onValueChange={(v) => {
+                      const selectedVehicle = vehiculos.find(vehicle => vehicle.id === v);
+                      const correoCliente = String(selectedVehicle?.clienteLogistica || selectedVehicle?.destinoLogistico || "").trim();
+                      const categoriasInternas = ["STOCK EXPOSICION", "STOCK EXPOSICIÓN", "DEMO", "TNR", "YUC"];
+                      const clienteReal = correoCliente && !categoriasInternas.includes(correoCliente.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toUpperCase()) ? correoCliente : "";
+                      setFormData(prev => ({
+                        ...prev,
+                        vehiculoId: v,
+                        cliente: clienteReal || prev.cliente,
+                        matricula: selectedVehicle?.matricula || prev.matricula
+                      }));
+                      setVehicleSearch("");
+                    }}>
 
                     <SelectTrigger className="h-12 bg-slate-50 border-none rounded-xl font-bold text-xs uppercase">
                       <SelectValue placeholder="SELECCIONAR..." />
