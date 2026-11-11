@@ -40,8 +40,8 @@ export default function ImportLogisticsPage(){
    const imported: string[]=[];
    for(const r of rows){
     const match=existing.find(v=>{
-      const currentVin=String(v.vin||"").replace(/\\s/g,"").toUpperCase();
-      const currentShort=String(v.vin7||"").replace(/\\s/g,"").toUpperCase() || (currentVin.length===7?currentVin:"");
+      const currentVin=String(v.vin||"").replace(/\s/g,"").toUpperCase();
+      const currentShort=String(v.vin7||"").replace(/\s/g,"").toUpperCase() || (currentVin.length===7?currentVin:"");
       return r.vin.length===17 ? currentVin===r.vin : currentShort===r.vin.slice(-7);
     });
     const fields:any={vin7:r.vin.slice(-7),modelo:r.modelo,matricula:r.matricula||"",colorExterior:r.color||"",destinoLogistico:r.cliente||"",clienteLogistica:r.cliente||"",tipoLogistico:r.cliente||"Sin clasificar",transporte:r.transporte||"",fechaRecepcionCorreo:r.fecha||"",llegada:r.llegada||"",comision:r.comision||"",vendedorLogistica:r.vendedor||"",origenImportacion:"Correo logística BMW",updatedAt:now};
