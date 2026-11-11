@@ -276,62 +276,60 @@ function ShowroomContent() {
 
       {/* Diálogos y Sheets */}
       <Sheet open={!!selectedVehicleId} onOpenChange={o => !o && handleCloseDetail()}>
-        <SheetContent side="bottom" className="h-auto p-0 rounded-t-3xl border-none shadow-2xl overflow-hidden bg-white max-h-[90vh] overflow-y-auto">
+        <SheetContent side="bottom" className="h-[94vh] p-0 rounded-t-3xl border-none shadow-2xl overflow-hidden bg-slate-50">
           {selectedVehicle && (
-            <div className="flex flex-col">
-              <div className="bg-secondary p-4 text-white flex justify-between items-center shrink-0">
-                <div className="space-y-0.5">
-                  <Badge className="bg-primary text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-md">{selectedVehicle.estado}</Badge>
-                  <h2 className="text-base font-black uppercase italic tracking-tighter mt-1">{selectedVehicle.modelo}</h2>
-                  <p className="text-white/40 font-mono text-[9px] font-bold">VIN7: {selectedVehicle.vin7}</p>
+            <div className="flex flex-col h-full">
+              <div className="bg-secondary px-5 py-4 text-white flex justify-between items-center shrink-0">
+                <div className="min-w-0">
+                  <Badge className="bg-primary text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-md">{selectedVehicle.estado || "Stock"}</Badge>
+                  <h2 className="text-lg md:text-xl font-black uppercase italic tracking-tight mt-1 truncate">{selectedVehicle.modelo}</h2>
+                  <p className="text-white/60 font-mono text-[10px] font-bold">VIN: {selectedVehicle.vin || "No indicado"} · VIN7: {selectedVehicle.vin7 || "—"}</p>
                 </div>
-                <div className="flex gap-2">
-                  <Button variant="ghost" onClick={() => { setMovingVehicleId(selectedVehicle.id); handleCloseDetail(); }} className="h-10 w-10 bg-white/5 text-white"><Move className="w-5 h-5" /></Button>
-                  <Button variant="ghost" onClick={handleCloseDetail} className="h-10 w-10 bg-white/5 text-white"><X className="w-5 h-5" /></Button>
+                <div className="flex gap-2 shrink-0">
+                  <Button variant="ghost" onClick={() => { setMovingVehicleId(selectedVehicle.id); handleCloseDetail(); }} className="h-10 w-10 bg-white/10 text-white"><Move className="w-5 h-5" /></Button>
+                  <Button variant="ghost" onClick={handleCloseDetail} className="h-10 w-10 bg-white/10 text-white"><X className="w-5 h-5" /></Button>
                 </div>
               </div>
-              <div className="p-6 grid grid-cols-2 gap-4 pb-24 md:pb-6">
-                <div className="col-span-2 space-y-1">
-                  <Label className="text-[8px] font-black uppercase text-slate-400 px-1">TIPO LOGÍSTICO</Label>
-                  <Select value={selectedVehicle.tipoLogistico || "Stock Expo"} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { tipoLogistico: v })}>
-                    <SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl text-[10px] font-black uppercase"><SelectValue/></SelectTrigger>
-                    <SelectContent>{TIPOS_LOGISTICOS.map(t => <SelectItem key={t} value={t} className="text-[10px] font-bold uppercase">{t}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-
-                {(selectedVehicle.tipoLogistico?.includes('Renting') || selectedVehicle.tipoLogistico === 'Entrega Cliente') && (
-                  <div className="col-span-2 space-y-1">
-                    <Label className="text-[8px] font-black uppercase text-slate-400 px-1">
-                      {selectedVehicle.tipoLogistico === 'Entrega Cliente' ? 'NOMBRE DEL CLIENTE' : 'EMPRESA RENTING'}
-                    </Label>
-                    <div className="relative">
-                      {selectedVehicle.tipoLogistico === 'Entrega Cliente' ? <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300" /> : <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300" />}
-                      <Input 
-                        placeholder={selectedVehicle.tipoLogistico === 'Entrega Cliente' ? "NOMBRE COMPLETO..." : "EMPRESA..."} 
-                        value={selectedVehicle.entidadRenting || ""} 
-                        onChange={e => handleUpdateVehicle(selectedVehicle.id, { entidadRenting: e.target.value })} 
-                        className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px] pl-9"
-                      />
-                    </div>
+              <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-5">
+                <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
+                  <div><h3 className="text-sm font-black uppercase text-secondary">Identificación del vehículo</h3><p className="text-[10px] text-slate-400">Edita los datos principales. Los cambios se guardan automáticamente.</p></div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1"><Label>Modelo / versión</Label><Input value={selectedVehicle.modelo || ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{modelo:e.target.value})}/></div>
+                    <div className="space-y-1"><Label>Marca</Label><Input value={selectedVehicle.marca || "BMW"} onChange={e => handleUpdateVehicle(selectedVehicle.id,{marca:e.target.value})}/></div>
+                    <div className="space-y-1 md:col-span-2"><Label>Bastidor completo (VIN)</Label><Input value={selectedVehicle.vin || ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{vin:e.target.value.toUpperCase(),vin7:e.target.value.slice(-7).toUpperCase()})}/></div>
+                    <div className="space-y-1"><Label>Matrícula</Label><Input value={selectedVehicle.matricula || ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{matricula:e.target.value.toUpperCase()})}/></div>
+                    <div className="space-y-1"><Label>Kilometraje</Label><Input type="number" value={selectedVehicle.kilometraje ?? ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{kilometraje:e.target.value === "" ? null : Number(e.target.value)})}/></div>
+                    <div className="space-y-1"><Label>Motorización</Label><Input value={selectedVehicle.motor || ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{motor:e.target.value})}/></div>
+                    <div className="space-y-1"><Label>Carrocería</Label><Select value={selectedVehicle.bodyType || "SUV"} onValueChange={v => handleUpdateVehicle(selectedVehicle.id,{bodyType:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{["SUV","Berlina","Coupe","Roadster","Touring","Compacto","Cabrio"].map(t=><SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
                   </div>
-                )}
-
-                <div className="space-y-1">
-                  <Label className="text-[8px] font-black uppercase text-slate-400 px-1">UBICACIÓN</Label>
-                  <Select value={selectedVehicle.ubicacion} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { ubicacion: v })}>
-                    <SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl text-[10px] font-black uppercase"><SelectValue/></SelectTrigger>
-                    <SelectContent className="max-h-[250px]">{PLAZAS_LIST.map(p => <SelectItem key={p} value={p} className="text-[10px] font-bold">{p}</SelectItem>)}<Separator className="my-1"/>{OTHER_LOCATIONS.map(p => <SelectItem key={p} value={p} className="text-[10px] font-bold">{p.toUpperCase()}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1">
-                  <Label className="text-[8px] font-black uppercase text-slate-400 px-1">ESTADO</Label>
-                  <Select value={selectedVehicle.estado} onValueChange={v => handleUpdateVehicle(selectedVehicle.id, { estado: v })}>
-                    <SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl text-[10px] font-black uppercase"><SelectValue/></SelectTrigger>
-                    <SelectContent>{ESTADOS.map(e => <SelectItem key={e} value={e} className="text-[10px] uppercase font-bold">{e}</SelectItem>)}</SelectContent>
-                  </Select>
-                </div>
-                <Button variant="destructive" className="col-span-2 h-10 font-black uppercase text-[10px] rounded-xl mt-4" onClick={() => { if(confirm("¿Eliminar?")) { deleteDoc(doc(db, "vehiculos", selectedVehicle.id)); handleCloseDetail(); } }}><Trash2 className="w-3.5 h-3.5 mr-2" /> ELIMINAR STOCK</Button>
+                </section>
+                <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
+                  <h3 className="text-sm font-black uppercase text-secondary">Configuración y acabado</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1"><Label>Color exterior</Label><Select value={selectedVehicle.colorCodigo || selectedVehicle.colorBMW || "300"} onValueChange={v => handleUpdateVehicle(selectedVehicle.id,{colorCodigo:v,colorBMW:v,colorExterior:BMW_COLORS.find(c=>c.code===v)?.name || ""})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent className="max-h-64">{BMW_COLORS.map(c=><SelectItem key={c.code} value={c.code}>{c.code} · {c.name}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-1"><Label>Tapicería / interior</Label><Input value={selectedVehicle.tapiceria || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{tapiceria:e.target.value})}/></div>
+                    <div className="space-y-1"><Label>Llantas</Label><Input value={selectedVehicle.llantas || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{llantas:e.target.value})}/></div>
+                    <div className="space-y-1"><Label>Equipamiento / paquetes</Label><Input value={selectedVehicle.equipamiento || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{equipamiento:e.target.value})}/></div>
+                  </div>
+                </section>
+                <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
+                  <h3 className="text-sm font-black uppercase text-secondary">Gestión comercial y logística</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1"><Label>Tipo logístico</Label><Select value={selectedVehicle.tipoLogistico || "Stock Expo"} onValueChange={v=>handleUpdateVehicle(selectedVehicle.id,{tipoLogistico:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{TIPOS_LOGISTICOS.map(t=><SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-1"><Label>Estado</Label><Select value={selectedVehicle.estado || "Stock"} onValueChange={v=>handleUpdateVehicle(selectedVehicle.id,{estado:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{ESTADOS.map(e=><SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-1"><Label>Ubicación</Label><Select value={selectedVehicle.ubicacion || "Stock"} onValueChange={v=>handleUpdateVehicle(selectedVehicle.id,{ubicacion:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{PLAZAS_LIST.map(p=><SelectItem key={p} value={p}>{p}</SelectItem>)}<Separator className="my-1"/>{OTHER_LOCATIONS.map(p=><SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-1"><Label>Precio (€)</Label><Input type="number" value={selectedVehicle.precio ?? ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{precio:e.target.value===""?null:Number(e.target.value)})}/></div>
+                    <div className="space-y-1"><Label>Fecha de entrada</Label><Input type="date" value={selectedVehicle.fechaEntrada || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{fechaEntrada:e.target.value})}/></div>
+                    <div className="space-y-1"><Label>Responsable</Label><Input value={selectedVehicle.responsable || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{responsable:e.target.value})}/></div>
+                    {(selectedVehicle.tipoLogistico?.includes('Renting') || selectedVehicle.tipoLogistico === 'Entrega Cliente') && <div className="space-y-1 md:col-span-2"><Label>{selectedVehicle.tipoLogistico === 'Entrega Cliente' ? 'Nombre del cliente' : 'Empresa renting'}</Label><Input value={selectedVehicle.entidadRenting || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{entidadRenting:e.target.value})}/></div>}
+                  </div>
+                </section>
+                <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm space-y-2">
+                  <h3 className="text-sm font-black uppercase text-secondary">Observaciones</h3>
+                  <Input value={selectedVehicle.observaciones || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{observaciones:e.target.value})} placeholder="Añadir notas internas del vehículo..."/>
+                  <p className="text-[10px] text-slate-400">Alta: {selectedVehicle.createdAt || "Sin fecha"} · Última modificación: {selectedVehicle.updatedAt || "Sin registro"}</p>
+                </section>
+                <div className="flex justify-end pb-4"><Button variant="destructive" className="font-black uppercase text-xs" onClick={() => { if(confirm("¿Eliminar este vehículo del inventario?")) { deleteDoc(doc(db, "vehiculos", selectedVehicle.id)); handleCloseDetail(); } }}><Trash2 className="w-4 h-4 mr-2"/> Eliminar vehículo</Button></div>
               </div>
             </div>
           )}
