@@ -51,7 +51,7 @@ export default function IncidentsReports() {
 
   const filteredIncidencias = useMemo(() => {
     return incidencias.filter(i => 
-      i.vehiculoInfo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      i.vehiculoInfo?.toLowerCase().includes(searchTerm.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")) ||
       i.vin?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       i.id?.toLowerCase().includes(searchTerm.toLowerCase())
     );
