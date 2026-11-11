@@ -48,7 +48,12 @@ export default function ImportLogisticsPage(){
      const short=String(v.vin7||"").replace(/\s/g,"").toUpperCase()||(full.length===7?full:"");
      return r.vin.length===17?full===r.vin:short===r.vin.slice(-7);
     });
-    const marca=/^MINI\\b/i.test(r.modelo.trim())?"MINI":"BMW";\n    const colorNorm=r.color.normalize("NFD").replace(/[\\u0300-\\u036f]/g,"").toLowerCase();\n    const colorCode=colorNorm.includes("skyscraper grey")?"C4W":colorNorm.includes("black sapphire")?"475":colorNorm.includes("brooklyn grey")?"C4P":colorNorm.includes("dravit grey")?"C36":colorNorm.includes("fire red")?"C68":colorNorm.includes("alpine white")?"300":"";\n    const fechaMatch=r.fecha.match(/(\\d{2})\\/(\\d{2})\\/(\\d{2,4})/);\n    const fechaEntrada=fechaMatch?`${fechaMatch[3].length===2?"20"+fechaMatch[3]:fechaMatch[3]}-${fechaMatch[2]}-${fechaMatch[1]}`:"";\n    const fields:any={vin7:r.vin.slice(-7),marca,modelo:r.modelo,matricula:r.matricula||"",colorExterior:r.color||"",colorCorreo:r.color||"",colorCodigo:colorCode||null,colorBMW:colorCode||null,destinoLogistico:r.cliente||"",clienteLogistica:r.cliente||"",tipoLogistico:r.cliente||"Sin clasificar",transporte:r.transporte||"",fechaRecepcionCorreo:r.fecha||"",fechaEntrada,llegada:r.llegada||"",comision:r.comision||"",vendedorLogistica:r.vendedor||"",responsable:r.vendedor||"",origenImportacion:"Correo logística BMW",updatedAt:now};
+    const marca=/^MINI\b/i.test(r.modelo.trim())?"MINI":"BMW";
+    const colorNorm=r.color.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+    const colorCode=colorNorm.includes("skyscraper grey")?"C4W":colorNorm.includes("black sapphire")?"475":colorNorm.includes("brooklyn grey")?"C4P":colorNorm.includes("dravit grey")?"C36":colorNorm.includes("fire red")?"C68":colorNorm.includes("alpine white")?"300":"";
+    const fechaMatch=r.fecha.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
+    const fechaEntrada=fechaMatch?`${fechaMatch[3].length===2?"20"+fechaMatch[3]:fechaMatch[3]}-${fechaMatch[2]}-${fechaMatch[1]}`:"";
+    const fields:any={vin7:r.vin.slice(-7),marca,modelo:r.modelo,matricula:r.matricula||"",colorExterior:r.color||"",colorCorreo:r.color||"",colorCodigo:colorCode||null,colorBMW:colorCode||null,destinoLogistico:r.cliente||"",clienteLogistica:r.cliente||"",tipoLogistico:r.cliente||"Sin clasificar",transporte:r.transporte||"",fechaRecepcionCorreo:r.fecha||"",fechaEntrada,llegada:r.llegada||"",comision:r.comision||"",vendedorLogistica:r.vendedor||"",responsable:r.vendedor||"",origenImportacion:"Correo logística BMW",updatedAt:now};
     Object.keys(fields).forEach(k=>{if(fields[k]==="")delete fields[k]});
     if(match){
      if(!match.vin||String(match.vin).length===7)fields.vin=r.vin;
