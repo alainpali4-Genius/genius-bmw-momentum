@@ -47,13 +47,34 @@ const MOTOR_BY_MODEL: Array<{ test: RegExp; motor: string }> = [
   { test: /X1.*sDRIVE20d/i, motor: "Diésel · 2.0 · 120 kW (163 CV) · sDrive" },
   { test: /X1.*xDRIVE20d/i, motor: "Diésel · 2.0 · 120 kW (163 CV) · xDrive" },
   { test: /X1.*sDRIVE18i/i, motor: "Gasolina · 1.5 · 100 kW (136 CV) · sDrive" },
+  { test: /X2.*sDRIVE18d/i, motor: "Diésel · 2.0 · 110 kW (150 CV) · sDrive" },
+  { test: /X3.*20d.*xDRIVE/i, motor: "Diésel · 2.0 · 140 kW (190 CV) · xDrive" },
+  { test: /X5.*30d.*xDRIVE/i, motor: "Diésel · 3.0 · 210 kW (286 CV) · xDrive" },
+  { test: /X5.*40d.*xDRIVE/i, motor: "Diésel · 3.0 · 250 kW (340 CV) · xDrive" },
 ];
-function suggestedMotor(model: string) {
+export function suggestedMotor(model: string) {
   return MOTOR_BY_MODEL.find(item => item.test.test(model.trim()))?.motor || "";
 }
-function suggestedColor(model: string) {
+export function suggestedColor(model: string) {
   const value = model.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   return BMW_COLORS.find(c => value.includes(c.name.toLowerCase().replace(" metallic", " metalizado")) || value.includes(c.name.toLowerCase())) || null;
+}
+
+
+export function getVehicleColor(vehicle: any) {
+  const code = vehicle?.colorCodigo || vehicle?.colorBMW;
+  if (code) { const found = BMW_COLORS.find(c => c.code.toUpperCase() === String(code).toUpperCase()); if (found) return found; }
+  const name = String(vehicle?.colorExterior || vehicle?.colorCorreo || "").toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
+  const aliases: Array<[RegExp, string]> = [
+    [/black sapphire/, "475"], [/brooklyn grey/, "C4P"], [/fire red/, "C68"], [/skyscraper grey/, "C4W"], [/dravit grey/, "C36"], [/arctic race blue/, "C4R"], [/portimao blue/, "C31"], [/alpine white/, "300"], [/carbon black/, "416"],
+  ];
+  const match = aliases.find(([pattern]) => pattern.test(name));
+  if (match) return BMW_COLORS.find(c => c.code === match[1]) || null;
+  if (/\\bgris\\b|grey|gray/.test(name)) return { code: "GEN-GREY", name: vehicle?.colorExterior || "Gris", hex: "#85898d" };
+  if (/\\bazul\\b|blue/.test(name)) return { code: "GEN-BLUE", name: vehicle?.colorExterior || "Azul", hex: "#2864a0" };
+  if (/\\bnegro\\b|black/.test(name)) return { code: "GEN-BLACK", name: vehicle?.colorExterior || "Negro", hex: "#202124" };
+  if (/\\brojo\\b|red/.test(name)) return { code: "GEN-RED", name: vehicle?.colorExterior || "Rojo", hex: "#a5161a" };
+  return null;
 }
 
 export const TIPOS_LOGISTICOS = [
@@ -356,7 +377,7 @@ function ShowroomContent() {
                 <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
                   <h3 className="text-sm font-black uppercase text-secondary">Configuración y acabado</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1"><Label>Color exterior</Label><div className="flex items-center gap-2"><span className="h-9 w-9 shrink-0 rounded-md border border-slate-300 shadow-inner" style={{backgroundColor:BMW_COLORS.find(c=>c.code===(selectedVehicle.colorCodigo||selectedVehicle.colorBMW))?.hex||"#e5e7eb"}}/><Select value={selectedVehicle.colorCodigo || selectedVehicle.colorBMW || (selectedVehicle.colorExterior ? `correo:${selectedVehicle.colorExterior}` : "300")} onValueChange={v => v.startsWith("correo:") ? handleUpdateVehicle(selectedVehicle.id,{colorExterior:v.slice(7),colorCorreo:v.slice(7)}) : handleUpdateVehicle(selectedVehicle.id,{colorCodigo:v,colorBMW:v,colorExterior:BMW_COLORS.find(c=>c.code===v)?.name || ""})}><SelectTrigger className="flex-1"><SelectValue/></SelectTrigger><SelectContent className="max-h-64">{selectedVehicle.colorExterior && !BMW_COLORS.some(c=>c.name.toLowerCase()===String(selectedVehicle.colorExterior).toLowerCase()) && <SelectItem value={`correo:${selectedVehicle.colorExterior}`}>{selectedVehicle.colorExterior} · Correo BMW</SelectItem>}{BMW_COLORS.map(c=><SelectItem key={c.code} value={c.code}>{c.code} · {c.name}</SelectItem>)}</SelectContent></Select></div></div>
+                    <div className="space-y-1"><Label>Color exterior</Label><div className="flex items-center gap-2"><span className="h-9 w-9 shrink-0 rounded-md border border-slate-300 shadow-inner" style={{backgroundColor:getVehicleColor(selectedVehicle)?.hex||"#e5e7eb"}}/><Select value={selectedVehicle.colorCodigo || selectedVehicle.colorBMW || (selectedVehicle.colorExterior ? `correo:${selectedVehicle.colorExterior}` : "300")} onValueChange={v => v.startsWith("correo:") ? handleUpdateVehicle(selectedVehicle.id,{colorExterior:v.slice(7),colorCorreo:v.slice(7)}) : handleUpdateVehicle(selectedVehicle.id,{colorCodigo:v,colorBMW:v,colorExterior:BMW_COLORS.find(c=>c.code===v)?.name || ""})}><SelectTrigger className="flex-1"><SelectValue/></SelectTrigger><SelectContent className="max-h-64">{selectedVehicle.colorExterior && !BMW_COLORS.some(c=>c.name.toLowerCase()===String(selectedVehicle.colorExterior).toLowerCase()) && <SelectItem value={`correo:${selectedVehicle.colorExterior}`}>{selectedVehicle.colorExterior} · Correo BMW</SelectItem>}{BMW_COLORS.map(c=><SelectItem key={c.code} value={c.code}>{c.code} · {c.name}</SelectItem>)}</SelectContent></Select></div></div>
                     <div className="space-y-1"><Label>Tapicería / interior</Label><Input value={selectedVehicle.tapiceria || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{tapiceria:e.target.value})}/></div>
                     <div className="space-y-1"><Label>Llantas</Label><Input value={selectedVehicle.llantas || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{llantas:e.target.value})}/></div>
                     <div className="space-y-1"><Label>Equipamiento / paquetes</Label><Input value={selectedVehicle.equipamiento || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{equipamiento:e.target.value})}/></div>
