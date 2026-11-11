@@ -212,9 +212,12 @@ export default function DeliveryManagement() {
                       setVehicleSelectOpen(false);
                     }}>
 
-                    <SelectTrigger className="h-12 bg-slate-50 border-none rounded-xl font-bold text-xs uppercase">
-                      <SelectValue placeholder="SELECCIONAR..." />
-                    </SelectTrigger>
+                    <div className="flex items-center gap-2">
+                      <SelectTrigger className="h-12 flex-1 bg-slate-50 border-none rounded-xl font-bold text-xs uppercase">
+                        <SelectValue placeholder="SELECCIONAR..." />
+                      </SelectTrigger>
+                      {formData.vehiculoId && <Button type="button" variant="outline" size="icon" aria-label="Quitar vehículo seleccionado" onClick={() => { setFormData(prev => ({ ...prev, vehiculoId: "", cliente: "", matricula: "" })); setVehicleSearch(""); setVehicleSelectOpen(false); }} className="h-10 w-10 shrink-0 rounded-xl border-slate-200 text-slate-500 hover:text-red-600"><X className="h-4 w-4" /></Button>}
+                    </div>
                     <SelectContent className="rounded-xl border-none shadow-2xl">
                       {vehiculos.filter(v => {
                         if (v.estado === "Entregado") return false;
