@@ -321,6 +321,15 @@ function ShowroomContent() {
 
     const carRotation = id === 'P13' ? "rotate-0" : "rotate-90";
     const textRotation = id === 'P13' ? "rotate-0" : "-rotate-90";
+    // Identidad visual de las tres plataformas del fondo:
+    // P13 eléctrica (azul), P14 estándar (neutro), P15 M (rojo).
+    const platformStyle = id === "P13"
+      ? "bg-blue-50 border border-blue-200"
+      : id === "P14"
+        ? "bg-slate-100 border border-slate-300"
+        : id === "P15"
+          ? "bg-red-50 border border-red-200"
+          : "";
 
     return (
       <div 
@@ -333,12 +342,13 @@ function ShowroomContent() {
           "relative flex flex-col items-center justify-center transition-all h-full w-full",
           "rounded-sm overflow-hidden",
           GRID_POSITIONS[id],
-          vehicle ? "bg-white shadow-sm cursor-pointer hover:shadow-md" : "border-slate-100 border-dashed border-2 bg-white/20",
+          vehicle ? "shadow-sm cursor-pointer hover:shadow-md" : "border-dashed border-2",
+          platformStyle,
           isMovingTarget && "ring-4 ring-primary bg-primary/10 z-50 scale-[1.02]"
         )}
       >
         <div className="absolute top-0 left-0 z-30 p-0.5">
-          <span className="text-[7px] md:text-[9px] font-black uppercase text-slate-300 leading-none">{id}</span>
+          <span className={cn("text-[7px] md:text-[9px] font-black uppercase leading-none", id === "P13" ? "text-blue-700" : id === "P15" ? "text-red-700" : id === "P14" ? "text-slate-600" : "text-slate-300")}>{id}{id === "P13" ? " · i" : id === "P15" ? " · M" : ""}</span>
         </div>
         {vehicle && (
           <div 
