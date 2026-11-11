@@ -19,21 +19,21 @@ import { useToast } from "@/hooks/use-toast";
 import { useSearchParams, useRouter } from "next/navigation";
 
 export const BMW_COLORS = [
-  {"code":"300","name":"Alpine White III","hex":"#F5F5F5"},
-  {"code":"A96","name":"Mineral White Metallic","hex":"#F3F3F1"},
-  {"code":"668","name":"Black Uni","hex":"#000000"},
-  {"code":"475","name":"Black Sapphire Metallic","hex":"#1A1A1A"},
-  {"code":"416","name":"Carbon Black Metallic","hex":"#111111"},
-  {"code":"A90","name":"Sophisto Grey Metallic","hex":"#4A4A4A"},
-  {"code":"C36","name":"Dravit Grey Metallic","hex":"#5D5A55"},
-  {"code":"C4P","name":"Brooklyn Grey Metallic","hex":"#7B7D7E"},
-  {"code":"C4W","name":"Skyscraper Grey Metallic","hex":"#8B8E91"},
-  {"code":"C31","name":"Portimao Blue Metallic","hex":"#004D8D"},
-  {"code":"C4R","name":"Arctic Race Blue Metallic","hex":"#2A5C9A"},
-  {"code":"C6K","name":"San Remo Green Metallic","hex":"#2E4738"},
-  {"code":"C6M","name":"Isle of Man Green Metallic","hex":"#006B43"},
-  {"code":"C68","name":"Fire Red Metallic","hex":"#A5161A"},
-  {"code":"C77","name":"Vegas Red Metallic","hex":"#B21A1A"}
+  {code:"300",name:"Alpine White III",hex:"#F5F5F5"},
+  {code:"A96",name:"Mineral White Metallic",hex:"#F3F3F1"},
+  {code:"668",name:"Black Uni",hex:"#000000"},
+  {code:"475",name:"Black Sapphire Metallic",hex:"#1A1A1A"},
+  {code:"416",name:"Carbon Black Metallic",hex:"#111111"},
+  {code:"A90",name:"Sophisto Grey Metallic",hex:"#4A4A4A"},
+  {code:"C36",name:"Dravit Grey Metallic",hex:"#5D5A55"},
+  {code:"C4P",name:"Brooklyn Grey Metallic",hex:"#7B7D7E"},
+  {code:"C4W",name:"Skyscraper Grey Metallic",hex:"#8B8E91"},
+  {code:"C31",name:"Portimao Blue Metallic",hex:"#004D8D"},
+  {code:"C4R",name:"Arctic Race Blue Metallic",hex:"#2A5C9A"},
+  {code:"C6K",name:"San Remo Green Metallic",hex:"#2E4738"},
+  {code:"C6M",name:"Isle of Man Green Metallic",hex:"#006B43"},
+  {code:"C68",name:"Fire Red Metallic",hex:"#A5161A"},
+  {code:"C77",name:"Vegas Red Metallic",hex:"#B21A1A"}
 ];
 
 
@@ -62,18 +62,26 @@ export function suggestedColor(model: string) {
 
 
 export function getVehicleColor(vehicle: any) {
-  const code = vehicle?.colorCodigo || vehicle?.colorBMW;
-  if (code) { const found = BMW_COLORS.find(c => c.code.toUpperCase() === String(code).toUpperCase()); if (found) return found; }
-  const name = String(vehicle?.colorExterior || vehicle?.colorCorreo || "").toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
+  const code = String(vehicle?.colorCodigo || vehicle?.colorBMW || "").trim().toUpperCase();
+  if (code) {
+    const byCode = BMW_COLORS.find(c => c.code === code);
+    if (byCode) return byCode;
+  }
+  const raw = String(vehicle?.colorExterior || vehicle?.colorCorreo || "");
+  const name = raw.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().replace(/\\bmetalizado\\b/g, "metallic");
   const aliases: Array<[RegExp, string]> = [
-    [/black sapphire/, "475"], [/brooklyn grey/, "C4P"], [/fire red/, "C68"], [/skyscraper grey/, "C4W"], [/dravit grey/, "C36"], [/arctic race blue/, "C4R"], [/portimao blue/, "C31"], [/alpine white/, "300"], [/carbon black/, "416"],
+    [/black sapphire/, "475"], [/brooklyn grey/, "C4P"], [/fire red/, "C68"],
+    [/skyscraper grey/, "C4W"], [/dravit grey/, "C36"], [/arctic race blue/, "C4R"],
+    [/portimao blue/, "C31"], [/alpine white/, "300"], [/carbon black/, "416"],
+    [/sophisto grey/, "A90"], [/black uni/, "668"], [/mineral white/, "A96"],
+    [/san remo green/, "C6K"], [/isle of man green/, "C6M"], [/vegas red/, "C77"]
   ];
   const match = aliases.find(([pattern]) => pattern.test(name));
   if (match) return BMW_COLORS.find(c => c.code === match[1]) || null;
-  if (/\\bgris\\b|grey|gray/.test(name)) return { code: "GEN-GREY", name: vehicle?.colorExterior || "Gris", hex: "#85898d" };
-  if (/\\bazul\\b|blue/.test(name)) return { code: "GEN-BLUE", name: vehicle?.colorExterior || "Azul", hex: "#2864a0" };
-  if (/\\bnegro\\b|black/.test(name)) return { code: "GEN-BLACK", name: vehicle?.colorExterior || "Negro", hex: "#202124" };
-  if (/\\brojo\\b|red/.test(name)) return { code: "GEN-RED", name: vehicle?.colorExterior || "Rojo", hex: "#a5161a" };
+  if (/\\bgris\\b|grey|gray/.test(name)) return { code: "GEN-GREY", name: raw || "Gris", hex: "#85898d" };
+  if (/\\bazul\\b|blue/.test(name)) return { code: "GEN-BLUE", name: raw || "Azul", hex: "#2864a0" };
+  if (/\\bnegro\\b|black/.test(name)) return { code: "GEN-BLACK", name: raw || "Negro", hex: "#202124" };
+  if (/\\brojo\\b|red/.test(name)) return { code: "GEN-RED", name: raw || "Rojo", hex: "#a5161a" };
   return null;
 }
 
