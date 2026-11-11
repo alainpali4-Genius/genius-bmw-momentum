@@ -29,10 +29,10 @@ export default function GeniusDashboard() {
   }), [vehicles]);
 
   const filtered = useMemo(() => {
-    const s = search.trim().toLowerCase();
+    const s = search.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     if (!s) return vehicles.slice(0, 8);
     return vehicles.filter(v =>
-      [v.modelo, v.vin, v.vin7, v.matricula, v.entidadRenting].some(x => String(x || "").toLowerCase().includes(s))
+      [v.modelo, v.vin, v.vin7, v.matricula, v.entidadRenting, v.destinoLogistico, v.clienteLogistica, v.colorExterior].some(x => String(x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(s))
     ).slice(0, 8);
   }, [vehicles, search]);
 
