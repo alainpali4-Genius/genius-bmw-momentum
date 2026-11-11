@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from "react";
-import { Search, Plus, Loader2, Car, MapPin, Droplets, ArrowUpRight, Building2, User, LayoutGrid } from "lucide-react";
+import { Search, Plus, Loader2, Car, MapPin, ArrowUpRight, Building2, User, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,7 @@ import { differenceInDays, parseISO, isValid } from "date-fns";
 import { useRouter } from "next/navigation";
 import { BMW_COLORS } from "../showroom/page";
 
-type FilterType = 'all' | 'terraza' | 'entreplanta' | 'lavadero' | 'entrega' | 'exposicion';
+type FilterType = 'all' | 'terraza' | 'entreplanta' | 'entrega' | 'exposicion' | 'demo';
 
 export default function StockManagement() {
   const db = useFirestore();
@@ -36,7 +36,7 @@ export default function StockManagement() {
     let result = vehicles;
     if (activeFilter === 'terraza') result = result.filter(v => v.ubicacion?.toLowerCase() === 'terraza');
     else if (activeFilter === 'entreplanta') result = result.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta');
-    else if (activeFilter === 'lavadero') result = result.filter(v => v.ubicacion?.toLowerCase() === 'lavadero');
+    else if (activeFilter === 'demo') result = result.filter(v => v.ubicacion === 'Demo en uso');
     else if (activeFilter === 'entrega') result = result.filter(v => v.ubicacion?.toLowerCase().includes('entrega'));
     else if (activeFilter === 'exposicion') result = result.filter(v => v.ubicacion?.startsWith('P'));
     const q = searchTerm.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -49,7 +49,7 @@ export default function StockManagement() {
     {key:'terraza' as const,label:'Terraza',value:stats.terraza,icon:MapPin},
     {key:'entreplanta' as const,label:'Entreplanta',value:stats.entreplanta,icon:LayoutGrid},
     {key:'entrega' as const,label:'Entrega',value:stats.entrega,icon:ArrowUpRight},
-    {key:'lavadero' as const,label:'Lavadero',value:stats.lavadero,icon:Droplets},
+    {key:'demo' as const,label:'Demos en uso',value:stats.demo,icon:Car},
   ];
 
   return (
@@ -93,7 +93,7 @@ export default function StockManagement() {
                     <td className="px-4 py-4 text-sm text-slate-600">{car.motor||'—'}</td>
                     <td className="px-4 py-4"><div className="flex items-center gap-2 text-sm text-slate-600"><span className="h-3 w-3 rounded-full border border-slate-200" style={{backgroundColor:color?.hex||'#e5e7eb'}}/>{color?.name||car.colorExterior||'—'}</div></td>
                     <td className="px-4 py-4"><Badge variant="outline" className="rounded-full border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-medium text-slate-600">{car.tipoLogistico||'Stock Expo'}</Badge>{car.entidadRenting&&<div className="mt-1 flex items-center gap-1 text-[10px] text-slate-400">{car.tipoLogistico==='Entrega Cliente'?<User className="h-3 w-3"/>:<Building2 className="h-3 w-3"/>}{car.entidadRenting}</div>}</td>
-                    <td className="px-4 py-4"><Badge className={`rounded-full border-0 px-2.5 py-1 text-[10px] font-medium ${car.ubicacion?.startsWith('P')?'bg-blue-50 text-[#00549a]':'bg-slate-100 text-slate-600'}`}>{car.ubicacion||'Sin ubicación'}</Badge></td>
+                    <td className="px-4 py-4"><Badge className={`rounded-full border-0 px-2.5 py-1 text-[10px] font-medium ${car.ubicacion?.startsWith('P')?'bg-blue-50 text-[#00549a]':'bg-slate-100 text-slate-600'}`}>{car.ubicacion?.startsWith('P')?`Exposición · ${car.ubicacion}`:(car.ubicacion||'Sin ubicación')}</Badge>{car.ubicacion==='Demo en uso'&&<div className="mt-1 text-[10px] text-slate-400">Lo tiene: {car.demoAsignadoA||'Sin asignar'}</div>}</td>
                     <td className="px-4 py-4 text-right text-sm tabular-nums text-slate-600">{days===null?'—':days}</td>
                     <td className="px-5 py-4 text-right"><ArrowUpRight className="ml-auto h-4 w-4 text-slate-400"/></td>
                   </tr>
