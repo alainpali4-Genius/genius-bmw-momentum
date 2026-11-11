@@ -36,6 +36,26 @@ export const BMW_COLORS = [
   {"code":"C77","name":"Vegas Red Metallic","hex":"#B21A1A"}
 ];
 
+
+const MOTOR_BY_MODEL: Array<{ test: RegExp; motor: string }> = [
+  { test: /MINI\\s+ACEMAN\\s+SE/i, motor: "Eléctrico · SE · 160 kW (218 CV)" },
+  { test: /MINI\\s+COUNTRYMAN\\s+E\\b/i, motor: "Eléctrico · E · 150 kW (204 CV)" },
+  { test: /MINI\\s+COUNTRYMAN\\s+SE\\s+ALL4/i, motor: "Eléctrico · SE ALL4 · 230 kW (313 CV)" },
+  { test: /BMW\\s+M3\\s+COMPETITION\\s+M\\s+XDRIVE\\s+TOURING/i, motor: "Gasolina · 3.0 M TwinPower Turbo · 390 kW (530 CV) · M xDrive" },
+  { test: /BMW\\s+M3\\s+COMPETITION/i, motor: "Gasolina · 3.0 M TwinPower Turbo · 390 kW (530 CV)" },
+  { test: /BMW\\s+X1.*sDRIVE18d/i, motor: "Diésel · 2.0 · 110 kW (150 CV) · sDrive" },
+  { test: /BMW\\s+X1.*sDRIVE20d/i, motor: "Diésel · 2.0 · 120 kW (163 CV) · sDrive" },
+  { test: /BMW\\s+X1.*xDRIVE20d/i, motor: "Diésel · 2.0 · 120 kW (163 CV) · xDrive" },
+  { test: /BMW\\s+X1.*sDRIVE18i/i, motor: "Gasolina · 1.5 · 100 kW (136 CV) · sDrive" },
+];
+function suggestedMotor(model: string) {
+  return MOTOR_BY_MODEL.find(item => item.test.test(model.trim()))?.motor || "";
+}
+function suggestedColor(model: string) {
+  const value = model.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+  return BMW_COLORS.find(c => value.includes(c.name.toLowerCase().replace(" metallic", " metalizado")) || value.includes(c.name.toLowerCase())) || null;
+}
+
 export const TIPOS_LOGISTICOS = [
   "Stock Expo",
   "Entrega Renting",
@@ -112,7 +132,7 @@ function ShowroomContent() {
   const [isStockSheetOpen, setIsStockSheetOpen] = useState(false);
 
   const [formData, setFormData] = useState({
-    marca: "BMW", modelo: "", vin: "", matricula: "", kilometraje: "", motor: "sDrive20i",
+    marca: "BMW", modelo: "", vin: "", vin7: "", matricula: "", kilometraje: "", motor: "",
     colorBMW: "300", tapiceria: "", llantas: "", equipamiento: "", bodyType: "SUV",
     ubicacion: "Stock", estado: "Stock", tipoLogistico: "Stock Expo", entidadRenting: "",
     precio: "", responsable: "", observaciones: ""
@@ -325,11 +345,10 @@ function ShowroomContent() {
                 <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
                   <div><h3 className="text-sm font-black uppercase text-secondary">Identificación del vehículo</h3><p className="text-[10px] text-slate-400">Edita los datos principales. Los cambios se guardan automáticamente.</p></div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1"><Label>Modelo / versión</Label><Input value={selectedVehicle.modelo || ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{modelo:e.target.value})}/></div>
+                    <div className="space-y-1"><Label>Modelo / versión</Label><Input value={selectedVehicle.modelo || ""} onChange={e => { const model=e.target.value; const motor=suggestedMotor(model); const color=suggestedColor(model); handleUpdateVehicle(selectedVehicle.id,{modelo:model,...(motor?{motor}:{}),...(color?{colorCodigo:color.code,colorBMW:color.code,colorExterior:color.name}:{})}); }}/></div>
                     <div className="space-y-1"><Label>Marca</Label><Input value={/^MINI\b/i.test(selectedVehicle.modelo || "") ? "MINI" : (selectedVehicle.marca || "BMW")} readOnly className="bg-slate-50"/></div>
                     <div className="space-y-1 md:col-span-2"><Label>Bastidor completo (VIN)</Label><Input value={selectedVehicle.vin || ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{vin:e.target.value.toUpperCase(),vin7:e.target.value.slice(-7).toUpperCase()})}/></div>
                     <div className="space-y-1"><Label>Matrícula</Label><Input value={selectedVehicle.matricula || ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{matricula:e.target.value.toUpperCase()})}/></div>
-                    <div className="space-y-1"><Label>Kilometraje</Label><Input type="number" value={selectedVehicle.kilometraje ?? ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{kilometraje:e.target.value === "" ? null : Number(e.target.value)})}/></div>
                     <div className="space-y-1"><Label>Motorización</Label><Input value={selectedVehicle.motor || ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{motor:e.target.value})}/></div>
                     <div className="space-y-1"><Label>Carrocería</Label><Select value={selectedVehicle.bodyType || "SUV"} onValueChange={v => handleUpdateVehicle(selectedVehicle.id,{bodyType:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{["SUV","Berlina","Coupe","Roadster","Touring","Compacto","Cabrio"].map(t=><SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
                   </div>
@@ -337,7 +356,7 @@ function ShowroomContent() {
                 <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
                   <h3 className="text-sm font-black uppercase text-secondary">Configuración y acabado</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1"><Label>Color exterior</Label><Select value={selectedVehicle.colorCodigo || selectedVehicle.colorBMW || (selectedVehicle.colorExterior ? `correo:${selectedVehicle.colorExterior}` : "300")} onValueChange={v => v.startsWith("correo:") ? handleUpdateVehicle(selectedVehicle.id,{colorExterior:v.slice(7),colorCorreo:v.slice(7)}) : handleUpdateVehicle(selectedVehicle.id,{colorCodigo:v,colorBMW:v,colorExterior:BMW_COLORS.find(c=>c.code===v)?.name || ""})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent className="max-h-64">{selectedVehicle.colorExterior && !BMW_COLORS.some(c=>c.name.toLowerCase()===String(selectedVehicle.colorExterior).toLowerCase()) && <SelectItem value={`correo:${selectedVehicle.colorExterior}`}>{selectedVehicle.colorExterior} · Correo BMW</SelectItem>}{BMW_COLORS.map(c=><SelectItem key={c.code} value={c.code}>{c.code} · {c.name}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-1"><Label>Color exterior</Label><div className="flex items-center gap-2"><span className="h-9 w-9 shrink-0 rounded-md border border-slate-300 shadow-inner" style={{backgroundColor:BMW_COLORS.find(c=>c.code===(selectedVehicle.colorCodigo||selectedVehicle.colorBMW))?.hex||"#e5e7eb"}}/><Select value={selectedVehicle.colorCodigo || selectedVehicle.colorBMW || (selectedVehicle.colorExterior ? `correo:${selectedVehicle.colorExterior}` : "300")} onValueChange={v => v.startsWith("correo:") ? handleUpdateVehicle(selectedVehicle.id,{colorExterior:v.slice(7),colorCorreo:v.slice(7)}) : handleUpdateVehicle(selectedVehicle.id,{colorCodigo:v,colorBMW:v,colorExterior:BMW_COLORS.find(c=>c.code===v)?.name || ""})}><SelectTrigger className="flex-1"><SelectValue/></SelectTrigger><SelectContent className="max-h-64">{selectedVehicle.colorExterior && !BMW_COLORS.some(c=>c.name.toLowerCase()===String(selectedVehicle.colorExterior).toLowerCase()) && <SelectItem value={`correo:${selectedVehicle.colorExterior}`}>{selectedVehicle.colorExterior} · Correo BMW</SelectItem>}{BMW_COLORS.map(c=><SelectItem key={c.code} value={c.code}>{c.code} · {c.name}</SelectItem>)}</SelectContent></Select></div></div>
                     <div className="space-y-1"><Label>Tapicería / interior</Label><Input value={selectedVehicle.tapiceria || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{tapiceria:e.target.value})}/></div>
                     <div className="space-y-1"><Label>Llantas</Label><Input value={selectedVehicle.llantas || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{llantas:e.target.value})}/></div>
                     <div className="space-y-1"><Label>Equipamiento / paquetes</Label><Input value={selectedVehicle.equipamiento || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{equipamiento:e.target.value})}/></div>
@@ -406,17 +425,17 @@ function ShowroomContent() {
               <h3 className="text-xs font-black uppercase text-secondary border-b pb-2">1. Identificación</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div className="space-y-1"><Label>Marca</Label><Select value={formData.marca} onValueChange={v=>setFormData({...formData,marca:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{["BMW","MINI"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-1"><Label>Modelo / versión *</Label><Input placeholder="Ej. X2 sDrive18d" value={formData.modelo} onChange={e=>setFormData({...formData,modelo:e.target.value})}/></div>
-                <div className="space-y-1"><Label>Bastidor completo (VIN) *</Label><Input placeholder="17 caracteres" maxLength={17} value={formData.vin} onChange={e=>setFormData({...formData,vin:e.target.value.toUpperCase()})}/></div>
+                <div className="space-y-1"><Label>Modelo / versión *</Label><Input placeholder="Ej. BMW X1 sDrive18d" value={formData.modelo} onChange={e=>{const modelo=e.target.value;const motor=suggestedMotor(modelo);const color=suggestedColor(modelo);setFormData({...formData,modelo,...(motor?{motor}:{}),...(color?{colorBMW:color.code}:{})});}}/></div>
+                <div className="space-y-1"><Label>VIN completo (opcional)</Label><Input placeholder="17 caracteres" maxLength={17} value={formData.vin} onChange={e=>{const vin=e.target.value.toUpperCase().replace(/\\s/g,"");setFormData({...formData,vin,vin7:vin.length===17?vin.slice(-7):formData.vin7});}}/></div>
+                <div className="space-y-1"><Label>VIN7 (obligatorio)</Label><Input placeholder="Últimos 7 caracteres" maxLength={7} value={formData.vin7} onChange={e=>setFormData({...formData,vin7:e.target.value.toUpperCase().replace(/\\s/g,"").slice(0,7)})}/></div>
                 <div className="space-y-1"><Label>Matrícula</Label><Input value={formData.matricula} onChange={e=>setFormData({...formData,matricula:e.target.value.toUpperCase()})}/></div>
-                <div className="space-y-1"><Label>Motorización</Label><Input placeholder="Ej. xDrive20d" value={formData.motor} onChange={e=>setFormData({...formData,motor:e.target.value})}/></div>
-                <div className="space-y-1"><Label>Kilometraje</Label><Input type="number" min="0" value={formData.kilometraje} onChange={e=>setFormData({...formData,kilometraje:e.target.value})}/></div>
+                <div className="space-y-1"><Label>Motorización sugerida</Label><Input placeholder="Se completa según el modelo; puedes corregirla" value={formData.motor} onChange={e=>setFormData({...formData,motor:e.target.value})}/></div>
               </div>
             </section>
             <section className="space-y-3">
               <h3 className="text-xs font-black uppercase text-secondary border-b pb-2">2. Configuración y acabado</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-1"><Label>Color exterior</Label><Select value={formData.colorBMW} onValueChange={v=>setFormData({...formData,colorBMW:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent className="max-h-64">{BMW_COLORS.map(c=><SelectItem key={c.code} value={c.code}>{c.code} · {c.name}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1"><Label>Color exterior</Label><div className="flex items-center gap-2"><span className="h-9 w-9 shrink-0 rounded-md border border-slate-300 shadow-inner" style={{backgroundColor:BMW_COLORS.find(c=>c.code===formData.colorBMW)?.hex||"#e5e7eb"}}/><Select value={formData.colorBMW} onValueChange={v=>setFormData({...formData,colorBMW:v})}><SelectTrigger className="flex-1"><SelectValue/></SelectTrigger><SelectContent className="max-h-64">{BMW_COLORS.map(c=><SelectItem key={c.code} value={c.code}>{c.code} · {c.name}</SelectItem>)}</SelectContent></Select></div></div>
                 <div className="space-y-1"><Label>Carrocería</Label><Select value={formData.bodyType} onValueChange={v=>setFormData({...formData,bodyType:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{["SUV","Berlina","Coupe","Roadster","Touring","Compacto","Cabrio"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
                 <div className="space-y-1"><Label>Tapicería / interior</Label><Input value={formData.tapiceria} onChange={e=>setFormData({...formData,tapiceria:e.target.value})}/></div>
                 <div className="space-y-1"><Label>Llantas</Label><Input value={formData.llantas} onChange={e=>setFormData({...formData,llantas:e.target.value})}/></div>
@@ -448,18 +467,17 @@ function ShowroomContent() {
 
   async function handleQuickAdd() {
     const vin = formData.vin.trim().toUpperCase();
-    if (!formData.modelo.trim() || !vin) return toast({ variant: "destructive", title: "Faltan datos", description: "Modelo y bastidor son obligatorios." });
-    if (vin.length !== 17) return toast({ variant: "destructive", title: "Bastidor no válido", description: "El VIN debe tener 17 caracteres." });
-    if (/[IOQ]/.test(vin)) return toast({ variant: "destructive", title: "Bastidor no válido", description: "El VIN no puede contener I, O ni Q." });
-    if (vehiculos.some(v => (v.vin || "").toUpperCase() === vin)) return toast({ variant: "destructive", title: "Vehículo duplicado", description: "Ya existe un vehículo con ese bastidor." });
+    const vin7 = formData.vin7.trim().toUpperCase();
+    if (!formData.modelo.trim() || vin7.length !== 7) return toast({ variant: "destructive", title: "Faltan datos", description: "Indica el modelo y los últimos 7 caracteres del bastidor (VIN7)." });
+    if (vin && (vin.length !== 17 || /[IOQ]/.test(vin))) return toast({ variant: "destructive", title: "Bastidor no válido", description: "El VIN completo debe tener 17 caracteres y no contener I, O ni Q." });
+    if (vehiculos.some(v => (v.vin7 || "").toUpperCase() === vin7 || (vin && (v.vin || "").toUpperCase() === vin))) return toast({ variant: "destructive", title: "Vehículo duplicado", description: "Ya existe un vehículo con ese VIN7 o bastidor." });
     const now = new Date().toISOString();
-    const vin7 = vin.slice(-7);
-    const payload = { ...formData, modelo: formData.modelo.trim(), vin, vin7, kilometraje: formData.kilometraje === "" ? null : Number(formData.kilometraje), precio: formData.precio === "" ? null : Number(formData.precio), colorCodigo: formData.colorBMW, colorExterior: BMW_COLORS.find(c => c.code === formData.colorBMW)?.name || "Alpine White", fechaEntrada: now.split('T')[0], createdAt: now, updatedAt: now };
+    const payload = { ...formData, modelo: formData.modelo.trim(), vin, vin7, kilometraje: null, precio: formData.precio === "" ? null : Number(formData.precio), colorCodigo: formData.colorBMW, colorExterior: BMW_COLORS.find(c => c.code === formData.colorBMW)?.name || "Alpine White", fechaEntrada: now.split('T')[0], createdAt: now, updatedAt: now };
     try {
       await addDoc(collection(db, "vehiculos"), payload);
       toast({ title: "Vehículo Registrado" });
       setIsAddingNew(false);
-      setFormData({ marca: "BMW", modelo: "", vin: "", matricula: "", kilometraje: "", motor: "sDrive20i", colorBMW: "300", tapiceria: "", llantas: "", equipamiento: "", bodyType: "SUV", ubicacion: "Stock", estado: "Stock", tipoLogistico: "Stock Expo", entidadRenting: "", precio: "", responsable: "", observaciones: "" });
+      setFormData({ marca: "BMW", modelo: "", vin: "", vin7: "", matricula: "", kilometraje: "", motor: "", colorBMW: "300", tapiceria: "", llantas: "", equipamiento: "", bodyType: "SUV", ubicacion: "Stock", estado: "Stock", tipoLogistico: "Stock Expo", entidadRenting: "", precio: "", responsable: "", observaciones: "" });
     } catch (e) {
       toast({ variant: "destructive", title: "Error al guardar" });
     }
