@@ -50,6 +50,7 @@ export default function DeliveryManagement() {
   const [activeTab, setActiveTab] = useState("all");
   const [isAdding, setIsAdding] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [vehicleSearch, setVehicleSearch] = useState("");
 
   const { data: vehiculosRaw } = useCollection(query(collection(db, "vehiculos"), orderBy("modelo", "asc")));
   const entregasQuery = useMemo(() => query(collection(db, "entregas"), orderBy("fecha", "desc")), [db]);
@@ -180,7 +181,7 @@ export default function DeliveryManagement() {
           <p className="text-muted-foreground mt-1 text-[10px] font-black uppercase tracking-widest">Planificación logística Momentum Navarra</p>
         </div>
         <div className="flex gap-2">
-          <Dialog open={isAdding} onOpenChange={setIsAdding}>
+          <Dialog open={isAdding} onOpenChange={(open) => { setIsAdding(open); if (open && !formData.fecha) setFormData(prev => ({ ...prev, fecha: format(new Date(), "yyyy-MM-dd") })); if (!open) setVehicleSearch(""); }}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-blue-800 h-12 px-6 rounded-xl font-black uppercase tracking-widest shadow-lg">
                 <Plus className="w-4 h-4 mr-2" /> Programar Entrega
@@ -191,13 +192,21 @@ export default function DeliveryManagement() {
               <div className="p-8 space-y-5 bg-white">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Vehículo de Stock</Label>
-                  <Select value={formData.vehiculoId} onValueChange={(v) => setFormData({...formData, vehiculoId: v})}>
+                  <Input value={vehicleSearch} onChange={e => setVehicleSearch(e.target.value)} className="h-11 bg-white border-slate-200 rounded-xl text-xs" placeholder="Buscar por bastidor, VIN, matrícula o modelo…" />
+                  <Select value={formData.vehiculoId} onValueChange={(v) => { setFormData({...formData, vehiculoId: v}); setVehicleSearch(""); }}>
+
                     <SelectTrigger className="h-12 bg-slate-50 border-none rounded-xl font-bold text-xs uppercase">
                       <SelectValue placeholder="SELECCIONAR..." />
                     </SelectTrigger>
                     <SelectContent className="rounded-xl border-none shadow-2xl">
-                      {vehiculos.filter(v => v.estado !== 'Entregado').map(v => (
-                        <SelectItem key={v.id} value={v.id}>{v.modelo} ({v.vin7 || v.vin?.slice(-7)})</SelectItem>
+                      {vehiculos.filter(v => {
+                        if (v.estado === "Entregado") return false;
+                        const term = vehicleSearch.trim().toLowerCase().replace(/\s/g, "");
+                        if (!term) return true;
+                        const haystack = [v.vin, v.vin7, v.matricula, v.modelo, v.version].filter(Boolean).join(" ").toLowerCase();
+                        return haystack.includes(vehicleSearch.trim().toLowerCase()) || haystack.replace(/\s/g, "").includes(term);
+                      }).map(v => (
+                        <SelectItem key={v.id} value={v.id}>{v.modelo} · {v.vin7 || v.vin?.slice(-7)}{v.matricula ? ` · ${v.matricula}` : ""}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
