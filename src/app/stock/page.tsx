@@ -1,28 +1,14 @@
-
 'use client';
 
-import { useState, useMemo } from "react";
-import { 
-  Search, 
-  Plus, 
-  Loader2, 
-  Trash2,
-  Car,
-  MapPin,
-  Droplets,
-  ArrowRightCircle,
-  Building2,
-  User
-} from "lucide-react";
+import { useMemo, useState } from "react";
+import { Search, Plus, Loader2, Car, MapPin, Droplets, ArrowUpRight, Building2, User, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useFirestore, useCollection } from "@/firebase";
-import { collection, query, orderBy, doc, deleteDoc } from "firebase/firestore";
-import { differenceInDays, parseISO } from "date-fns";
-import { cn } from "@/lib/utils";
+import { collection, query, orderBy } from "firebase/firestore";
+import { differenceInDays, parseISO, isValid } from "date-fns";
 import { useRouter } from "next/navigation";
 import { BMW_COLORS } from "../showroom/page";
 
@@ -31,200 +17,91 @@ type FilterType = 'all' | 'terraza' | 'entreplanta' | 'lavadero' | 'entrega' | '
 export default function StockManagement() {
   const db = useFirestore();
   const router = useRouter();
-  const vehiculosQuery = useMemo(() => query(collection(db, "vehiculos"), orderBy("createdAt", "desc")), [db]);
-  const { data: vehiculosRaw, loading } = useCollection(vehiculosQuery);
+  const vehiclesQuery = useMemo(() => query(collection(db, "vehiculos"), orderBy("createdAt", "desc")), [db]);
+  const { data: rawVehicles, loading } = useCollection(vehiclesQuery);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState<FilterType>('all');
-  const vehiculos = useMemo(() => (vehiculosRaw || []) as any[], [vehiculosRaw]);
-
-  const filteredVehiculos = useMemo(() => {
-    let result = vehiculos;
-    const filter = activeFilter.toLowerCase();
-    if (filter === 'terraza') result = result.filter(v => v.ubicacion?.toLowerCase() === 'terraza');
-    else if (filter === 'entreplanta') result = result.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta');
-    else if (filter === 'lavadero') result = result.filter(v => v.ubicacion?.toLowerCase() === 'lavadero');
-    else if (filter === 'entrega') result = result.filter(v => v.ubicacion?.toLowerCase().includes('entrega'));
-    else if (filter === 'exposicion') result = result.filter(v => v.ubicacion?.startsWith('P'));
-
-    const s = searchTerm.toLowerCase();
-    if (s) {
-      result = result.filter(v => 
-        v.modelo?.toLowerCase().includes(s) || 
-        v.vin?.toLowerCase().includes(s) || 
-        v.vin7?.toLowerCase().includes(s) || 
-        v.entidadRenting?.toLowerCase().includes(s)
-      );
-    }
-    return result;
-  }, [vehiculos, searchTerm, activeFilter]);
+  const vehicles = (rawVehicles || []) as any[];
 
   const stats = useMemo(() => ({
-    exposicion: vehiculos.filter(v => v.ubicacion?.startsWith('P')).length,
-    terraza: vehiculos.filter(v => v.ubicacion?.toLowerCase() === 'terraza').length,
-    entreplanta: vehiculos.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta').length,
-    lavadero: vehiculos.filter(v => v.ubicacion?.toLowerCase() === 'lavadero').length,
-    entrega: vehiculos.filter(v => v.ubicacion?.toLowerCase().includes('entrega')).length,
-  }), [vehiculos]);
+    total: vehicles.length,
+    exposicion: vehicles.filter(v => v.ubicacion?.startsWith('P')).length,
+    terraza: vehicles.filter(v => v.ubicacion?.toLowerCase() === 'terraza').length,
+    entreplanta: vehicles.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta').length,
+    lavadero: vehicles.filter(v => v.ubicacion?.toLowerCase() === 'lavadero').length,
+    entrega: vehicles.filter(v => v.ubicacion?.toLowerCase().includes('entrega')).length,
+  }), [vehicles]);
 
-  const QuickFilterCard = ({ type, label, val, color, icon: Icon }: any) => {
-    const isActive = activeFilter === type;
-    return (
-      <Card 
-        onClick={() => setActiveFilter(isActive ? 'all' : type)}
-        className={cn(
-          "border-none shadow-sm cursor-pointer transition-all h-12 flex items-center bg-white rounded-md shrink-0", 
-          isActive && "ring-2 ring-primary bg-primary/5"
-        )}
-      >
-        <CardContent className="p-1.5 px-2.5 w-full">
-          <p className={cn("text-[6px] font-black uppercase mb-0.5 tracking-widest", isActive ? "text-primary" : "text-slate-400")}>{label}</p>
-          <div className="flex items-center justify-between">
-            <p className={cn("text-xs font-black leading-none", isActive ? "text-primary" : color)}>{val}</p>
-            <Icon className={cn("w-2.5 h-2.5 opacity-20", isActive && "opacity-80 text-primary")} />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
+  const filtered = useMemo(() => {
+    let result = vehicles;
+    if (activeFilter === 'terraza') result = result.filter(v => v.ubicacion?.toLowerCase() === 'terraza');
+    else if (activeFilter === 'entreplanta') result = result.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta');
+    else if (activeFilter === 'lavadero') result = result.filter(v => v.ubicacion?.toLowerCase() === 'lavadero');
+    else if (activeFilter === 'entrega') result = result.filter(v => v.ubicacion?.toLowerCase().includes('entrega'));
+    else if (activeFilter === 'exposicion') result = result.filter(v => v.ubicacion?.startsWith('P'));
+    const q = searchTerm.trim().toLowerCase();
+    if (q) result = result.filter(v => [v.modelo,v.vin,v.vin7,v.matricula,v.entidadRenting,v.motor].some(x => String(x || '').toLowerCase().includes(q)));
+    return result;
+  }, [vehicles, activeFilter, searchTerm]);
+
+  const filters = [
+    {key:'exposicion' as const,label:'Exposición',value:stats.exposicion,icon:Car},
+    {key:'terraza' as const,label:'Terraza',value:stats.terraza,icon:MapPin},
+    {key:'entreplanta' as const,label:'Entreplanta',value:stats.entreplanta,icon:LayoutGrid},
+    {key:'entrega' as const,label:'Entrega',value:stats.entrega,icon:ArrowUpRight},
+    {key:'lavadero' as const,label:'Lavadero',value:stats.lavadero,icon:Droplets},
+  ];
 
   return (
-    <div className="p-1.5 md:p-6 max-w-[1600px] mx-auto h-screen flex flex-col overflow-hidden">
-      <div className="flex justify-between items-center gap-2 mb-2 shrink-0 px-1">
-        <h1 className="text-sm md:text-2xl font-black text-secondary uppercase italic tracking-tighter">STOCK <span className="text-primary not-italic">VN</span></h1>
-        <div className="flex gap-1.5">
-          <Button variant="outline" className="h-8 text-[8px] font-black uppercase rounded-md" onClick={() => router.push('/showroom')}>PLANO</Button>
-          <Button className="h-8 bg-secondary text-white text-[8px] font-black uppercase rounded-md shadow-md" onClick={() => router.push('/showroom?add=true')}>
-            <Plus className="w-3 h-3 mr-1" /> ALTA
-          </Button>
-        </div>
-      </div>
-      <div className="grid grid-cols-5 gap-1 mb-2 shrink-0">
-        <QuickFilterCard type="exposicion" label="EXPO" val={stats.exposicion} color="text-secondary" icon={Car} />
-        <QuickFilterCard type="terraza" label="TERRAZA" val={stats.terraza} color="text-blue-500" icon={MapPin} />
-        <QuickFilterCard type="entreplanta" label="PLANTA" val={stats.entreplanta} color="text-blue-700" icon={MapPin} />
-        <QuickFilterCard type="entrega" label="ENTREGA" val={stats.entrega} color="text-emerald-600" icon={ArrowRightCircle} />
-        <QuickFilterCard type="lavadero" label="LAVADO" val={stats.lavadero} color="text-sky-500" icon={Droplets} />
-      </div>
-      <div className="relative mb-2 shrink-0">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-300" />
-        <Input 
-          className="pl-9 h-9 bg-white border-none shadow-sm rounded-md text-[9px] font-black uppercase" 
-          placeholder="BUSCAR MODELO, BASTIDOR O CLIENTE..." 
-          value={searchTerm} 
-          onChange={e => setSearchTerm(e.target.value)} 
-        />
-      </div>
-      <div className="flex-1 overflow-hidden">
-        {loading ? (
-          <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
-        ) : filteredVehiculos.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-lg border-2 border-dashed border-slate-50 font-black uppercase text-[8px] text-slate-300">Sin resultados</div>
-        ) : (
-          <div className="h-full overflow-y-auto scrollbar-none pb-20">
-            <div className="hidden md:block bg-white rounded-lg shadow-sm overflow-hidden">
-              <Table>
-                <TableHeader className="bg-slate-50 sticky top-0">
-                  <TableRow className="border-none h-10">
-                    <TableHead className="font-black text-[9px] uppercase">Categoría</TableHead>
-                    <TableHead className="font-black text-[9px] uppercase">Modelo</TableHead>
-                    <TableHead className="font-black text-[9px] uppercase">Bastidor</TableHead>
-                    <TableHead className="font-black text-[9px] uppercase">Ubicación</TableHead>
-                    <TableHead className="font-black text-[9px] uppercase text-center">Días</TableHead>
-                    <TableHead className="text-right px-4">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredVehiculos.map((car) => {
-                    const days = car.fechaEntrada ? differenceInDays(new Date(), parseISO(car.fechaEntrada)) : 0;
-                    const colorObj = BMW_COLORS.find(c => c.code === (car.colorCodigo || car.colorBMW));
-                    const isParticular = car.tipoLogistico === 'Entrega Cliente';
-                    return (
-                      <TableRow key={car.id} onClick={() => router.push(`/showroom?s=${car.vin7}`)} className="hover:bg-slate-50/50 cursor-pointer h-12 border-slate-50 group">
-                        <TableCell>
-                          <div className="flex flex-col gap-0.5">
-                            <Badge className={cn(
-                              "text-[8px] font-black uppercase px-2 py-0.5 border-none w-fit",
-                              car.tipoLogistico?.includes('Renting') ? "bg-blue-100 text-blue-700" :
-                              car.tipoLogistico === 'Demo' ? "bg-orange-100 text-orange-700" :
-                              car.tipoLogistico === 'Entrega Cliente' ? "bg-emerald-100 text-emerald-700" :
-                              "bg-slate-100 text-slate-500"
-                            )}>
-                              {car.tipoLogistico || "Stock Expo"}
-                            </Badge>
-                            {car.entidadRenting && (
-                              <div className="flex items-center gap-1 text-[7px] font-black text-slate-400 uppercase ml-1">
-                                {isParticular ? <User className="w-2 h-2" /> : <Building2 className="w-2 h-2" />} {car.entidadRenting}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-black text-[10px] uppercase text-secondary">
-                          <div className="flex items-center gap-2">
-                            {car.modelo}
-                            <div className="w-2 h-2 rounded-full border border-slate-200" style={{ backgroundColor: colorObj?.hex || '#F5F5F5' }} />
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-mono text-[9px] font-bold text-slate-400">{car.vin7}</TableCell>
-                        <TableCell>
-                          <Badge className={cn("text-[8px] font-black uppercase px-2 py-0.5 border-none", car.ubicacion?.startsWith('P') ? "bg-primary text-white" : "bg-slate-100 text-secondary")}>{car.ubicacion}</Badge>
-                        </TableCell>
-                        <TableCell className="text-center font-black text-[10px]">{days}D</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 opacity-0 group-hover:opacity-100" onClick={(e) => { e.stopPropagation(); if(confirm("¿Eliminar?")) deleteDoc(doc(db, "vehiculos", car.id)); }}>
-                            <Trash2 className="w-3.5 h-3.5 text-slate-200 hover:text-red-600" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
-            <div className="md:hidden space-y-1">
-              {filteredVehiculos.map((car) => {
-                const days = car.fechaEntrada ? differenceInDays(new Date(), parseISO(car.fechaEntrada)) : 0;
-                const colorObj = BMW_COLORS.find(c => c.code === (car.colorCodigo || car.colorBMW));
-                const isParticular = car.tipoLogistico === 'Entrega Cliente';
-                return (
-                  <Card key={car.id} onClick={() => router.push(`/showroom?s=${car.vin7}`)} className="bg-white border-none shadow-sm rounded-md active:scale-[0.99]">
-                    <CardContent className="p-2 flex items-center justify-between gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-black text-[9px] uppercase text-secondary leading-none truncate">{car.modelo}</h3>
-                          <Badge className={cn(
-                            "text-[6px] font-black uppercase px-1 py-0 rounded-sm border-none h-3 leading-none",
-                            car.tipoLogistico?.includes('Renting') ? "bg-blue-50 text-blue-600" :
-                            car.tipoLogistico === 'Demo' ? "bg-orange-50 text-orange-600" :
-                            "bg-slate-50 text-slate-400"
-                          )}>
-                            {car.tipoLogistico || "STOCK"}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-1.5 mt-1">
-                          <span className="font-mono text-[7px] font-bold text-slate-400">{car.vin7}</span>
-                          <span className="text-[7px] font-black text-slate-300">{days}D</span>
-                          {car.entidadRenting && (
-                            <div className="flex items-center gap-1 text-[6px] font-black text-blue-500 uppercase truncate max-w-[80px]">
-                               {isParticular ? <User className="w-2 h-2" /> : <Building2 className="w-2 h-2" />}
-                               <span>{car.entidadRenting}</span>
-                            </div>
-                          )}
-                          <div className="w-1.5 h-1.5 rounded-full border border-slate-200 ml-1" style={{ backgroundColor: colorObj?.hex || '#F5F5F5' }} />
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1.5 shrink-0">
-                        <Badge className={cn("text-[6px] font-black uppercase px-1.5 py-0.5 border-none", car.ubicacion?.startsWith('P') ? "bg-primary text-white" : "bg-slate-100 text-secondary")}>{car.ubicacion}</Badge>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-200" onClick={(e) => { e.stopPropagation(); if(confirm("¿Eliminar?")) deleteDoc(doc(db, "vehiculos", car.id)); }}>
-                          <Trash2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+    <div className="h-full overflow-y-auto bg-slate-50">
+      <div className="mx-auto max-w-[1600px] space-y-6 px-5 py-7 md:px-8 md:py-9">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div><p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0066b3]">Inventario · Momentum Navarra</p><h1 className="text-3xl font-semibold tracking-tight text-slate-900">Gestión de stock</h1><p className="mt-1 text-sm text-slate-500">{stats.total} vehículos registrados en las zonas logísticas.</p></div>
+          <div className="flex gap-2">
+            <Button variant="outline" className="h-10 rounded-lg border-slate-200 bg-white" onClick={() => router.push('/showroom')}><LayoutGrid className="mr-2 h-4 w-4"/> Ver plano</Button>
+            <Button className="h-10 rounded-lg bg-[#0066b3] text-white hover:bg-[#00549a]" onClick={() => router.push('/showroom?add=true')}><Plus className="mr-2 h-4 w-4"/> Añadir vehículo</Button>
           </div>
-        )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+          {filters.map(f => {
+            const active = activeFilter === f.key;
+            return <button key={f.key} onClick={() => setActiveFilter(active ? 'all' : f.key)} className={`rounded-xl border bg-white p-4 text-left shadow-sm transition-colors hover:border-blue-200 ${active ? 'border-[#0066b3] ring-1 ring-[#0066b3]/20' : 'border-slate-200/80'}`}>
+              <div className="flex items-center justify-between"><span className="text-xs font-medium text-slate-500">{f.label}</span><f.icon className={`h-4 w-4 ${active ? 'text-[#0066b3]' : 'text-slate-400'}`}/></div>
+              <div className="mt-2 text-2xl font-semibold text-slate-900">{f.value}</div>
+            </button>
+          })}
+        </div>
+
+        <Card className="overflow-hidden rounded-xl border-slate-200/80 bg-white shadow-sm">
+          <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
+            <div><h2 className="font-semibold text-slate-900">Vehículos en stock</h2><p className="mt-1 text-xs text-slate-500">Mostrando {filtered.length} de {vehicles.length} unidades</p></div>
+            <div className="relative w-full sm:max-w-[360px]"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"/><Input value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} placeholder="Buscar modelo, bastidor, matrícula…" className="h-10 rounded-lg border-slate-200 pl-9 text-sm"/></div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[760px] text-left">
+              <thead className="bg-slate-50/80"><tr className="text-[10px] font-semibold uppercase tracking-wider text-slate-400"><th className="px-5 py-3">Vehículo</th><th className="px-4 py-3">Motor</th><th className="px-4 py-3">Color</th><th className="px-4 py-3">Tipo logístico</th><th className="px-4 py-3">Ubicación</th><th className="px-4 py-3 text-right">Días</th><th className="px-5 py-3"></th></tr></thead>
+              <tbody className="divide-y divide-slate-100">
+                {loading ? <tr><td colSpan={7} className="px-5 py-14 text-center text-sm text-slate-400"><Loader2 className="mr-2 inline h-4 w-4 animate-spin"/> Cargando vehículos…</td></tr> :
+                filtered.length===0 ? <tr><td colSpan={7} className="px-5 py-14 text-center text-sm text-slate-400">No hay vehículos que coincidan con la búsqueda.</td></tr> :
+                filtered.map(car=>{
+                  const color=BMW_COLORS.find(c=>c.code===(car.colorCodigo||car.colorBMW));
+                  const parsed=car.fechaEntrada?parseISO(car.fechaEntrada):null;
+                  const days=parsed&&isValid(parsed)?Math.max(0,differenceInDays(new Date(),parsed)):null;
+                  return <tr key={car.id} onClick={()=>router.push(`/showroom?s=${car.vin7||car.vin}`)} className="cursor-pointer transition-colors hover:bg-slate-50/80">
+                    <td className="px-5 py-4"><div className="text-sm font-semibold text-slate-800">{car.modelo||'Modelo sin definir'}</div><div className="mt-1 font-mono text-[10px] text-slate-400">{car.vin7||car.vin||'Sin bastidor'}{car.matricula? ` · ${car.matricula}`:''}</div></td>
+                    <td className="px-4 py-4 text-sm text-slate-600">{car.motor||'—'}</td>
+                    <td className="px-4 py-4"><div className="flex items-center gap-2 text-sm text-slate-600"><span className="h-3 w-3 rounded-full border border-slate-200" style={{backgroundColor:color?.hex||'#e5e7eb'}}/>{color?.name||car.colorExterior||'—'}</div></td>
+                    <td className="px-4 py-4"><Badge variant="outline" className="rounded-full border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-medium text-slate-600">{car.tipoLogistico||'Stock Expo'}</Badge>{car.entidadRenting&&<div className="mt-1 flex items-center gap-1 text-[10px] text-slate-400">{car.tipoLogistico==='Entrega Cliente'?<User className="h-3 w-3"/>:<Building2 className="h-3 w-3"/>}{car.entidadRenting}</div>}</td>
+                    <td className="px-4 py-4"><Badge className={`rounded-full border-0 px-2.5 py-1 text-[10px] font-medium ${car.ubicacion?.startsWith('P')?'bg-blue-50 text-[#00549a]':'bg-slate-100 text-slate-600'}`}>{car.ubicacion||'Sin ubicación'}</Badge></td>
+                    <td className="px-4 py-4 text-right text-sm tabular-nums text-slate-600">{days===null?'—':days}</td>
+                    <td className="px-5 py-4 text-right"><ArrowUpRight className="ml-auto h-4 w-4 text-slate-400"/></td>
+                  </tr>
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       </div>
     </div>
   );
