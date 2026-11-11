@@ -24,7 +24,8 @@ function parseRows(raw:string):Row[] {
 }
 export default function ImportLogisticsPage(){
  const db=useFirestore(); const {toast}=useToast(); const [raw,setRaw]=useState(""); const [busy,setBusy]=useState(false);
- const historyQuery=useMemo(()=>query(collection(db,"importacionesLogistica"),orderBy("fecha","desc"),limit(10)),[db]);\n const {data:historyRaw}=useCollection(historyQuery); const history=(historyRaw||[]) as any[];
+ const historyQuery=useMemo(()=>query(collection(db,"importacionesLogistica"),orderBy("fecha","desc"),limit(10)),[db]);
+ const {data:historyRaw}=useCollection(historyQuery); const history=(historyRaw||[]) as any[];
  const parsedRows=useMemo(()=>parseRows(raw),[raw]);
  const rows=useMemo(()=>Array.from(new Map(parsedRows.map(r=>[r.vin,r])).values()),[parsedRows]);
  const duplicateRows=parsedRows.length-rows.length;
