@@ -49,7 +49,6 @@ export default function ImportLogisticsPage(){
      return r.vin.length===17?full===r.vin:short===r.vin.slice(-7);
     });
     const marca=/^MINI\b/i.test(r.modelo.trim())?"MINI":"BMW";
-    const colorNorm=r.color.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
     const colorAliases:Array<[RegExp,string]>=[
      [/black sapphire/i,"475"],[/brooklyn grey/i,"C4P"],[/fire red/i,"C68"],[/skyscraper grey/i,"C4W"],
      [/dravit grey/i,"C36"],[/arctic race blue/i,"C4R"],[/portimao blue/i,"C31"],[/alpine white/i,"300"],
