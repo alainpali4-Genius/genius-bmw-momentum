@@ -28,7 +28,7 @@ export default function StockManagement() {
     exposicion: vehicles.filter(v => v.ubicacion?.startsWith('P')).length,
     terraza: vehicles.filter(v => v.ubicacion?.toLowerCase() === 'terraza').length,
     entreplanta: vehicles.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta').length,
-    lavadero: vehicles.filter(v => v.ubicacion?.toLowerCase() === 'lavadero').length,
+    demo: vehicles.filter(v => v.ubicacion === 'Demo en uso').length,
     entrega: vehicles.filter(v => v.ubicacion?.toLowerCase().includes('entrega')).length,
   }), [vehicles]);
 
