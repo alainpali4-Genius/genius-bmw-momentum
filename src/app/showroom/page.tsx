@@ -112,7 +112,10 @@ function ShowroomContent() {
   const [isStockSheetOpen, setIsStockSheetOpen] = useState(false);
 
   const [formData, setFormData] = useState({
-    modelo: "", vin: "", colorBMW: "300", ubicacion: "Stock", motor: "sDrive20i", bodyType: "SUV", estado: "Stock", tipoLogistico: "Stock Expo", entidadRenting: ""
+    marca: "BMW", modelo: "", vin: "", matricula: "", kilometraje: "", motor: "sDrive20i",
+    colorBMW: "300", tapiceria: "", llantas: "", equipamiento: "", bodyType: "SUV",
+    ubicacion: "Stock", estado: "Stock", tipoLogistico: "Stock Expo", entidadRenting: "",
+    precio: "", responsable: "", observaciones: ""
   });
 
   const vehiculos = useMemo(() => (vehiculosRaw || []) as any[], [vehiculosRaw]);
@@ -364,25 +367,47 @@ function ShowroomContent() {
       </Sheet>
 
       <Dialog open={isAddingNew} onOpenChange={setIsAddingNew}>
-        <DialogContent className="p-0 border-none rounded-3xl overflow-hidden max-w-[90vw] md:max-w-md shadow-2xl">
-          <div className="p-6 bg-secondary text-white font-black uppercase italic text-center text-sm">ALTA DE VEHÍCULO VN</div>
-          <div className="p-6 space-y-4 bg-white max-h-[80vh] overflow-y-auto">
-            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Modelo</Label><Input placeholder="EJ: BMW X5..." value={formData.modelo} onChange={e => setFormData({...formData, modelo: e.target.value})} className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
-            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Bastidor (VIN)</Label><Input placeholder="WBA..." value={formData.vin} onChange={e => setFormData({...formData, vin: e.target.value})} className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
-            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Tipo Logístico</Label><Select value={formData.tipoLogistico} onValueChange={v => setFormData({...formData, tipoLogistico: v})}><SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent>{TIPOS_LOGISTICOS.map(t => <SelectItem key={t} value={t} className="text-[9px] uppercase font-bold">{t}</SelectItem>)}</SelectContent></Select></div>
-            {(formData.tipoLogistico.includes('Renting') || formData.tipoLogistico === 'Entrega Cliente') && (
-              <div className="space-y-1">
-                <Label className="text-[8px] font-black uppercase text-slate-400">
-                  {formData.tipoLogistico === 'Entrega Cliente' ? 'Nombre del Cliente' : 'Empresa Renting'}
-                </Label>
-                <Input placeholder={formData.tipoLogistico === 'Entrega Cliente' ? "CLIENTE..." : "EMPRESA..."} value={formData.entidadRenting} onChange={e => setFormData({...formData, entidadRenting: e.target.value})} className="h-10 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" />
+        <DialogContent className="p-0 border-none rounded-3xl overflow-hidden max-w-[95vw] md:max-w-3xl shadow-2xl">
+          <div className="p-5 bg-secondary text-white font-black uppercase italic text-center text-base">Alta completa de vehículo</div>
+          <div className="p-5 md:p-6 space-y-5 bg-white max-h-[78vh] overflow-y-auto">
+            <section className="space-y-3">
+              <h3 className="text-xs font-black uppercase text-secondary border-b pb-2">1. Identificación</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1"><Label>Marca</Label><Select value={formData.marca} onValueChange={v=>setFormData({...formData,marca:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{["BMW","MINI"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1"><Label>Modelo / versión *</Label><Input placeholder="Ej. X2 sDrive18d" value={formData.modelo} onChange={e=>setFormData({...formData,modelo:e.target.value})}/></div>
+                <div className="space-y-1"><Label>Bastidor completo (VIN) *</Label><Input placeholder="17 caracteres" maxLength={17} value={formData.vin} onChange={e=>setFormData({...formData,vin:e.target.value.toUpperCase()})}/></div>
+                <div className="space-y-1"><Label>Matrícula</Label><Input value={formData.matricula} onChange={e=>setFormData({...formData,matricula:e.target.value.toUpperCase()})}/></div>
+                <div className="space-y-1"><Label>Motorización</Label><Input placeholder="Ej. xDrive20d" value={formData.motor} onChange={e=>setFormData({...formData,motor:e.target.value})}/></div>
+                <div className="space-y-1"><Label>Kilometraje</Label><Input type="number" min="0" value={formData.kilometraje} onChange={e=>setFormData({...formData,kilometraje:e.target.value})}/></div>
               </div>
-            )}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Color</Label><Select value={formData.colorBMW} onValueChange={v => setFormData({...formData, colorBMW: v})}><SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent className="max-h-[250px]">{BMW_COLORS.map(c => <SelectItem key={c.code} value={c.code} className="text-[9px]">{c.name}</SelectItem>)}</SelectContent></Select></div>
-              <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400">Carrocería</Label><Select value={formData.bodyType} onValueChange={v => setFormData({...formData, bodyType: v})}><SelectTrigger className="h-10 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent>{["SUV", "Berlina", "Coupe", "Roadster"].map(t => <SelectItem key={t} value={t} className="text-[9px]">{t}</SelectItem>)}</SelectContent></Select></div>
-            </div>
-            <Button onClick={handleQuickAdd} className="w-full h-12 bg-primary text-white font-black uppercase text-[10px] rounded-xl mt-2">REGISTRAR EN INVENTARIO</Button>
+            </section>
+            <section className="space-y-3">
+              <h3 className="text-xs font-black uppercase text-secondary border-b pb-2">2. Configuración y acabado</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1"><Label>Color exterior</Label><Select value={formData.colorBMW} onValueChange={v=>setFormData({...formData,colorBMW:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent className="max-h-64">{BMW_COLORS.map(c=><SelectItem key={c.code} value={c.code}>{c.code} · {c.name}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1"><Label>Carrocería</Label><Select value={formData.bodyType} onValueChange={v=>setFormData({...formData,bodyType:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{["SUV","Berlina","Coupe","Roadster","Touring","Compacto","Cabrio"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1"><Label>Tapicería / interior</Label><Input value={formData.tapiceria} onChange={e=>setFormData({...formData,tapiceria:e.target.value})}/></div>
+                <div className="space-y-1"><Label>Llantas</Label><Input value={formData.llantas} onChange={e=>setFormData({...formData,llantas:e.target.value})}/></div>
+                <div className="space-y-1 md:col-span-2"><Label>Equipamiento y paquetes</Label><Input value={formData.equipamiento} onChange={e=>setFormData({...formData,equipamiento:e.target.value})}/></div>
+              </div>
+            </section>
+            <section className="space-y-3">
+              <h3 className="text-xs font-black uppercase text-secondary border-b pb-2">3. Gestión comercial y logística</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1"><Label>Tipo logístico</Label><Select value={formData.tipoLogistico} onValueChange={v=>setFormData({...formData,tipoLogistico:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{TIPOS_LOGISTICOS.map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1"><Label>Estado</Label><Select value={formData.estado} onValueChange={v=>setFormData({...formData,estado:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{ESTADOS.map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1"><Label>Ubicación inicial</Label><Select value={formData.ubicacion} onValueChange={v=>setFormData({...formData,ubicacion:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{["Stock",...PLAZAS_LIST,...OTHER_LOCATIONS.filter(v=>v!=="Stock")].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1"><Label>Precio (€)</Label><Input type="number" min="0" value={formData.precio} onChange={e=>setFormData({...formData,precio:e.target.value})}/></div>
+                <div className="space-y-1"><Label>Responsable</Label><Input value={formData.responsable} onChange={e=>setFormData({...formData,responsable:e.target.value})}/></div>
+                {(formData.tipoLogistico.includes("Renting") || formData.tipoLogistico==="Entrega Cliente") && <div className="space-y-1"><Label>{formData.tipoLogistico==="Entrega Cliente"?"Nombre del cliente":"Empresa renting"}</Label><Input value={formData.entidadRenting} onChange={e=>setFormData({...formData,entidadRenting:e.target.value})}/></div>}
+              </div>
+            </section>
+            <section className="space-y-2">
+              <h3 className="text-xs font-black uppercase text-secondary border-b pb-2">4. Observaciones</h3>
+              <Input placeholder="Notas internas del vehículo..." value={formData.observaciones} onChange={e=>setFormData({...formData,observaciones:e.target.value})}/>
+            </section>
+            <p className="text-[10px] text-slate-400">* Campos obligatorios. El VIN7 se obtiene automáticamente de los últimos siete caracteres del bastidor.</p>
+            <Button onClick={handleQuickAdd} className="w-full h-12 bg-primary text-white font-black uppercase text-xs rounded-xl">Registrar vehículo en inventario</Button>
           </div>
         </DialogContent>
       </Dialog>
@@ -390,14 +415,19 @@ function ShowroomContent() {
   );
 
   async function handleQuickAdd() {
-    if (!formData.modelo || !formData.vin) return toast({ variant: "destructive", title: "Faltan datos" });
-    const vin7 = formData.vin.slice(-7).toUpperCase();
-    const payload = { ...formData, vin: formData.vin.toUpperCase(), vin7, colorCodigo: formData.colorBMW, colorExterior: BMW_COLORS.find(c => c.code === formData.colorBMW)?.name || "Alpine White", fechaEntrada: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    const vin = formData.vin.trim().toUpperCase();
+    if (!formData.modelo.trim() || !vin) return toast({ variant: "destructive", title: "Faltan datos", description: "Modelo y bastidor son obligatorios." });
+    if (vin.length !== 17) return toast({ variant: "destructive", title: "Bastidor no válido", description: "El VIN debe tener 17 caracteres." });
+    if (/[IOQ]/.test(vin)) return toast({ variant: "destructive", title: "Bastidor no válido", description: "El VIN no puede contener I, O ni Q." });
+    if (vehiculos.some(v => (v.vin || "").toUpperCase() === vin)) return toast({ variant: "destructive", title: "Vehículo duplicado", description: "Ya existe un vehículo con ese bastidor." });
+    const now = new Date().toISOString();
+    const vin7 = vin.slice(-7);
+    const payload = { ...formData, modelo: formData.modelo.trim(), vin, vin7, kilometraje: formData.kilometraje === "" ? null : Number(formData.kilometraje), precio: formData.precio === "" ? null : Number(formData.precio), colorCodigo: formData.colorBMW, colorExterior: BMW_COLORS.find(c => c.code === formData.colorBMW)?.name || "Alpine White", fechaEntrada: now.split('T')[0], createdAt: now, updatedAt: now };
     try {
       await addDoc(collection(db, "vehiculos"), payload);
       toast({ title: "Vehículo Registrado" });
       setIsAddingNew(false);
-      setFormData({ modelo: "", vin: "", colorBMW: "300", ubicacion: "Stock", motor: "sDrive20i", bodyType: "SUV", estado: "Stock", tipoLogistico: "Stock Expo", entidadRenting: "" });
+      setFormData({ marca: "BMW", modelo: "", vin: "", matricula: "", kilometraje: "", motor: "sDrive20i", colorBMW: "300", tapiceria: "", llantas: "", equipamiento: "", bodyType: "SUV", ubicacion: "Stock", estado: "Stock", tipoLogistico: "Stock Expo", entidadRenting: "", precio: "", responsable: "", observaciones: "" });
     } catch (e) {
       toast({ variant: "destructive", title: "Error al guardar" });
     }
