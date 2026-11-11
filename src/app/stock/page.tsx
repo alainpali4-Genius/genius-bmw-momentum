@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search, Plus, Loader2, Car, MapPin, ArrowUpRight, Building2, User, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { differenceInDays, parseISO, isValid } from "date-fns";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getVehicleColor, suggestedMotor } from "../showroom/page";
 
 type FilterType = 'all' | 'terraza' | 'entreplanta' | 'entrega' | 'exposicion' | 'demo';
@@ -17,10 +17,17 @@ type FilterType = 'all' | 'terraza' | 'entreplanta' | 'entrega' | 'exposicion' |
 export default function StockManagement() {
   const db = useFirestore();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const vehiclesQuery = useMemo(() => query(collection(db, "vehiculos"), orderBy("createdAt", "desc")), [db]);
   const { data: rawVehicles, loading } = useCollection(vehiclesQuery);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const requestedFilter = searchParams.get('filter') as FilterType | null;
+  const validFilters: FilterType[] = ['all','terraza','entreplanta','entrega','exposicion','demo'];
+  const [activeFilter, setActiveFilter] = useState<FilterType>(requestedFilter && validFilters.includes(requestedFilter) ? requestedFilter : 'all');
+  useEffect(() => {
+    const next = searchParams.get('filter') as FilterType | null;
+    setActiveFilter(next && validFilters.includes(next) ? next : 'all');
+  }, [searchParams]);
   const vehicles = (rawVehicles || []) as any[];
 
   const stats = useMemo(() => ({
