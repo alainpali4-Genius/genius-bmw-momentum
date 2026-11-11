@@ -10,7 +10,7 @@ import { useFirestore, useCollection } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { differenceInDays, parseISO, isValid } from "date-fns";
 import { useRouter } from "next/navigation";
-import { BMW_COLORS } from "../showroom/page";
+import { getVehicleColor, suggestedMotor } from "../showroom/page";
 
 type FilterType = 'all' | 'terraza' | 'entreplanta' | 'entrega' | 'exposicion' | 'demo';
 
@@ -85,12 +85,12 @@ export default function StockManagement() {
                 {loading ? <tr><td colSpan={7} className="px-5 py-14 text-center text-sm text-slate-400"><Loader2 className="mr-2 inline h-4 w-4 animate-spin"/> Cargando vehículos…</td></tr> :
                 filtered.length===0 ? <tr><td colSpan={7} className="px-5 py-14 text-center text-sm text-slate-400">No hay vehículos que coincidan con la búsqueda.</td></tr> :
                 filtered.map(car=>{
-                  const color=BMW_COLORS.find(c=>c.code===(car.colorCodigo||car.colorBMW));
+                  const color=getVehicleColor(car);
                   const parsed=car.fechaEntrada?parseISO(car.fechaEntrada):null;
                   const days=parsed&&isValid(parsed)?Math.max(0,differenceInDays(new Date(),parsed)):null;
                   return <tr key={car.id} onClick={()=>router.push(`/showroom?s=${car.vin7||car.vin}`)} className="cursor-pointer transition-colors hover:bg-slate-50/80">
                     <td className="px-5 py-4"><div className="text-sm font-semibold text-slate-800">{car.modelo||'Modelo sin definir'}</div><div className="mt-1 font-mono text-[10px] text-slate-400">{car.vin7||car.vin||'Sin bastidor'}{car.matricula? ` · ${car.matricula}`:''}</div></td>
-                    <td className="px-4 py-4 text-sm text-slate-600">{car.motor||'—'}</td>
+                    <td className="px-4 py-4 text-sm text-slate-600">{car.motor||suggestedMotor(car.modelo||"")||'—'}</td>
                     <td className="px-4 py-4"><div className="flex items-center gap-2 text-sm text-slate-600"><span className="h-3 w-3 rounded-full border border-slate-200" style={{backgroundColor:color?.hex||'#e5e7eb'}}/>{color?.name||car.colorExterior||'—'}</div></td>
                     <td className="px-4 py-4"><Badge variant="outline" className="rounded-full border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-medium text-slate-600">{car.tipoLogistico||'Stock Expo'}</Badge>{car.entidadRenting&&<div className="mt-1 flex items-center gap-1 text-[10px] text-slate-400">{car.tipoLogistico==='Entrega Cliente'?<User className="h-3 w-3"/>:<Building2 className="h-3 w-3"/>}{car.entidadRenting}</div>}</td>
                     <td className="px-4 py-4"><Badge className={`rounded-full border-0 px-2.5 py-1 text-[10px] font-medium ${car.ubicacion?.startsWith('P')?'bg-blue-50 text-[#00549a]':'bg-slate-100 text-slate-600'}`}>{car.ubicacion?.startsWith('P')?`Exposición · ${car.ubicacion}`:(car.ubicacion||'Sin ubicación')}</Badge>{car.ubicacion==='Demo en uso'&&<div className="mt-1 text-[10px] text-slate-400">Lo tiene: {car.demoAsignadoA||'Sin asignar'}</div>}</td>
