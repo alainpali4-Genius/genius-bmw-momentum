@@ -179,6 +179,7 @@ function ShowroomContent() {
   const db = useFirestore();
   const searchParams = useSearchParams();
   const router = useRouter();
+  const isStockOrigin = searchParams.get('returnTo') === '/stock';
   const { data: vehiculosRaw, loading } = useCollection(query(collection(db, "vehiculos"), orderBy("createdAt", "desc")));
   
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
@@ -369,6 +370,8 @@ function ShowroomContent() {
 
   return (
     <div className="flex flex-col h-screen w-full bg-[#f4f7fa] overflow-hidden">
+      {!isStockOrigin && (
+<> 
       {/* Cabecera optimizada */}
       <div className="bg-white border-b px-3 py-1.5 md:py-2 flex items-center justify-between shrink-0 shadow-sm z-40">
         <h1 className="text-[11px] md:text-xl font-black text-secondary uppercase italic leading-none tracking-tighter">PLANO <span className="text-primary not-italic">EXPO</span></h1>
@@ -387,6 +390,9 @@ function ShowroomContent() {
           </div>
         </div>
       </div>
+
+      </>
+      )}
 
       {/* Diálogos y Sheets */}
       <Sheet open={!!selectedVehicleId} onOpenChange={o => !o && handleCloseDetail()}>
