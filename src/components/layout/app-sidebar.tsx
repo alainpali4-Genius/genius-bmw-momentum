@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import {
-  LayoutDashboard, Grid3X3, Car, CalendarDays, Package,
+  LayoutDashboard, Grid3X3, Car, CalendarDays, Package, ClipboardPaste,
   History, Settings, ShieldAlert, LogOut, X
 } from "lucide-react"
 import {
@@ -19,6 +19,7 @@ import { BrandLogo } from "./brand-logo"
 const operations = [
   { title: "Inicio", url: "/", icon: LayoutDashboard },
   { title: "Stock", url: "/stock", icon: Car },
+  { title: "Importar correo BMW", url: "/import", icon: ClipboardPaste },
   { title: "Plano de exposición", url: "/showroom", icon: Grid3X3 },
   { title: "Entregas", url: "/delivery", icon: CalendarDays },
   { title: "Inventario", url: "/inventory", icon: Package },
