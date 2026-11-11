@@ -50,7 +50,13 @@ export default function ImportLogisticsPage(){
     });
     const marca=/^MINI\b/i.test(r.modelo.trim())?"MINI":"BMW";
     const colorNorm=r.color.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
-    const colorCode=colorNorm.includes("skyscraper grey")?"C4W":colorNorm.includes("black sapphire")?"475":colorNorm.includes("brooklyn grey")?"C4P":colorNorm.includes("dravit grey")?"C36":colorNorm.includes("fire red")?"C68":colorNorm.includes("alpine white")?"300":"";
+    const colorAliases:Array<[RegExp,string]>=[
+     [/black sapphire/i,"475"],[/brooklyn grey/i,"C4P"],[/fire red/i,"C68"],[/skyscraper grey/i,"C4W"],
+     [/dravit grey/i,"C36"],[/arctic race blue/i,"C4R"],[/portimao blue/i,"C31"],[/alpine white/i,"300"],
+     [/carbon black/i,"416"],[/sophisto grey/i,"A90"],[/black uni/i,"668"],[/mineral white/i,"A96"],
+     [/san remo green/i,"C6K"],[/isle of man green/i,"C6M"],[/vegas red/i,"C77"]
+    ];
+    const colorCode=colorAliases.find(([pattern])=>pattern.test(r.color))?.[1]||"";
     const fechaMatch=r.fecha.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
     const fechaEntrada=fechaMatch?`${fechaMatch[3].length===2?"20"+fechaMatch[3]:fechaMatch[3]}-${fechaMatch[2]}-${fechaMatch[1]}`:"";
     const clienteOriginal=r.cliente||"";
