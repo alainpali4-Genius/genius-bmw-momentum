@@ -88,7 +88,7 @@ export default function StockManagement() {
                   const color=getVehicleColor(car);
                   const parsed=car.fechaEntrada?parseISO(car.fechaEntrada):null;
                   const days=parsed&&isValid(parsed)?Math.max(0,differenceInDays(new Date(),parsed)):null;
-                  return <tr key={car.id} onClick={()=>router.push(`/showroom?s=${car.vin7||car.vin}`)} className="cursor-pointer transition-colors hover:bg-slate-50/80">
+                  return <tr key={car.id} onClick={()=>router.push(`/showroom?s=${encodeURIComponent(car.vin7||car.vin||"")}&returnTo=%2Fstock`)} className="cursor-pointer transition-colors hover:bg-slate-50/80">
                     <td className="px-5 py-4"><div className="text-sm font-semibold text-slate-800">{car.modelo||'Modelo sin definir'}</div><div className="mt-1 font-mono text-[10px] text-slate-400">{car.vin7||car.vin||'Sin bastidor'}{car.matricula? ` · ${car.matricula}`:''}</div></td>
                     <td className="px-4 py-4 text-sm text-slate-600">{(car.motor && car.motor.trim() !== "—" ? car.motor : suggestedMotor(car.modelo||""))||'—'}</td>
                     <td className="px-4 py-4"><div className="flex items-center gap-2 text-sm text-slate-600"><span className="h-3 w-3 shrink-0 rounded-full border border-slate-300 shadow-sm" style={{backgroundColor:color?.hex||'#e5e7eb'}}/><span>{color ? <><span className="font-medium">{color.name}</span>{!color.code.startsWith("GEN-") && <span className="ml-1.5 text-[10px] text-slate-400">({color.code})</span>}</> : car.colorExterior||'—'}</span></div></td>
