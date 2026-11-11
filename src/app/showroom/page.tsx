@@ -38,21 +38,21 @@ export const BMW_COLORS = [
 
 
 const MOTOR_BY_MODEL: Array<{ test: RegExp; motor: string }> = [
-  { test: /MINI\\s+ACEMAN\\s+SE/i, motor: "Eléctrico · SE · 160 kW (218 CV)" },
-  { test: /MINI\\s+COUNTRYMAN\\s+E\\b/i, motor: "Eléctrico · E · 150 kW (204 CV)" },
-  { test: /MINI\\s+COUNTRYMAN\\s+SE\\s+ALL4/i, motor: "Eléctrico · SE ALL4 · 230 kW (313 CV)" },
-  { test: /BMW\\s+M3\\s+COMPETITION\\s+M\\s+XDRIVE\\s+TOURING/i, motor: "Gasolina · 3.0 M TwinPower Turbo · 390 kW (530 CV) · M xDrive" },
-  { test: /BMW\\s+M3\\s+COMPETITION/i, motor: "Gasolina · 3.0 M TwinPower Turbo · 390 kW (530 CV)" },
-  { test: /BMW\\s+X1.*sDRIVE18d/i, motor: "Diésel · 2.0 · 110 kW (150 CV) · sDrive" },
-  { test: /BMW\\s+X1.*sDRIVE20d/i, motor: "Diésel · 2.0 · 120 kW (163 CV) · sDrive" },
-  { test: /BMW\\s+X1.*xDRIVE20d/i, motor: "Diésel · 2.0 · 120 kW (163 CV) · xDrive" },
-  { test: /BMW\\s+X1.*sDRIVE18i/i, motor: "Gasolina · 1.5 · 100 kW (136 CV) · sDrive" },
+  { test: /ACEMAN\s+SE/i, motor: "Eléctrico · SE · 160 kW (218 CV)" },
+  { test: /COUNTRYMAN\s+E\b/i, motor: "Eléctrico · E · 150 kW (204 CV)" },
+  { test: /COUNTRYMAN\s+SE\s+ALL4/i, motor: "Eléctrico · SE ALL4 · 230 kW (313 CV)" },
+  { test: /BMW\s+M3\s+COMPETITION\s+M\s+XDRIVE\s+TOURING/i, motor: "Gasolina · 3.0 M TwinPower Turbo · 390 kW (530 CV) · M xDrive" },
+  { test: /BMW\s+M3\s+COMPETITION/i, motor: "Gasolina · 3.0 M TwinPower Turbo · 390 kW (530 CV)" },
+  { test: /X1.*sDRIVE18d/i, motor: "Diésel · 2.0 · 110 kW (150 CV) · sDrive" },
+  { test: /X1.*sDRIVE20d/i, motor: "Diésel · 2.0 · 120 kW (163 CV) · sDrive" },
+  { test: /X1.*xDRIVE20d/i, motor: "Diésel · 2.0 · 120 kW (163 CV) · xDrive" },
+  { test: /X1.*sDRIVE18i/i, motor: "Gasolina · 1.5 · 100 kW (136 CV) · sDrive" },
 ];
 function suggestedMotor(model: string) {
   return MOTOR_BY_MODEL.find(item => item.test.test(model.trim()))?.motor || "";
 }
 function suggestedColor(model: string) {
-  const value = model.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+  const value = model.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   return BMW_COLORS.find(c => value.includes(c.name.toLowerCase().replace(" metallic", " metalizado")) || value.includes(c.name.toLowerCase())) || null;
 }
 
