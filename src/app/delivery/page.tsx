@@ -18,7 +18,8 @@ import {
   CheckCircle,
   Mail,
   RefreshCw,
-  ArrowDownCircle
+  ArrowDownCircle,
+  X
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -192,7 +193,10 @@ export default function DeliveryManagement() {
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 sm:p-7 space-y-4 bg-white">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Vehículo de Stock</Label>
-                  <Input value={vehicleSearch} onChange={e => { setVehicleSearch(e.target.value); setVehicleSelectOpen(true); }} className="h-11 bg-white border-slate-200 rounded-xl text-xs" placeholder="Buscar por bastidor, VIN, matrícula o modelo…" />
+                  <div className="relative">
+  <Input value={vehicleSearch} onChange={e => { setVehicleSearch(e.target.value); setVehicleSelectOpen(true); }} className="h-11 bg-white border-slate-200 rounded-xl text-xs pr-10" placeholder="Buscar por bastidor, VIN, matrícula o modelo…" />
+  {vehicleSearch && <Button type="button" variant="ghost" size="icon" aria-label="Limpiar búsqueda" onClick={() => { setVehicleSearch(""); setVehicleSelectOpen(true); }} className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-slate-400 hover:text-slate-700"><X className="h-4 w-4" /></Button>}
+</div>
                   <Select open={vehicleSelectOpen} onOpenChange={setVehicleSelectOpen} value={formData.vehiculoId} onValueChange={(v) => {
                       const selectedVehicle = vehiculos.find(vehicle => vehicle.id === v);
                       const correoCliente = String(selectedVehicle?.clienteLogistica || selectedVehicle?.destinoLogistico || "").trim();
@@ -201,8 +205,8 @@ export default function DeliveryManagement() {
                       setFormData(prev => ({
                         ...prev,
                         vehiculoId: v,
-                        cliente: clienteReal || prev.cliente,
-                        matricula: selectedVehicle?.matricula || prev.matricula
+                        cliente: clienteReal,
+                        matricula: selectedVehicle?.matricula || ""
                       }));
                       setVehicleSearch("");
                       setVehicleSelectOpen(false);
