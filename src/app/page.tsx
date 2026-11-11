@@ -1,192 +1,146 @@
-
 'use client';
 
 import { useMemo, useState } from "react";
-import { 
-  Package, Grid3X3, Car, CalendarCheck, Clock, Search, Scan, Trash2, Building2, User
-} from "lucide-react";
+import { Car, MapPin, Package, CalendarCheck, Clock3, Search, ArrowUpRight, Plus, RefreshCw } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFirestore, useCollection } from "@/firebase";
-import { collection, query, orderBy, doc, deleteDoc } from "firebase/firestore";
-import { cn } from "@/lib/utils";
+import { collection, query, orderBy } from "firebase/firestore";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { BMW_COLORS } from "./showroom/page";
-
-type LocationFilter = 'ALL' | 'EXPO' | 'TERRAZA' | 'ENTREPLANTA' | 'LAVADERO' | 'ENTREGA' | 'STOCK';
 
 export default function GeniusDashboard() {
   const db = useFirestore();
   const router = useRouter();
-  const { data: vehiculosRaw, loading } = useCollection(query(collection(db, "vehiculos"), orderBy("createdAt", "desc")));
-  const vehiculos = (vehiculosRaw || []) as any[];
-  
-  const [fastSearch, setFastSearch] = useState("");
-  const [activeLocation, setActiveLocation] = useState<LocationFilter>('ALL');
+  const [search, setSearch] = useState("");
+  const vehiclesQuery = useMemo(() => query(collection(db, "vehiculos"), orderBy("createdAt", "desc")), [db]);
+  const { data: rawVehicles, loading } = useCollection(vehiclesQuery);
+  const vehicles = (rawVehicles || []) as any[];
 
-  const filteredStock = useMemo(() => {
-    let list = vehiculos;
-    if (activeLocation === 'EXPO') list = list.filter(v => v.ubicacion?.startsWith('P'));
-    else if (activeLocation === 'TERRAZA') list = list.filter(v => v.ubicacion?.toLowerCase() === 'terraza');
-    else if (activeLocation === 'ENTREPLANTA') list = list.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta');
-    else if (activeLocation === 'LAVADERO') list = list.filter(v => v.ubicacion?.toLowerCase() === 'lavadero');
-    else if (activeLocation === 'ENTREGA') list = list.filter(v => v.ubicacion?.toLowerCase().includes('entrega'));
-    else if (activeLocation === 'STOCK') list = list.filter(v => v.ubicacion?.toLowerCase() === 'stock');
+  const stats = useMemo(() => ({
+    total: vehicles.length,
+    expo: vehicles.filter(v => v.ubicacion?.startsWith("P")).length,
+    stock: vehicles.filter(v => ["stock", "terraza", "entreplanta", "lavadero"].includes((v.ubicacion || "").toLowerCase())).length,
+    reserved: vehicles.filter(v => v.estado === "Reservado").length,
+    prep: vehicles.filter(v => v.estado === "Preparacion Entrega" || v.estado === "Preparación Entrega").length,
+  }), [vehicles]);
 
-    if (fastSearch) {
-      const s = fastSearch.toLowerCase();
-      list = list.filter(v => 
-        v.modelo?.toLowerCase().includes(s) || 
-        v.vin?.toLowerCase().includes(s) || 
-        v.vin7?.toLowerCase().includes(s) ||
-        v.entidadRenting?.toLowerCase().includes(s)
-      );
-    }
-    return list;
-  }, [vehiculos, activeLocation, fastSearch]);
-
-  const stats = useMemo(() => {
-    const total = vehiculos.length;
-    const expo = vehiculos.filter(v => v.ubicacion?.startsWith('P')).length;
-    const demo = vehiculos.filter(v => v.tipoLogistico === 'Demo' || v.estado === 'Demo').length;
-    const reserved = vehiculos.filter(v => v.estado === 'Reservado').length;
-    const prep = vehiculos.filter(v => v.estado === 'Preparacion Entrega').length;
-    return { total, expo, demo, reserved, prep };
-  }, [vehiculos]);
+  const filtered = useMemo(() => {
+    const s = search.trim().toLowerCase();
+    if (!s) return vehicles.slice(0, 8);
+    return vehicles.filter(v =>
+      [v.modelo, v.vin, v.vin7, v.matricula, v.entidadRenting].some(x => String(x || "").toLowerCase().includes(s))
+    ).slice(0, 8);
+  }, [vehicles, search]);
 
   const kpis = [
-    { label: "TOTAL", value: stats.total, icon: Package, color: "text-[#00AEEF]" },
-    { label: "EXPO", value: stats.expo, icon: Grid3X3, color: "text-[#003399]" },
-    { label: "DEMO", value: stats.demo, icon: Car, color: "text-[#003399]" },
-    { label: "RESERV", value: stats.reserved, icon: CalendarCheck, color: "text-[#ED1C24]" },
-    { label: "PREP", value: stats.prep, icon: Clock, color: "text-[#ED1C24]" },
+    { label: "Vehículos totales", value: stats.total, icon: Car, note: "Unidades registradas" },
+    { label: "En exposición", value: stats.expo, icon: MapPin, note: "Plazas de showroom" },
+    { label: "En stock", value: stats.stock, icon: Package, note: "Zonas logísticas" },
+    { label: "Reservados", value: stats.reserved, icon: CalendarCheck, note: "Pendientes de gestión" },
   ];
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-[#f4f7fa]">
-      <div className="p-1.5 md:p-3 space-y-1.5 shrink-0">
-        <div className="bg-[#003399] rounded-lg p-2 md:p-3 text-white shadow-md">
-          <div className="flex items-center justify-between gap-2">
-            <h1 className="text-base md:text-xl font-black italic tracking-tighter leading-none shrink-0">
-              MOMENTUM <span className="text-white not-italic">VN</span>
-            </h1>
-            <div className="flex gap-1.5 w-full max-w-[400px]">
-              <div className="relative flex-1">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-white/40" />
-                <Input 
-                  className="h-8 bg-white/10 border-none rounded-md text-[9px] font-black uppercase placeholder:text-white/20 pl-8 text-white" 
-                  placeholder="BUSCAR VIN7, MODELO O CLIENTE..."
-                  value={fastSearch}
-                  onChange={(e) => setFastSearch(e.target.value)}
-                />
-              </div>
-              <Button onClick={() => router.push(`/showroom?s=${fastSearch}`)} className="h-8 w-8 rounded-md bg-[#ED1C24] hover:bg-red-700 p-0 border-none shrink-0">
-                <Scan className="h-4 w-4 text-white" />
-              </Button>
-            </div>
+    <div className="h-full overflow-y-auto bg-slate-50">
+      <div className="mx-auto max-w-[1600px] space-y-6 px-5 py-7 md:px-8 md:py-9">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0066b3]">Momentum Navarra · Gestión VN</p>
+            <h1 className="text-3xl font-semibold tracking-tight text-slate-900 md:text-[34px]">Panel de control</h1>
+            <p className="mt-1.5 text-sm text-slate-500">Resumen de vehículos, exposición y operativa del concesionario.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" className="h-10 rounded-lg border-slate-200 bg-white text-slate-700" onClick={() => router.refresh()}>
+              <RefreshCw className="mr-2 h-4 w-4" /> Actualizar
+            </Button>
+            <Button className="h-10 rounded-lg bg-[#0066b3] px-4 text-white hover:bg-[#00549a]" onClick={() => router.push("/showroom?add=true")}>
+              <Plus className="mr-2 h-4 w-4" /> Añadir vehículo
+            </Button>
           </div>
         </div>
-        <div className="flex gap-1 overflow-x-auto pb-0.5 scrollbar-none">
-          {kpis.map((kpi) => (
-            <Card key={kpi.label} className="min-w-[75px] md:min-w-0 flex-1 h-12 bg-white border-none shadow-sm rounded-md">
-              <CardContent className="p-1.5 px-2.5 h-full flex flex-col justify-center">
-                <p className="text-[6px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{kpi.label}</p>
-                <div className="flex justify-between items-center">
-                  <p className="text-xs md:text-sm font-black text-slate-800 leading-none">{kpi.value}</p>
-                  <kpi.icon className={cn("w-2.5 h-2.5 opacity-20", kpi.color)} />
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {kpis.map((item, index) => (
+            <Card key={item.label} className="rounded-xl border-slate-200/80 bg-white shadow-sm">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-slate-500">{item.label}</p>
+                    <p className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">{loading ? "—" : item.value}</p>
+                    <p className="mt-1 text-xs text-slate-400">{item.note}</p>
+                  </div>
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${index === 1 ? "bg-blue-50 text-[#0066b3]" : "bg-slate-100 text-slate-600"}`}>
+                    <item.icon className="h-5 w-5" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
           ))}
         </div>
-      </div>
 
-      <div className="flex-1 px-1.5 md:px-3 pb-2 overflow-hidden flex flex-col">
-        <div className="bg-white rounded-lg shadow-sm border-none flex-1 overflow-hidden flex flex-col">
-          <div className="p-1.5 md:p-2 border-b shrink-0 flex items-center justify-between">
-            <Tabs value={activeLocation} onValueChange={(v: any) => setActiveLocation(v)}>
-              <TabsList className="bg-slate-50 p-0.5 rounded-md h-7">
-                <TabsTrigger value="ALL" className="text-[7px] font-black uppercase px-2 h-6">STOCK</TabsTrigger>
-                <TabsTrigger value="EXPO" className="text-[7px] font-black uppercase px-2 h-6">EXPO</TabsTrigger>
-                <TabsTrigger value="TERRAZA" className="text-[7px] font-black uppercase px-2 h-6">TERRAZA</TabsTrigger>
-                <TabsTrigger value="ENTREPLANTA" className="text-[7px] font-black uppercase px-2 h-6">PLANTA</TabsTrigger>
-                <TabsTrigger value="LAVADERO" className="text-[7px] font-black uppercase px-2 h-6">LAVADO</TabsTrigger>
-                <TabsTrigger value="ENTREGA" className="text-[7px] font-black uppercase px-2 h-6">ENTREGA</TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <Badge variant="outline" className="text-[7px] font-black px-1.5 py-0.5 rounded-sm bg-slate-50 border-none">
-              {filteredStock.length} U
-            </Badge>
-          </div>
-          <div className="flex-1 overflow-y-auto p-1.5 md:p-2 space-y-1 scrollbar-none">
-            {loading ? (
-              <div className="flex justify-center py-10"><Clock className="animate-spin text-slate-200 h-5 w-5" /></div>
-            ) : filteredStock.length === 0 ? (
-              <div className="text-center py-20 text-[8px] font-black uppercase text-slate-300 tracking-widest italic">Sin unidades</div>
-            ) : (
-              filteredStock.map((car) => {
-                const colorObj = BMW_COLORS.find(c => c.code === (car.colorCodigo || car.colorBMW));
-                const isRenting = car.tipoLogistico?.includes('Renting');
-                const isDemo = car.tipoLogistico === 'Demo';
-                const isParticular = car.tipoLogistico === 'Entrega Cliente';
-                return (
-                  <Card key={car.id} onClick={() => router.push(`/showroom?s=${car.vin7}`)} className="border border-slate-50 bg-white hover:border-primary/20 transition-all rounded-md shadow-sm overflow-hidden active:scale-[0.99] group cursor-pointer">
-                    <CardContent className="p-2 flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2 flex-1 min-w-0">
-                        <div className="h-7 w-7 bg-slate-50 rounded flex items-center justify-center shrink-0">
-                          <Car className="h-3.5 w-3.5 text-slate-300 group-hover:text-primary" />
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-black text-[9px] uppercase text-secondary leading-none truncate">{car.modelo}</h4>
-                            {car.tipoLogistico && (
-                              <Badge className={cn(
-                                "text-[6px] font-black uppercase px-1 py-0 rounded-sm border-none leading-none h-3",
-                                isRenting ? "bg-blue-100 text-blue-700" :
-                                isDemo ? "bg-orange-100 text-orange-700" :
-                                isParticular ? "bg-emerald-100 text-emerald-700" :
-                                "bg-slate-100 text-slate-500"
-                              )}>
-                                {car.tipoLogistico === 'Entrega Renting' ? 'RENTING' : 
-                                 car.tipoLogistico === 'Entrega Cliente' ? 'PARTICULAR' :
-                                 car.tipoLogistico === 'Devolucion Renting' ? 'DEVOL. RENTING' :
-                                 car.tipoLogistico}
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="font-mono text-[7px] font-bold text-slate-400">{car.vin7}</span>
-                            {car.entidadRenting && (
-                              <div className="flex items-center gap-1 text-[6px] font-black text-blue-600 uppercase">
-                                {isParticular ? <User className="w-2 h-2" /> : <Building2 className="w-2 h-2" />}
-                                <span className="truncate max-w-[80px]">{car.entidadRenting}</span>
-                              </div>
-                            )}
-                            <div className="flex items-center gap-1">
-                              <div className="w-1.5 h-1.5 rounded-full border border-slate-200" style={{ backgroundColor: colorObj?.hex || '#F5F5F5' }} />
-                              <span className="text-[6px] font-black text-slate-400 uppercase truncate">{colorObj?.name.split(' ')[0]}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <Badge className={cn("text-[6px] font-black uppercase px-1 py-0.5 border-none rounded-md", 
-                          car.ubicacion?.startsWith('P') ? "bg-primary text-white" : "bg-slate-100 text-secondary"
-                        )}>
-                          {car.ubicacion}
-                        </Badge>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 rounded-md text-slate-200 hover:text-red-600 hover:bg-red-50" onClick={(e) => { e.stopPropagation(); if(confirm("¿Eliminar?")) deleteDoc(doc(db, "vehiculos", car.id)); }}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })
-            )}
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1.65fr)_minmax(300px,1fr)]">
+          <Card className="overflow-hidden rounded-xl border-slate-200/80 bg-white shadow-sm">
+            <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-base font-semibold text-slate-900">Vehículos</h2>
+                <p className="mt-1 text-xs text-slate-500">{vehicles.length} unidades registradas</p>
+              </div>
+              <div className="relative w-full sm:max-w-[280px]">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar modelo, VIN o matrícula" className="h-9 rounded-lg border-slate-200 pl-9 text-sm" />
+              </div>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[620px] text-left">
+                <thead className="bg-slate-50/80">
+                  <tr className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                    <th className="px-5 py-3">Vehículo</th><th className="px-4 py-3">Motor</th><th className="px-4 py-3">Color</th><th className="px-4 py-3">Ubicación</th><th className="px-4 py-3">Estado</th><th className="px-5 py-3"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {loading ? <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-slate-400">Cargando vehículos…</td></tr> :
+                  filtered.length === 0 ? <tr><td colSpan={6} className="px-5 py-12 text-center text-sm text-slate-400">No se han encontrado vehículos.</td></tr> :
+                  filtered.map(car => {
+                    const color = BMW_COLORS.find(c => c.code === (car.colorCodigo || car.colorBMW));
+                    return <tr key={car.id} onClick={() => router.push(`/showroom?s=${car.vin7 || car.vin}`)} className="cursor-pointer transition-colors hover:bg-slate-50/80">
+                      <td className="px-5 py-4"><div className="font-medium text-sm text-slate-800">{car.modelo || "Modelo sin definir"}</div><div className="mt-1 font-mono text-[10px] text-slate-400">{car.vin7 || car.vin || "Sin VIN"}</div></td>
+                      <td className="px-4 py-4 text-sm text-slate-600">{car.motor || "—"}</td>
+                      <td className="px-4 py-4"><div className="flex items-center gap-2 text-sm text-slate-600"><span className="h-3 w-3 rounded-full border border-slate-200" style={{backgroundColor: color?.hex || "#e5e7eb"}} />{color?.name || car.color || "—"}</div></td>
+                      <td className="px-4 py-4 text-sm text-slate-600">{car.ubicacion || "Sin ubicación"}</td>
+                      <td className="px-4 py-4"><Badge variant="outline" className="rounded-full border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-medium text-slate-600">{car.estado || "Disponible"}</Badge></td>
+                      <td className="px-5 py-4 text-right"><ArrowUpRight className="ml-auto h-4 w-4 text-slate-400" /></td>
+                    </tr>
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <div className="flex justify-end border-t border-slate-100 p-3">
+              <Button asChild variant="ghost" className="h-9 text-sm font-medium text-[#0066b3] hover:bg-blue-50"><Link href="/stock">Ver todo el stock <ArrowUpRight className="ml-2 h-4 w-4" /></Link></Button>
+            </div>
+          </Card>
+
+          <div className="space-y-5">
+            <Card className="rounded-xl border-slate-200/80 bg-white shadow-sm">
+              <CardContent className="p-5">
+                <div className="mb-4 flex items-center justify-between"><h2 className="text-base font-semibold text-slate-900">Accesos rápidos</h2><span className="text-xs text-slate-400">Operativa</span></div>
+                <div className="space-y-2">
+                  <Link href="/showroom" className="flex items-center justify-between rounded-lg border border-slate-100 p-3 transition-colors hover:border-blue-100 hover:bg-blue-50/50"><span className="flex items-center gap-3 text-sm font-medium text-slate-700"><MapPin className="h-4 w-4 text-[#0066b3]"/> Plano de exposición</span><ArrowUpRight className="h-4 w-4 text-slate-400"/></Link>
+                  <Link href="/delivery" className="flex items-center justify-between rounded-lg border border-slate-100 p-3 transition-colors hover:border-blue-100 hover:bg-blue-50/50"><span className="flex items-center gap-3 text-sm font-medium text-slate-700"><CalendarCheck className="h-4 w-4 text-[#0066b3]"/> Gestión de entregas</span><ArrowUpRight className="h-4 w-4 text-slate-400"/></Link>
+                  <Link href="/inventory" className="flex items-center justify-between rounded-lg border border-slate-100 p-3 transition-colors hover:border-blue-100 hover:bg-blue-50/50"><span className="flex items-center gap-3 text-sm font-medium text-slate-700"><Package className="h-4 w-4 text-[#0066b3]"/> Movimientos de inventario</span><ArrowUpRight className="h-4 w-4 text-slate-400"/></Link>
+                </div>
+              </CardContent>
+            </Card>
+            <Card className="rounded-xl border-slate-200/80 bg-white shadow-sm">
+              <CardContent className="p-5">
+                <h2 className="text-base font-semibold text-slate-900">Pendientes de gestión</h2>
+                <p className="mt-1 text-xs text-slate-500">Vehículos que requieren seguimiento.</p>
+                <div className="mt-5 flex items-center justify-between border-b border-slate-100 pb-3"><span className="flex items-center gap-2 text-sm text-slate-600"><CalendarCheck className="h-4 w-4 text-amber-500"/> Reservados</span><strong className="text-lg font-semibold text-slate-900">{stats.reserved}</strong></div>
+                <div className="flex items-center justify-between pt-3"><span className="flex items-center gap-2 text-sm text-slate-600"><Clock3 className="h-4 w-4 text-blue-500"/> Preparación entrega</span><strong className="text-lg font-semibold text-slate-900">{stats.prep}</strong></div>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
