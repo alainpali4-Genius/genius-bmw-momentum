@@ -209,9 +209,16 @@ function ShowroomContent() {
 
   const handleCloseDetail = () => {
     setSelectedVehicleId(null);
+    const returnTo = searchParams.get('returnTo');
+    // Volver al listado que abrió la ficha, manteniendo el contexto de navegación.
+    if (returnTo === '/stock') {
+      router.replace('/stock', { scroll: false });
+      return;
+    }
     const params = new URLSearchParams(searchParams.toString());
     params.delete('s');
     params.delete('add');
+    params.delete('returnTo');
     router.replace(`/showroom${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
   };
 
