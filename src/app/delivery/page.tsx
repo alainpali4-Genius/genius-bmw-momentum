@@ -60,19 +60,15 @@ export default function DeliveryManagement() {
     cliente: "",
     fecha: "",
     hora: "10:00",
+    matricula: "",
+    fechaPreentrega: "",
+    fechaMatriculacion: "",
+    zonaEntrega: "",
     asesor: "",
     actaEnviada: false,
     recogidaRenting: false,
     recogidaRentingInfo: ""
   });
-
-  // Evitar errores de hidratación inicializando la fecha en el cliente
-  useEffect(() => {
-    setFormData(prev => ({
-      ...prev,
-      fecha: format(new Date(), "yyyy-MM-dd")
-    }));
-  }, []);
 
   const entregas = (entregasRaw || []) as any[];
   const vehiculos = (vehiculosRaw || []) as any[];
@@ -128,7 +124,7 @@ export default function DeliveryManagement() {
 
       setIsAdding(false);
       setFormData({
-        vehiculoId: "", cliente: "", fecha: format(new Date(), "yyyy-MM-dd"), hora: "10:00",
+        vehiculoId: "", cliente: "", fecha: "", hora: "10:00", matricula: "", fechaPreentrega: "", fechaMatriculacion: "", zonaEntrega: "",
         asesor: "", actaEnviada: false, recogidaRenting: false, recogidaRentingInfo: ""
       });
       toast({ title: "Entrega Programada", description: "Se ha registrado correctamente." });
@@ -218,6 +214,26 @@ export default function DeliveryManagement() {
                   <div className="space-y-2">
                     <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Hora</Label>
                     <Input type="time" value={formData.hora} onChange={e => setFormData({...formData, hora: e.target.value})} className="h-12 bg-slate-50 border-none rounded-xl font-bold uppercase text-xs" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Matrícula</Label>
+                    <Input value={formData.matricula} onChange={e => setFormData({...formData, matricula: e.target.value.toUpperCase()})} className="h-12 bg-slate-50 border-none rounded-xl font-bold text-xs" placeholder="1234 ABC" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Zona de entrega</Label>
+                    <Input value={formData.zonaEntrega} onChange={e => setFormData({...formData, zonaEntrega: e.target.value})} className="h-12 bg-slate-50 border-none rounded-xl font-bold text-xs" placeholder="ZONA ENTREGA" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Fecha envío preentrega</Label>
+                    <Input type="date" value={formData.fechaPreentrega} onChange={e => setFormData({...formData, fechaPreentrega: e.target.value})} className="h-12 bg-slate-50 border-none rounded-xl font-bold text-xs" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Fecha matriculación</Label>
+                    <Input type="date" value={formData.fechaMatriculacion} onChange={e => setFormData({...formData, fechaMatriculacion: e.target.value})} className="h-12 bg-slate-50 border-none rounded-xl font-bold text-xs" />
                   </div>
                 </div>
                 <div className="space-y-2">
