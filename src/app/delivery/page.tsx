@@ -197,7 +197,7 @@ export default function DeliveryManagement() {
                       const selectedVehicle = vehiculos.find(vehicle => vehicle.id === v);
                       const correoCliente = String(selectedVehicle?.clienteLogistica || selectedVehicle?.destinoLogistico || "").trim();
                       const categoriasInternas = ["STOCK EXPOSICION", "STOCK EXPOSICIÓN", "DEMO", "TNR", "YUC"];
-                      const clienteReal = correoCliente && !categoriasInternas.includes(correoCliente.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toUpperCase()) ? correoCliente : "";
+                      const clienteReal = correoCliente && !categoriasInternas.includes(correoCliente.toUpperCase()) ? correoCliente : "";
                       setFormData(prev => ({
                         ...prev,
                         vehiculoId: v,
