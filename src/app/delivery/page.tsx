@@ -187,9 +187,9 @@ export default function DeliveryManagement() {
                 <Plus className="w-4 h-4 mr-2" /> Programar Entrega
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md p-0 overflow-hidden border-none rounded-[2rem] shadow-2xl">
+            <DialogContent className="w-[calc(100vw-1.5rem)] max-w-md max-h-[90dvh] p-0 flex flex-col overflow-hidden border-none rounded-2xl shadow-2xl">
               <div className="p-6 bg-primary text-white"><h2 className="text-lg font-black uppercase italic">NUEVA ENTREGA</h2></div>
-              <div className="p-8 space-y-5 bg-white">
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 sm:p-7 space-y-4 bg-white">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Vehículo de Stock</Label>
                   <Input value={vehicleSearch} onChange={e => setVehicleSearch(e.target.value)} className="h-11 bg-white border-slate-200 rounded-xl text-xs" placeholder="Buscar por bastidor, VIN, matrícula o modelo…" />
