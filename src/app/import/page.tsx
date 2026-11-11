@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo, useState } from "react";
-import { collection, getDocs, writeBatch, doc } from "firebase/firestore";
-import { useFirestore } from "@/firebase";
+import { collection, getDocs, writeBatch, doc, query, orderBy, limit } from "firebase/firestore";
+import { useFirestore, useCollection } from "@/firebase";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,7 +23,7 @@ function parseRows(raw:string):Row[] {
  return lines.slice(1).map(line=>{const cells=split(line);const get=(k:keyof typeof ix)=>ix[k]>=0?(cells[ix[k]]||"").trim():"";return {transporte:get("transporte"),fecha:get("fecha"),llegada:get("llegada"),vin:get("vin").replace(/\s/g,"").toUpperCase(),matricula:get("matricula"),comision:get("comision"),vendedor:get("vendedor"),cliente:get("cliente"),modelo:get("modelo"),color:get("color")};}).filter(r=>r.vin&&r.modelo);
 }
 export default function ImportLogisticsPage(){
- const db=useFirestore(); const {toast}=useToast(); const [raw,setRaw]=useState(""); const [busy,setBusy]=useState(false);
+ const db=useFirestore(); const {toast}=useToast(); const [raw,setRaw]=useState(""); const [busy,setBusy]=useState(false);\n const historyQuery=useMemo(()=>query(collection(db,"importacionesLogistica"),orderBy("fecha","desc"),limit(10)),[db]);\n const {data:historyRaw}=useCollection(historyQuery); const history=(historyRaw||[]) as any[];
  const parsedRows=useMemo(()=>parseRows(raw),[raw]);
  const rows=useMemo(()=>Array.from(new Map(parsedRows.map(r=>[r.vin,r])).values()),[parsedRows]);
  const duplicateRows=parsedRows.length-rows.length;
