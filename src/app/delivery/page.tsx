@@ -51,6 +51,7 @@ export default function DeliveryManagement() {
   const [isAdding, setIsAdding] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [vehicleSearch, setVehicleSearch] = useState("");
+  const [vehicleSelectOpen, setVehicleSelectOpen] = useState(false);
 
   const { data: vehiculosRaw } = useCollection(query(collection(db, "vehiculos"), orderBy("modelo", "asc")));
   const entregasQuery = useMemo(() => query(collection(db, "entregas"), orderBy("fecha", "desc")), [db]);
@@ -85,10 +86,9 @@ export default function DeliveryManagement() {
     }
 
     if (searchTerm) {
-      const s = searchTerm.toLowerCase();
+      const s = searchTerm.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       list = list.filter(d => 
-        d.cliente?.toLowerCase().includes(s) ||
-        d.vehiculoInfo?.toLowerCase().includes(s)
+        [d.cliente, d.vehiculoInfo, d.matricula, d.asesor, d.vin].some(value => String(value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(s))
       );
     }
     return list;
@@ -192,8 +192,8 @@ export default function DeliveryManagement() {
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-5 sm:p-7 space-y-4 bg-white">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase text-slate-400 tracking-widest px-1">Vehículo de Stock</Label>
-                  <Input value={vehicleSearch} onChange={e => setVehicleSearch(e.target.value)} className="h-11 bg-white border-slate-200 rounded-xl text-xs" placeholder="Buscar por bastidor, VIN, matrícula o modelo…" />
-                  <Select value={formData.vehiculoId} onValueChange={(v) => {
+                  <Input value={vehicleSearch} onChange={e => { setVehicleSearch(e.target.value); setVehicleSelectOpen(true); }} className="h-11 bg-white border-slate-200 rounded-xl text-xs" placeholder="Buscar por bastidor, VIN, matrícula o modelo…" />
+                  <Select open={vehicleSelectOpen} onOpenChange={setVehicleSelectOpen} value={formData.vehiculoId} onValueChange={(v) => {
                       const selectedVehicle = vehiculos.find(vehicle => vehicle.id === v);
                       const correoCliente = String(selectedVehicle?.clienteLogistica || selectedVehicle?.destinoLogistico || "").trim();
                       const categoriasInternas = ["STOCK EXPOSICION", "STOCK EXPOSICIÓN", "DEMO", "TNR", "YUC"];
@@ -205,6 +205,7 @@ export default function DeliveryManagement() {
                         matricula: selectedVehicle?.matricula || prev.matricula
                       }));
                       setVehicleSearch("");
+                      setVehicleSelectOpen(false);
                     }}>
 
                     <SelectTrigger className="h-12 bg-slate-50 border-none rounded-xl font-bold text-xs uppercase">
@@ -213,9 +214,9 @@ export default function DeliveryManagement() {
                     <SelectContent className="rounded-xl border-none shadow-2xl">
                       {vehiculos.filter(v => {
                         if (v.estado === "Entregado") return false;
-                        const term = vehicleSearch.trim().toLowerCase().replace(/\s/g, "");
+                        const term = vehicleSearch.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, "");
                         if (!term) return true;
-                        const haystack = [v.vin, v.vin7, v.matricula, v.modelo, v.version].filter(Boolean).join(" ").toLowerCase();
+                        const haystack = [v.vin, v.vin7, v.matricula, v.modelo, v.version].filter(Boolean).join(" ").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                         return haystack.includes(vehicleSearch.trim().toLowerCase()) || haystack.replace(/\s/g, "").includes(term);
                       }).map(v => (
                         <SelectItem key={v.id} value={v.id}>{v.modelo} · {v.vin7 || v.vin?.slice(-7)}{v.matricula ? ` · ${v.matricula}` : ""}</SelectItem>
