@@ -408,7 +408,6 @@ function ShowroomContent() {
                 </div>
               </div>
               <div className="col-span-12 row-start-5 -z-0 pointer-events-none"/>
-              <div className="col-span-12 row-start-7 flex items-center justify-center rounded-lg bg-slate-100 text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">Zona posterior · plataformas de exposición</div>
             </div>
             <div className="mt-3 flex items-center justify-between rounded-lg bg-[#172f50] px-4 py-2 text-[10px] font-bold uppercase tracking-[0.18em] text-white"><span>Entrada showroom</span><span>Momentum BMW · MINI</span></div>
           </div>
