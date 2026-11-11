@@ -46,7 +46,7 @@ export const TIPOS_LOGISTICOS = [
 
 const ESTADOS = ["Exposicion", "Stock", "Demo", "Reservado", "Preparacion Entrega", "Entregado", "Cedido"];
 const PLAZAS_LIST = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12", "P13", "P14", "P15"];
-const OTHER_LOCATIONS = ["Stock", "Terraza", "Entreplanta", "Lavadero", "Zona Entrega", "Taller", "Entregado"];
+const OTHER_LOCATIONS = ["Entreplanta", "Terraza", "Zona de entrega", "Demo en uso"];
 
 const GRID_POSITIONS: Record<string, string> = {
   P1: "col-start-1 row-start-1",
@@ -119,7 +119,7 @@ function ShowroomContent() {
   });
 
   const vehiculos = useMemo(() => (vehiculosRaw || []) as any[], [vehiculosRaw]);
-  const pendingStock = useMemo(() => vehiculos.filter(v => !PLAZAS_LIST.includes(v.ubicacion)), [vehiculos]);
+  const pendingStock = useMemo(() => vehiculos.filter(v => !PLAZAS_LIST.includes(v.ubicacion) && v.estado !== "Entregado"), [vehiculos]);
   const selectedVehicle = useMemo(() => vehiculos.find(v => v.id === selectedVehicleId), [vehiculos, selectedVehicleId]);
 
   useEffect(() => {
@@ -326,7 +326,7 @@ function ShowroomContent() {
                   <div><h3 className="text-sm font-black uppercase text-secondary">Identificación del vehículo</h3><p className="text-[10px] text-slate-400">Edita los datos principales. Los cambios se guardan automáticamente.</p></div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-1"><Label>Modelo / versión</Label><Input value={selectedVehicle.modelo || ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{modelo:e.target.value})}/></div>
-                    <div className="space-y-1"><Label>Marca</Label><Input value={selectedVehicle.marca || (/^MINI\\b/i.test(selectedVehicle.modelo || "") ? "MINI" : "BMW")} readOnly className="bg-slate-50"/></div>
+                    <div className="space-y-1"><Label>Marca</Label><Input value={/^MINI\b/i.test(selectedVehicle.modelo || "") ? "MINI" : (selectedVehicle.marca || "BMW")} readOnly className="bg-slate-50"/></div>
                     <div className="space-y-1 md:col-span-2"><Label>Bastidor completo (VIN)</Label><Input value={selectedVehicle.vin || ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{vin:e.target.value.toUpperCase(),vin7:e.target.value.slice(-7).toUpperCase()})}/></div>
                     <div className="space-y-1"><Label>Matrícula</Label><Input value={selectedVehicle.matricula || ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{matricula:e.target.value.toUpperCase()})}/></div>
                     <div className="space-y-1"><Label>Kilometraje</Label><Input type="number" value={selectedVehicle.kilometraje ?? ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{kilometraje:e.target.value === "" ? null : Number(e.target.value)})}/></div>
@@ -348,8 +348,7 @@ function ShowroomContent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-1"><Label>Cliente / destino del correo</Label><Input value={selectedVehicle.clienteLogistica || selectedVehicle.destinoLogistico || selectedVehicle.tipoLogistico || ""} readOnly className="bg-slate-50"/></div>
                     <div className="space-y-1"><Label>Estado</Label><Select value={selectedVehicle.estado || "Stock"} onValueChange={v=>handleUpdateVehicle(selectedVehicle.id,{estado:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{ESTADOS.map(e=><SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent></Select></div>
-                    <div className="space-y-1"><Label>Ubicación</Label><Select value={selectedVehicle.ubicacion || "Stock"} onValueChange={v=>handleUpdateVehicle(selectedVehicle.id,{ubicacion:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{PLAZAS_LIST.map(p=><SelectItem key={p} value={p}>{p}</SelectItem>)}<Separator className="my-1"/>{OTHER_LOCATIONS.map(p=><SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></div>
-                    <div className="space-y-1"><Label>Precio (€)</Label><Input type="number" value={selectedVehicle.precio ?? ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{precio:e.target.value===""?null:Number(e.target.value)})}/></div>
+                    <div className="space-y-1"><Label>Ubicación física</Label><Select value={selectedVehicle.ubicacion || "Entreplanta"} onValueChange={v=>handleUpdateVehicle(selectedVehicle.id,{ubicacion:v, estado:v==="Demo en uso"?"Demo en uso":selectedVehicle.estado})}><SelectTrigger><SelectValue placeholder="Seleccionar ubicación"/></SelectTrigger><SelectContent><SelectItem value="Entreplanta">Entreplanta</SelectItem><SelectItem value="Terraza">Terraza</SelectItem><SelectItem value="Zona de entrega">Zona de entrega</SelectItem><SelectItem value="Demo en uso">Demo en uso</SelectItem><Separator className="my-1"/>{PLAZAS_LIST.map(p=><SelectItem key={p} value={p}>Exposición · {p}</SelectItem>)}</SelectContent></Select></div>
                     <div className="space-y-1"><Label>Fecha de entrada</Label><Input type="date" value={selectedVehicle.fechaEntrada || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{fechaEntrada:e.target.value})}/></div>
                     <div className="space-y-1"><Label>Responsable</Label><Input value={selectedVehicle.responsable || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{responsable:e.target.value})}/></div>\n                    <div className="space-y-1"><Label>Vendedor (correo BMW)</Label><Input value={selectedVehicle.vendedorLogistica || ""} readOnly className="bg-slate-50"/></div>\n                    <div className="space-y-1"><Label>Fecha recepción</Label><Input value={selectedVehicle.fechaRecepcionCorreo || ""} readOnly className="bg-slate-50"/></div>\n                    <div className="space-y-1"><Label>Llegada</Label><Input value={selectedVehicle.llegada || ""} readOnly className="bg-slate-50"/></div>\n                    <div className="space-y-1"><Label>Comisión</Label><Input value={selectedVehicle.comision || ""} readOnly className="bg-slate-50"/></div>
                     {(selectedVehicle.tipoLogistico?.includes('Renting') || selectedVehicle.tipoLogistico === 'Entrega Cliente') && <div className="space-y-1 md:col-span-2"><Label>{selectedVehicle.tipoLogistico === 'Entrega Cliente' ? 'Nombre del cliente' : 'Empresa renting'}</Label><Input value={selectedVehicle.entidadRenting || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{entidadRenting:e.target.value})}/></div>}
