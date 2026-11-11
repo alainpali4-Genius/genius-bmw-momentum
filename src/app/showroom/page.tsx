@@ -46,6 +46,8 @@ const MOTOR_BY_MODEL: Array<{ test: RegExp; motor: string }> = [
   { test: /X1.*sDRIVE18d/i, motor: "Diésel · 2.0 · 110 kW (150 CV) · sDrive" },
   { test: /X1.*sDRIVE20d/i, motor: "Diésel · 2.0 · 120 kW (163 CV) · sDrive" },
   { test: /X1.*xDRIVE20d/i, motor: "Diésel · 2.0 · 120 kW (163 CV) · xDrive" },
+  { test: /iX1.*eDRIVE20/i, motor: "Eléctrico · eDrive20 · 150 kW (204 CV)" },
+  { test: /iX1.*xDRIVE30/i, motor: "Eléctrico · xDrive30 · 230 kW (313 CV)" },
   { test: /X1.*sDRIVE18i/i, motor: "Gasolina · 1.5 · 100 kW (136 CV) · sDrive" },
   { test: /X2.*sDRIVE18d/i, motor: "Diésel · 2.0 · 110 kW (150 CV) · sDrive" },
   { test: /X3.*20d.*xDRIVE/i, motor: "Diésel · 2.0 · 140 kW (190 CV) · xDrive" },
