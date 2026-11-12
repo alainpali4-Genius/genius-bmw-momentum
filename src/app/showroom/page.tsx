@@ -418,7 +418,7 @@ function ShowroomContent() {
                     <div className="space-y-1"><Label>Marca</Label><Input value={/^MINI\b/i.test(selectedVehicle.modelo || "") ? "MINI" : (selectedVehicle.marca || "BMW")} readOnly className="bg-slate-50"/></div>
                     <div className="space-y-1 md:col-span-2"><Label>Bastidor completo (VIN)</Label><Input value={selectedVehicle.vin || ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{vin:e.target.value.toUpperCase(),vin7:e.target.value.slice(-7).toUpperCase()})}/></div>
                     <div className="space-y-1"><Label>Matrícula</Label><Input value={selectedVehicle.matricula || ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{matricula:e.target.value.toUpperCase()})}/></div>
-                    <div className="space-y-1"><Label>Motorización</Label><Input value={selectedVehicle.motor || ""} onChange={e => handleUpdateVehicle(selectedVehicle.id,{motor:e.target.value})}/></div>
+                    <div className="space-y-1"><Label>Motorización</Label><Input value={selectedVehicle.motor || suggestedMotor(selectedVehicle.modelo || "")} onChange={e => handleUpdateVehicle(selectedVehicle.id,{motor:e.target.value})}/></div>
                     <div className="space-y-1"><Label>Carrocería</Label><Select value={selectedVehicle.bodyType || "SUV"} onValueChange={v => handleUpdateVehicle(selectedVehicle.id,{bodyType:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{["SUV","Berlina","Coupe","Roadster","Touring","Compacto","Cabrio"].map(t=><SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
                   </div>
                 </section>
