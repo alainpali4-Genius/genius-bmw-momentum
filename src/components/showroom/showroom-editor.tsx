@@ -58,7 +58,7 @@ export default function ShowroomEditor({vehicles,movingVehicleId,onPlaceVehicle,
   const handleResize=(e:React.PointerEvent<HTMLDivElement>,p:Plaza)=>{ if(!editing)return; e.preventDefault();e.stopPropagation();const sx=e.clientX,sy=e.clientY,sw=p.width,sh=p.height,before=clone(plazas);const onMove=(ev:PointerEvent)=>setPlazas(old=>old.map(v=>v.id===p.id?{...v,width:Math.max(100,sw+(ev.clientX-sx)/zoom),height:Math.max(80,sh+(ev.clientY-sy)/zoom)}:v));const onUp=()=>{window.removeEventListener("pointermove",onMove);window.removeEventListener("pointerup",onUp);setHistory(h=>[...h.slice(-39),before]);setFuture([]);setSaved(false);};window.addEventListener("pointermove",onMove);window.addEventListener("pointerup",onUp); };
   const occupied=useMemo(()=>{const m=new Map<string,any>();vehicles.forEach(v=>{if(v.ubicacion)m.set(v.ubicacion,v)});return m;},[vehicles]);
 
-  return <div className="flex flex-col gap-3">
+  return <div className="flex h-full min-h-0 flex-col gap-3">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><h2 className="text-xl font-black uppercase italic text-slate-800">Plano de exposición</h2><div className="mt-1 flex flex-wrap gap-2 text-xs"><Badge variant="outline">{plazas.length} plazas</Badge><Badge className="bg-emerald-600">{plazas.filter(p=>occupied.has(p.id)).length} ocupadas</Badge><Badge variant="secondary">{plazas.filter(p=>!occupied.has(p.id)).length} libres</Badge></div></div>
       <div className="flex items-center gap-2"><span className="text-xs text-slate-500">{saved?"Guardado":"Cambios sin guardar"}</span><Button onClick={async()=>{if(editing){if(await save())setEditing(false);}else setEditing(true);}} variant={editing?"destructive":"default"}>{editing?"Finalizar edición":"Editar plano"}</Button></div>
@@ -72,8 +72,8 @@ export default function ShowroomEditor({vehicles,movingVehicleId,onPlaceVehicle,
       <span className="text-xs text-slate-500">Arrastra las plazas para moverlas; usa la esquina para cambiar su tamaño.</span>
       <Button className="ml-auto" onClick={save}><Save className="mr-2 h-4 w-4"/> Guardar plano</Button>
     </div>}
-    <div className={`grid gap-3 ${editing ? "xl:grid-cols-[minmax(0,1fr)_280px]" : "grid-cols-1"}`}>
-      <div className="relative overflow-auto rounded-xl border border-slate-300 bg-slate-100 shadow-inner" style={{height:"min(72vh,850px)"}}>
+    <div className={`grid min-h-0 flex-1 gap-3 ${editing ? "xl:grid-cols-[minmax(0,1fr)_280px]" : "grid-cols-1"}`}>
+      <div className="relative h-full min-h-[560px] overflow-auto rounded-xl border border-slate-300 bg-slate-100 shadow-inner">
         <div className="sticky right-3 top-3 z-30 ml-auto flex w-fit gap-1 rounded-lg border bg-white/95 p-1 shadow"><Button size="icon" variant="ghost" onClick={()=>setZoom(z=>Math.max(.35,z-.1))}><Minus className="h-4 w-4"/></Button><span className="flex items-center px-1 text-xs font-bold">{Math.round(zoom*100)}%</span><Button size="icon" variant="ghost" onClick={()=>setZoom(z=>Math.min(1.5,z+.1))}><Plus className="h-4 w-4"/></Button></div>
         <div style={{width:1700*zoom,height:1120*zoom,backgroundImage:showGrid?"radial-gradient(#cbd5e1 1px, transparent 1px)":undefined,backgroundSize:`${20*zoom}px ${20*zoom}px`}}>
           <div className="relative origin-top-left" style={{width:1700,height:1120,transform:`scale(${zoom})`,transformOrigin:"top left"}}>
