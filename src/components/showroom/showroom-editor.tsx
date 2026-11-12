@@ -72,7 +72,7 @@ export default function ShowroomEditor({vehicles,movingVehicleId,onPlaceVehicle,
       <span className="text-xs text-slate-500">Arrastra las plazas para moverlas; usa la esquina para cambiar su tamaño.</span>
       <Button className="ml-auto" onClick={save}><Save className="mr-2 h-4 w-4"/> Guardar plano</Button>
     </div>}
-    <div className="grid gap-3 xl:grid-cols-[minmax(0,1fr)_280px]">
+    <div className={`grid gap-3 ${editing ? "xl:grid-cols-[minmax(0,1fr)_280px]" : "grid-cols-1"}`}>
       <div className="relative overflow-auto rounded-xl border border-slate-300 bg-slate-100 shadow-inner" style={{height:"min(72vh,850px)"}}>
         <div className="sticky right-3 top-3 z-30 ml-auto flex w-fit gap-1 rounded-lg border bg-white/95 p-1 shadow"><Button size="icon" variant="ghost" onClick={()=>setZoom(z=>Math.max(.35,z-.1))}><Minus className="h-4 w-4"/></Button><span className="flex items-center px-1 text-xs font-bold">{Math.round(zoom*100)}%</span><Button size="icon" variant="ghost" onClick={()=>setZoom(z=>Math.min(1.5,z+.1))}><Plus className="h-4 w-4"/></Button></div>
         <div style={{width:1700*zoom,height:1120*zoom,backgroundImage:showGrid?"radial-gradient(#cbd5e1 1px, transparent 1px)":undefined,backgroundSize:`${20*zoom}px ${20*zoom}px`}}>
@@ -88,7 +88,7 @@ export default function ShowroomEditor({vehicles,movingVehicleId,onPlaceVehicle,
           </div>
         </div>
       </div>
-      <aside className="rounded-xl border bg-white p-4 shadow-sm">
+      {editing && <aside className="rounded-xl border bg-white p-4 shadow-sm">
         {selectedPlaza?<><div className="mb-4 flex items-center justify-between"><h3 className="font-bold text-slate-800">Plaza seleccionada</h3><button onClick={()=>setSelected(null)}><X className="h-4 w-4"/></button></div>
           <label className="mb-1 block text-xs font-semibold uppercase text-slate-500">Nombre visible</label><Input value={selectedPlaza.label||selectedPlaza.id} disabled={!editing} onChange={e=>updateSelected({label:e.target.value})} className="mb-3"/>
           <label className="mb-1 block text-xs font-semibold uppercase text-slate-500">Zona</label><Select disabled={!editing} value={selectedPlaza.zone} onValueChange={v=>updateSelected({zone:v})}><SelectTrigger className="mb-3"><SelectValue/></SelectTrigger><SelectContent>{["Exposición","Plataforma BMW i","Plataforma estándar","Plataforma M","Atención","Espera","Circulación"].map(z=><SelectItem key={z} value={z}>{z}</SelectItem>)}</SelectContent></Select>
@@ -99,7 +99,7 @@ export default function ShowroomEditor({vehicles,movingVehicleId,onPlaceVehicle,
         </>:<div className="py-10 text-center text-sm text-slate-400">Selecciona una plaza para ver sus propiedades y personalizarla.</div>}
         {movingVehicleId&&<div className="mt-4 rounded-lg bg-blue-50 p-3 text-xs text-blue-800">Selecciona una plaza para colocar el vehículo. <button onClick={onCancelMove} className="ml-1 underline">Cancelar</button></div>}
         {loading&&<p className="mt-3 text-xs text-slate-400">Cargando distribución guardada…</p>}
-      </aside>
+      </aside>}
     </div>
   </div>;
 }
