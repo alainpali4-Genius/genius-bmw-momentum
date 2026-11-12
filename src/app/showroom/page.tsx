@@ -20,21 +20,72 @@ import { useSearchParams, useRouter } from "next/navigation";
 import ShowroomEditor from "@/components/showroom/showroom-editor";
 
 export const BMW_COLORS = [
-  {code:"300",name:"Alpine White III",hex:"#F5F5F5"},
-  {code:"A96",name:"Mineral White Metallic",hex:"#F3F3F1"},
-  {code:"668",name:"Black Uni",hex:"#000000"},
-  {code:"475",name:"Black Sapphire Metallic",hex:"#1A1A1A"},
-  {code:"416",name:"Carbon Black Metallic",hex:"#111111"},
-  {code:"A90",name:"Sophisto Grey Metallic",hex:"#4A4A4A"},
-  {code:"C36",name:"Dravit Grey Metallic",hex:"#5D5A55"},
-  {code:"C4P",name:"Brooklyn Grey Metallic",hex:"#7B7D7E"},
-  {code:"C4W",name:"Skyscraper Grey Metallic",hex:"#8B8E91"},
-  {code:"C31",name:"Portimao Blue Metallic",hex:"#004D8D"},
-  {code:"C4R",name:"Arctic Race Blue Metallic",hex:"#2A5C9A"},
-  {code:"C6K",name:"San Remo Green Metallic",hex:"#2E4738"},
-  {code:"C6M",name:"Isle of Man Green Metallic",hex:"#006B43"},
-  {code:"C68",name:"Fire Red Metallic",hex:"#A5161A"},
-  {code:"C77",name:"Vegas Red Metallic",hex:"#B21A1A"}
+  // BMW: gama habitual y colores BMW Individual/M.
+  {code:"300",name:"Alpine White III",hex:"#F5F5F5",brand:"BMW"},
+  {code:"668",name:"Jet Black",hex:"#080808",brand:"BMW"},
+  {code:"475",name:"Black Sapphire Metallic",hex:"#1A1A1A",brand:"BMW"},
+  {code:"416",name:"Carbon Black Metallic",hex:"#111827",brand:"BMW"},
+  {code:"A96",name:"Mineral White Metallic",hex:"#F3F3F1",brand:"BMW"},
+  {code:"A83",name:"Glacier Silver Metallic",hex:"#AEB4B8",brand:"BMW"},
+  {code:"A75",name:"Melbourne Red Metallic",hex:"#8E1824",brand:"BMW"},
+  {code:"B39",name:"Mineral Grey Metallic",hex:"#686C70",brand:"BMW"},
+  {code:"B45",name:"Estoril Blue Metallic",hex:"#07549A",brand:"BMW"},
+  {code:"A52",name:"Space Grey Metallic",hex:"#737A80",brand:"BMW"},
+  {code:"A89",name:"Imperial Blue Metallic",hex:"#172D50",brand:"BMW"},
+  {code:"C1M",name:"Phytonic Blue Metallic",hex:"#245A91",brand:"BMW"},
+  {code:"C1X",name:"Sunset Orange Metallic",hex:"#C65B20",brand:"BMW"},
+  {code:"C10",name:"Mediterranean Blue Metallic",hex:"#164B78",brand:"BMW"},
+  {code:"C31",name:"Portimao Blue Metallic",hex:"#004D8D",brand:"BMW"},
+  {code:"C3Z",name:"Tanzanite Blue II Metallic",hex:"#172C52",brand:"BMW"},
+  {code:"C34",name:"San Francisco Red Metallic",hex:"#8E2634",brand:"BMW"},
+  {code:"C35",name:"Blue Ridge Mountain Metallic",hex:"#526D83",brand:"BMW"},
+  {code:"C36",name:"Dravit Grey Metallic",hex:"#5D5A55",brand:"BMW"},
+  {code:"C3D",name:"Manhattan Metallic",hex:"#77766F",brand:"BMW"},
+  {code:"C3G",name:"Toronto Red Metallic",hex:"#A51E2D",brand:"BMW"},
+  {code:"C3N",name:"Storm Bay Metallic",hex:"#687A83",brand:"BMW"},
+  {code:"C4E",name:"San Remo Green Metallic",hex:"#526A54",brand:"BMW"},
+  {code:"C4F",name:"Arctic Race Blue Metallic",hex:"#2A5C9A",brand:"BMW"},
+  {code:"C4G",name:"Isle of Man Green Metallic",hex:"#176044",brand:"BMW"},
+  {code:"C4H",name:"Sao Paulo Yellow",hex:"#E3C52D",brand:"BMW"},
+  {code:"C4P",name:"Brooklyn Grey Metallic",hex:"#7B7D7E",brand:"BMW"},
+  {code:"C4W",name:"Skyscraper Grey Metallic",hex:"#8B8E91",brand:"BMW"},
+  {code:"X1F",name:"Frozen Pure Grey Metallic",hex:"#85898B",brand:"BMW"},
+  {code:"X1G",name:"Frozen Tanzanite Blue Metallic",hex:"#263C62",brand:"BMW"},
+  // MINI: colores clásicos y actuales. La disponibilidad depende del modelo y año.
+  {code:"850",name:"Pepper White",hex:"#F0EEE4",brand:"MINI"},
+  {code:"851",name:"Chili Red",hex:"#B51F2A",brand:"MINI"},
+  {code:"A94",name:"Midnight Black Metallic",hex:"#17191D",brand:"MINI"},
+  {code:"A62",name:"White Silver Metallic",hex:"#BFC4C7",brand:"MINI"},
+  {code:"B22",name:"British Racing Green",hex:"#174B36",brand:"MINI"},
+  {code:"B26",name:"Oxford Green",hex:"#243D32",brand:"MINI"},
+  {code:"B30",name:"Reef Blue",hex:"#28749A",brand:"MINI"},
+  {code:"B47",name:"Rooftop Grey",hex:"#85898C",brand:"MINI"},
+  {code:"B58",name:"Thunder Grey",hex:"#777C80",brand:"MINI"},
+  {code:"B62",name:"Starlight Blue",hex:"#254B78",brand:"MINI"},
+  {code:"B70",name:"Volcanic Orange",hex:"#D66B25",brand:"MINI"},
+  {code:"B71",name:"Moonwalk Grey",hex:"#92999C",brand:"MINI"},
+  {code:"C19",name:"Rebel Green",hex:"#31513C",brand:"MINI"},
+  {code:"C1B",name:"Solaris Orange",hex:"#D96B28",brand:"MINI"},
+  {code:"C2C",name:"Pure Burgundy",hex:"#592B3C",brand:"MINI"},
+  {code:"C2M",name:"Island Blue",hex:"#4B86A8",brand:"MINI"},
+  {code:"C3B",name:"British Racing Green IV",hex:"#174B35",brand:"MINI"},
+  {code:"C3Y",name:"Enigmatic Black Metallic",hex:"#252A31",brand:"MINI"},
+  {code:"C4L",name:"Sage Green",hex:"#9AA58D",brand:"MINI"},
+  {code:"C54",name:"Melting Silver II",hex:"#B9BEC1",brand:"MINI"},
+  {code:"C5H",name:"Zesty Yellow",hex:"#D8D33C",brand:"MINI"},
+  {code:"C6A",name:"Nanuq White",hex:"#E9E8E0",brand:"MINI"},
+  {code:"C6B",name:"Melting Silver III",hex:"#AEB5B9",brand:"MINI"},
+  {code:"C6D",name:"Resolute Bronze",hex:"#8C7761",brand:"MINI"},
+  {code:"C6F",name:"Indigo Sunset Blue",hex:"#344B79",brand:"MINI"},
+  {code:"C6K",name:"Blazing Blue",hex:"#1767A5",brand:"MINI"},
+  {code:"C6M",name:"Ocean Wave Green",hex:"#347D72",brand:"MINI"},
+  {code:"C6N",name:"Sunny Side Yellow",hex:"#E5D34A",brand:"MINI"},
+  {code:"C6P",name:"Legend Grey",hex:"#737A80",brand:"MINI"},
+  {code:"C70",name:"Slate Blue",hex:"#657F9B",brand:"MINI"},
+  {code:"C71",name:"Smokey Green",hex:"#66796B",brand:"MINI"},
+  {code:"C72",name:"Rebel Red",hex:"#B32A35",brand:"MINI"},
+  {code:"C74",name:"Chili Red II",hex:"#B51F2A",brand:"MINI"},
+  {code:"C77",name:"Copper Grey",hex:"#8C8178",brand:"MINI"}
 ];
 
 
@@ -202,6 +253,8 @@ function ShowroomContent() {
   const vehiculos = useMemo(() => (vehiculosRaw || []) as any[], [vehiculosRaw]);
   const pendingStock = useMemo(() => vehiculos.filter(v => !/^P\d+$/i.test(String(v.ubicacion || "")) && v.estado !== "Entregado"), [vehiculos]);
   const selectedVehicle = useMemo(() => vehiculos.find(v => v.id === selectedVehicleId), [vehiculos, selectedVehicleId]);
+  const vehicleColorOptions = useMemo(() => BMW_COLORS.filter(c => c.brand === (/^MINI\\b/i.test(selectedVehicle?.modelo || "") || selectedVehicle?.marca === "MINI" ? "MINI" : "BMW")), [selectedVehicle]);
+  const newVehicleColorOptions = useMemo(() => BMW_COLORS.filter(c => c.brand === formData.marca), [formData.marca]);
 
   useEffect(() => {
     if (searchParams.get('add') === 'true') setIsAddingNew(true);
@@ -423,7 +476,7 @@ function ShowroomContent() {
                 <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
                   <h3 className="text-sm font-black uppercase text-secondary">Configuración y acabado</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1"><Label>Color exterior</Label><div className="flex items-center gap-2"><span className="h-9 w-9 shrink-0 rounded-md border border-slate-300 shadow-inner" style={{backgroundColor:getVehicleColor(selectedVehicle)?.hex||"#e5e7eb"}}/><Select value={selectedVehicle.colorCodigo || selectedVehicle.colorBMW || (getVehicleColor(selectedVehicle) && BMW_COLORS.some(c=>c.code===getVehicleColor(selectedVehicle)?.code) ? getVehicleColor(selectedVehicle)!.code : (selectedVehicle.colorExterior ? `correo:${selectedVehicle.colorExterior}` : "300"))} onValueChange={v => v.startsWith("correo:") ? handleUpdateVehicle(selectedVehicle.id,{colorExterior:v.slice(7),colorCorreo:v.slice(7)}) : handleUpdateVehicle(selectedVehicle.id,{colorCodigo:v,colorBMW:v,colorExterior:BMW_COLORS.find(c=>c.code===v)?.name || ""})}><SelectTrigger className="flex-1"><SelectValue/></SelectTrigger><SelectContent className="max-h-64">{selectedVehicle.colorExterior && !BMW_COLORS.some(c=>c.name.toLowerCase()===String(selectedVehicle.colorExterior).toLowerCase()) && <SelectItem value={`correo:${selectedVehicle.colorExterior}`}>{selectedVehicle.colorExterior} · Correo BMW</SelectItem>}{BMW_COLORS.map(c=><SelectItem key={c.code} value={c.code}>{c.code} · {c.name}</SelectItem>)}</SelectContent></Select></div></div>
+                    <div className="space-y-1"><Label>Color exterior</Label><div className="flex items-center gap-2"><span className="h-9 w-9 shrink-0 rounded-md border border-slate-300 shadow-inner" style={{backgroundColor:getVehicleColor(selectedVehicle)?.hex||"#e5e7eb"}}/><Select value={selectedVehicle.colorCodigo || selectedVehicle.colorBMW || (getVehicleColor(selectedVehicle) && BMW_COLORS.some(c=>c.code===getVehicleColor(selectedVehicle)?.code) ? getVehicleColor(selectedVehicle)!.code : (selectedVehicle.colorExterior ? `correo:${selectedVehicle.colorExterior}` : "300"))} onValueChange={v => v.startsWith("correo:") ? handleUpdateVehicle(selectedVehicle.id,{colorExterior:v.slice(7),colorCorreo:v.slice(7)}) : handleUpdateVehicle(selectedVehicle.id,{colorCodigo:v,colorBMW:v,colorExterior:BMW_COLORS.find(c=>c.code===v)?.name || ""})}><SelectTrigger className="flex-1"><SelectValue/></SelectTrigger><SelectContent className="max-h-64">{selectedVehicle.colorExterior && !BMW_COLORS.some(c=>c.name.toLowerCase()===String(selectedVehicle.colorExterior).toLowerCase()) && <SelectItem value={`correo:${selectedVehicle.colorExterior}`}>{selectedVehicle.colorExterior} · Correo BMW</SelectItem>}{vehicleColorOptions.map(c=><SelectItem key={c.code} value={c.code}>{c.code} · {c.name}</SelectItem>)}</SelectContent></Select></div></div>
                     <div className="space-y-1"><Label>Tapicería / interior</Label><Input value={selectedVehicle.tapiceria || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{tapiceria:e.target.value})}/></div>
                     <div className="space-y-1"><Label>Llantas</Label><Input value={selectedVehicle.llantas || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{llantas:e.target.value})}/></div>
                     <div className="space-y-1"><Label>Equipamiento / paquetes</Label><Input value={selectedVehicle.equipamiento || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{equipamiento:e.target.value})}/></div>
@@ -502,7 +555,7 @@ function ShowroomContent() {
             <section className="space-y-3">
               <h3 className="text-xs font-black uppercase text-secondary border-b pb-2">2. Configuración y acabado</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-1"><Label>Color exterior</Label><div className="flex items-center gap-2"><span className="h-9 w-9 shrink-0 rounded-md border border-slate-300 shadow-inner" style={{backgroundColor:BMW_COLORS.find(c=>c.code===formData.colorBMW)?.hex||"#e5e7eb"}}/><Select value={formData.colorBMW} onValueChange={v=>setFormData({...formData,colorBMW:v})}><SelectTrigger className="flex-1"><SelectValue/></SelectTrigger><SelectContent className="max-h-64">{BMW_COLORS.map(c=><SelectItem key={c.code} value={c.code}>{c.code} · {c.name}</SelectItem>)}</SelectContent></Select></div></div>
+                <div className="space-y-1"><Label>Color exterior</Label><div className="flex items-center gap-2"><span className="h-9 w-9 shrink-0 rounded-md border border-slate-300 shadow-inner" style={{backgroundColor:BMW_COLORS.find(c=>c.code===formData.colorBMW)?.hex||"#e5e7eb"}}/><Select value={formData.colorBMW} onValueChange={v=>setFormData({...formData,colorBMW:v})}><SelectTrigger className="flex-1"><SelectValue/></SelectTrigger><SelectContent className="max-h-64">{newVehicleColorOptions.map(c=><SelectItem key={c.code} value={c.code}>{c.code} · {c.name}</SelectItem>)}</SelectContent></Select></div></div>
                 <div className="space-y-1"><Label>Carrocería</Label><Select value={formData.bodyType} onValueChange={v=>setFormData({...formData,bodyType:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{["SUV","Berlina","Coupe","Roadster","Touring","Compacto","Cabrio"].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
                 <div className="space-y-1"><Label>Tapicería / interior</Label><Input value={formData.tapiceria} onChange={e=>setFormData({...formData,tapiceria:e.target.value})}/></div>
                 <div className="space-y-1"><Label>Llantas</Label><Input value={formData.llantas} onChange={e=>setFormData({...formData,llantas:e.target.value})}/></div>
