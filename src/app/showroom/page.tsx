@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams, useRouter } from "next/navigation";
+import ShowroomEditor from "@/components/showroom/showroom-editor";
 
 export const BMW_COLORS = [
   {code:"300",name:"Alpine White III",hex:"#F5F5F5"},
@@ -385,36 +386,13 @@ function ShowroomContent() {
     <div className="flex flex-col h-screen w-full bg-[#f4f7fa] overflow-hidden">
       {!isStockOrigin && (
 <> 
-      {/* Cabecera optimizada */}
-      <div className="bg-white border-b px-3 py-1.5 md:py-2 flex items-center justify-between shrink-0 shadow-sm z-40">
-        <h1 className="text-[11px] md:text-xl font-black text-secondary uppercase italic leading-none tracking-tighter">PLANO <span className="text-primary not-italic">EXPO</span></h1>
-        <div className="flex gap-1">
-          {movingVehicleId && <Button onClick={() => setMovingVehicleId(null)} className="h-6 md:h-7 bg-red-600 text-white rounded-md font-black uppercase text-[7px] md:text-[8px] px-2">CANCELAR</Button>}
-          <Button variant="outline" onClick={() => setIsStockSheetOpen(true)} className="h-6 md:h-7 rounded-md font-black uppercase text-[7px] md:text-[8px] px-2 border-slate-200">STOCK ({pendingStock.length})</Button>
-          <Button onClick={() => setIsAddingNew(true)} className="h-6 md:h-7 bg-secondary text-white rounded-md font-black uppercase text-[7px] md:text-[8px] px-2">NUEVO</Button>
-        </div>
-      </div>
-
-      {/* Plano cenital compacto: prioridad a la lectura rápida de vehículos */}
-      <div className="flex-1 relative overflow-auto bg-[#e9edf1]">
-        <div className="min-h-full min-w-[760px] p-2 md:p-4">
-          <div className="mx-auto max-w-[1500px] rounded-xl border border-slate-300 bg-[#f8f9fa] p-2 md:p-3 shadow-sm">
-            <div className="mb-2 flex items-center justify-between rounded-md bg-white px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-slate-500">
-              <span>Momentum Navarra · Exposición</span><span>Acceso principal</span>
-            </div>
-            <div className="grid min-h-[620px] h-[min(78vh,820px)] grid-cols-12 grid-rows-[1fr_1fr_0.30fr_1fr_0.85fr] gap-2">
-              {PLAZAS_LIST.map(id => renderPlaza(id))}
-              <div className="col-span-12 row-start-3 flex items-center justify-center rounded-md border-y border-slate-300 bg-[#e4e8ec] px-2">
-                <span className="text-[9px] font-bold uppercase tracking-[0.18em] text-slate-500">Pasillo central · atención y circulación</span>
-                <span className="ml-3 hidden text-[9px] text-slate-400 sm:inline">Zona de espera / mesas comerciales</span>
-              </div>
-            </div>
-            <div className="mt-2 flex items-center justify-between rounded-md bg-[#172f50] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-white"><span>Entrada showroom</span><span>BMW · MINI</span></div>
-          </div>
-        </div>
-      </div>
-      </>
-      )}
+      <ShowroomEditor
+        vehicles={vehiculos}
+        movingVehicleId={movingVehicleId}
+        onPlaceVehicle={(vehicleId, plazaId) => handleSwapOrMove(vehicleId, plazaId)}
+        onSelectVehicle={setSelectedVehicleId}
+        onCancelMove={() => setMovingVehicleId(null)}
+      />
 
       {/* Diálogos y Sheets */}
       <Sheet open={!!selectedVehicleId} onOpenChange={o => !o && handleCloseDetail()}>
