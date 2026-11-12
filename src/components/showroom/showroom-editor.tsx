@@ -46,7 +46,7 @@ export default function ShowroomEditor({vehicles,movingVehicleId,onPlaceVehicle,
   useEffect(()=>{ let alive=true; (async()=>{ try { const snap=await getDoc(doc(db,"configuracion","showroomLayout")); if(alive && snap.exists() && Array.isArray(snap.data().plazas) && snap.data().plazas.length) setPlazas(snap.data().plazas as Plaza[]); } catch(e){ console.error("No se pudo cargar el plano",e); } finally { if(alive) setLoading(false); } })(); return ()=>{alive=false}; },[db]);
 
   const commit = useCallback((next:Plaza[])=>{ setHistory(h=>[...h.slice(-39),clone(plazas)]); setFuture([]); setPlazas(next); setSaved(false); },[plazas]);
-  const save = async()=>{ try { await setDoc(doc(db,"configuracion","showroomLayout"),{plazas,updatedAt:new Date().toISOString()},{merge:true}); setSaved(true); } catch(e){ console.error(e); alert("No se pudo guardar la distribución. Comprueba la conexión."); } };
+  const save = async()=>{ try { await setDoc(doc(db,"configuracion","showroomLayout"),{plazas,updatedAt:new Date().toISOString()},{merge:true}); setSaved(true); return true; } catch(e){ console.error(e); alert("No se pudo guardar la distribución. Comprueba la conexión."); return false; } };
   const updateSelected=(patch:Partial<Plaza>)=>{ if(!selected) return; commit(plazas.map(p=>p.id===selected?{...p,...patch}:p)); };
   const undo=()=>{ if(!history.length)return; const previous=history[history.length-1]; setFuture(f=>[clone(plazas),...f]); setPlazas(previous); setHistory(h=>h.slice(0,-1)); setSaved(false); };
   const redo=()=>{ if(!future.length)return; setHistory(h=>[...h,clone(plazas)]); setPlazas(future[0]); setFuture(f=>f.slice(1)); setSaved(false); };
@@ -61,7 +61,7 @@ export default function ShowroomEditor({vehicles,movingVehicleId,onPlaceVehicle,
   return <div className="flex flex-col gap-3">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><h2 className="text-xl font-black uppercase italic text-slate-800">Plano de exposición</h2><div className="mt-1 flex flex-wrap gap-2 text-xs"><Badge variant="outline">{plazas.length} plazas</Badge><Badge className="bg-emerald-600">{plazas.filter(p=>occupied.has(p.id)).length} ocupadas</Badge><Badge variant="secondary">{plazas.filter(p=>!occupied.has(p.id)).length} libres</Badge></div></div>
-      <div className="flex items-center gap-2"><span className="text-xs text-slate-500">{saved?"Guardado":"Cambios sin guardar"}</span><Button onClick={()=>editing?setEditing(false):setEditing(true)} variant={editing?"destructive":"default"}>{editing?"Finalizar edición":"Editar plano"}</Button></div>
+      <div className="flex items-center gap-2"><span className="text-xs text-slate-500">{saved?"Guardado":"Cambios sin guardar"}</span><Button onClick={async()=>{if(editing){if(await save())setEditing(false);}else setEditing(true);}} variant={editing?"destructive":"default"}>{editing?"Finalizar edición":"Editar plano"}</Button></div>
     </div>
     {editing&&<div className="flex flex-wrap items-center gap-2 rounded-xl border bg-white p-2 shadow-sm">
       <Button variant="outline" onClick={addPlaza}><Plus className="mr-1 h-4 w-4"/> Nueva plaza</Button>
