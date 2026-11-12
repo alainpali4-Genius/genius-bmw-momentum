@@ -47,6 +47,33 @@ const compressImage = (file: File, maxWidth = 1600, quality = 0.82): Promise<str
   });
 };
 
+
+const loadLocalOcr = async (): Promise<any> => {
+  if ((window as any).Tesseract) return (window as any).Tesseract;
+  await new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector('script[data-genius-tesseract="true"]') as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("No se ha podido cargar el motor OCR.")), { once: true });
+      if ((window as any).Tesseract) resolve();
+      return;
+    }
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js";
+    script.async = true;
+    script.dataset.geniusTesseract = "true";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("No se ha podido cargar el lector local. Comprueba la conexión del móvil."));
+    document.head.appendChild(script);
+  });
+  const engine = (window as any).Tesseract;
+  if (!engine?.recognize) throw new Error("El lector OCR no está disponible en este navegador.");
+  return engine;
+};
+
+const normalizeOcr = (value: string) =>
+  value.toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/O/g, "0");
+
 export default function InventarioGenius() {
   const db = useFirestore();
   const { toast } = useToast();
@@ -93,7 +120,7 @@ export default function InventarioGenius() {
         origen: vehicle.ubicacion || "N/A",
         destino: vehicle.ubicacion || "N/A",
         usuario: "GENIUS IA",
-        detalles: "Inventario verificado mediante reconocimiento de bastidor."
+        detalles: "Inventario verificado mediante lectura OCR local."
       };
       try {
         await addDoc(collection(db, "movimientos"), payload);
@@ -123,25 +150,64 @@ export default function InventarioGenius() {
     const file = e.target.files?.[0];
     if (!file) return;
     setIsProcessing(true);
-    setProcessStep("Optimizando imagen...");
+    setProcessStep("Preparando fotografía...");
     try {
-      const compressedDataUri = await compressImage(file);
-      setProcessStep("Reconociendo el bastidor...");
-      const response = await fetch("/api/scan-vin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photoDataUri: compressedDataUri }),
+      const image = await compressImage(file, 2200, 0.94);
+      setProcessStep("Cargando reconocimiento local...");
+      const ocr = await loadLocalOcr();
+      setProcessStep("Leyendo el número de bastidor...");
+      const result = await ocr.recognize(image, "eng", {
+        logger: (info: any) => {
+          if (info?.status === "recognizing text") {
+            setProcessStep(`Leyendo placa: ${Math.round((info.progress || 0) * 100)}%`);
+          }
+        },
       });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result?.error || "No se pudo procesar la imagen.");
-      if (result?.vin) {
-        setProcessStep("Verificando stock...");
-        await handleAudit(result.vin, { modelo: result.modelo });
+      const rawText = String(result?.data?.text || "");
+      const compact = normalizeOcr(rawText);
+      const fullVin = compact.match(/[A-HJ-NPR-Z0-9]{17}/)?.[0];
+
+      // Primero se intenta identificar un VIN7 que coincida con un vehículo real del stock.
+      const stockMatches = vehiculos.filter((vehicle: any) => {
+        const known = String(vehicle.vin7 || vehicle.vin || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+        if (known.length < 7) return false;
+        const key = known.slice(-7);
+        return compact.includes(key) || compact.includes(key.replace(/0/g, "O"));
+      });
+
+      if (stockMatches.length === 1) {
+        setProcessStep("Vehículo localizado en stock...");
+        await handleAudit(stockMatches[0].vin7 || stockMatches[0].vin);
+        return;
+      }
+
+      if (stockMatches.length > 1) {
+        toast({ variant: "destructive", title: "Lectura ambigua", description: "Se han encontrado varias coincidencias. Introduce manualmente los últimos 7 caracteres." });
+        return;
+      }
+
+      if (fullVin) {
+        setProcessStep("Comprobando bastidor...");
+        await handleAudit(fullVin);
+        return;
+      }
+
+      // Si la placa solo deja leer siete caracteres, se muestran para validación manual.
+      const candidates = rawText.toUpperCase().match(/[A-HJ-NPR-Z0-9][A-HJ-NPR-Z0-9\s-]{5,12}[A-HJ-NPR-Z0-9]/g) || [];
+      const seven = candidates
+        .map((candidate: string) => candidate.replace(/[^A-Z0-9]/g, ""))
+        .filter((candidate: string) => candidate.length >= 7)
+        .map((candidate: string) => candidate.slice(-7))
+        .find((candidate: string) => /^[A-HJ-NPR-Z0-9]{7}$/.test(candidate));
+
+      if (seven) {
+        setManualVin(seven);
+        toast({ title: "VIN7 leído", description: "Revisa los 7 caracteres detectados y pulsa la flecha para buscar el vehículo." });
       } else {
-        toast({ variant: "destructive", title: "IA no detectó datos" });
+        toast({ variant: "destructive", title: "No se distingue el bastidor", description: "Prueba otra foto más cerca, enfocada y sin reflejos. También puedes introducir el VIN7 manualmente." });
       }
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Error de procesamiento", description: err?.message || "No se pudo analizar la fotografía." });
+      toast({ variant: "destructive", title: "Error en el lector de placa", description: err?.message || "No se ha podido leer la fotografía." });
     } finally {
       setIsProcessing(false);
       setProcessStep(null);
@@ -163,7 +229,7 @@ export default function InventarioGenius() {
         origen: "N/A",
         destino: payload.ubicacion,
         usuario: "GENIUS IA",
-        detalles: "Alta mediante reconocimiento de bastidor."
+        detalles: "Alta mediante lectura OCR local."
       });
       setIsNewVehicleDialogOpen(false);
       setLastAudit({ ...payload, id: docRef.id, status: 'success', message: 'VEHÍCULO REGISTRADO Y AUDITADO' });
@@ -187,7 +253,7 @@ export default function InventarioGenius() {
             {isProcessing ? <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" /> : <Scan className="w-8 h-8 text-white" />}
           </div>
           <div className="space-y-1">
-            <h2 className="text-lg font-semibold tracking-tight text-slate-900">{isProcessing ? "IA ANALIZANDO..." : "ESCANEAR PLACA VIN"}</h2>
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900">{isProcessing ? "LEYENDO PLACA..." : "ESCANEAR PLACA VIN"}</h2>
             <p className="text-sm text-slate-500">{processStep || "Fotografía los últimos 7 caracteres o la placa VIN completa"}</p>
           </div>
           <div className="w-full max-w-sm space-y-3">
