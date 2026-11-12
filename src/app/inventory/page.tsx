@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useFirestore, useCollection } from "@/firebase";
 import { collection, query, orderBy, addDoc, limit, doc, updateDoc } from "firebase/firestore";
-import { scanVIN } from "@/ai/flows/scan-vin-flow";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -21,7 +20,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BMW_COLORS, TIPOS_LOGISTICOS } from "../showroom/page";
 
-const compressImage = (file: File, maxWidth = 1024, quality = 0.6): Promise<string> => {
+const compressImage = (file: File, maxWidth = 1600, quality = 0.82): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -128,7 +127,13 @@ export default function InventarioGenius() {
     try {
       const compressedDataUri = await compressImage(file);
       setProcessStep("Analizando con Gemini...");
-      const result = await scanVIN({ photoDataUri: compressedDataUri });
+      const response = await fetch("/api/scan-vin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photoDataUri: compressedDataUri }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result?.error || "No se pudo procesar la imagen.");
       if (result?.vin) {
         setProcessStep("Verificando stock...");
         await handleAudit(result.vin, { modelo: result.modelo });
@@ -136,7 +141,7 @@ export default function InventarioGenius() {
         toast({ variant: "destructive", title: "IA no detectó datos" });
       }
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Error de procesamiento" });
+      toast({ variant: "destructive", title: "Error de procesamiento", description: err?.message || "No se pudo analizar la fotografía." });
     } finally {
       setIsProcessing(false);
       setProcessStep(null);
