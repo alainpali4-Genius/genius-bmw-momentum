@@ -93,7 +93,7 @@ export default function InventarioGenius() {
         origen: vehicle.ubicacion || "N/A",
         destino: vehicle.ubicacion || "N/A",
         usuario: "GENIUS IA",
-        detalles: "Inventario verificado por IA."
+        detalles: "Inventario verificado mediante reconocimiento de bastidor."
       };
       try {
         await addDoc(collection(db, "movimientos"), payload);
@@ -126,7 +126,7 @@ export default function InventarioGenius() {
     setProcessStep("Optimizando imagen...");
     try {
       const compressedDataUri = await compressImage(file);
-      setProcessStep("Analizando con Gemini...");
+      setProcessStep("Reconociendo el bastidor...");
       const response = await fetch("/api/scan-vin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -163,7 +163,7 @@ export default function InventarioGenius() {
         origen: "N/A",
         destino: payload.ubicacion,
         usuario: "GENIUS IA",
-        detalles: "Alta por escaneo IA."
+        detalles: "Alta mediante reconocimiento de bastidor."
       });
       setIsNewVehicleDialogOpen(false);
       setLastAudit({ ...payload, id: docRef.id, status: 'success', message: 'VEHÍCULO REGISTRADO Y AUDITADO' });
@@ -178,7 +178,7 @@ export default function InventarioGenius() {
       <div className="flex flex-col gap-0.5">
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0066b3]">Operaciones · Momentum Navarra</p>
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Inventario y movimientos</h1>
-        <p className="mt-1 text-sm text-slate-500">Auditoría de vehículos mediante lectura de bastidor y registro de actividad.</p>
+        <p className="mt-1 text-sm text-slate-500">Identificación rápida por fotografía del bastidor o introducción manual del VIN7.</p>
       </div>
 
       <Card className="overflow-hidden rounded-xl border-slate-200/80 bg-white text-slate-900 shadow-sm">
@@ -188,7 +188,7 @@ export default function InventarioGenius() {
           </div>
           <div className="space-y-1">
             <h2 className="text-lg font-semibold tracking-tight text-slate-900">{isProcessing ? "IA ANALIZANDO..." : "ESCANEAR PLACA VIN"}</h2>
-            <p className="text-sm text-slate-500">{processStep || "Captura la chapa del bastidor"}</p>
+            <p className="text-sm text-slate-500">{processStep || "Fotografía los últimos 7 caracteres o la placa VIN completa"}</p>
           </div>
           <div className="w-full max-w-sm space-y-3">
             <Button size="lg" className="h-12 w-full rounded-lg bg-[#0066b3] text-sm font-semibold text-white shadow-none hover:bg-[#00549a]" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}>
@@ -230,7 +230,7 @@ export default function InventarioGenius() {
 
       <Dialog open={isNewVehicleDialogOpen} onOpenChange={setIsNewVehicleDialogOpen}>
         <DialogContent className="p-0 border-none rounded-3xl overflow-hidden max-w-[90vw] md:max-w-md shadow-2xl">
-          <div className="bg-[#0066b3] p-5 text-center text-sm font-semibold text-white">ALTA POR ESCANEO IA</div>
+          <div className="bg-[#0066b3] p-5 text-center text-sm font-semibold text-white">ALTA DE VEHÍCULO · VIN RECONOCIDO</div>
           <div className="p-6 space-y-4 bg-white max-h-[80vh] overflow-y-auto">
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Modelo Detectado</Label><Input value={newVehicleData.modelo} onChange={e => setNewVehicleData({...newVehicleData, modelo: e.target.value})} className="h-11 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
             <div className="space-y-1">
