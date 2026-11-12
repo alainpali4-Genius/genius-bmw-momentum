@@ -531,6 +531,7 @@ function ShowroomContent() {
           </div>
         </DialogContent>
       </Dialog>
+      </> )}
     </div>
   );
 
