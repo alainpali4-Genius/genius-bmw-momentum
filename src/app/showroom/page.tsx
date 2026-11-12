@@ -253,7 +253,7 @@ function ShowroomContent() {
   const vehiculos = useMemo(() => (vehiculosRaw || []) as any[], [vehiculosRaw]);
   const pendingStock = useMemo(() => vehiculos.filter(v => !/^P\d+$/i.test(String(v.ubicacion || "")) && v.estado !== "Entregado"), [vehiculos]);
   const selectedVehicle = useMemo(() => vehiculos.find(v => v.id === selectedVehicleId), [vehiculos, selectedVehicleId]);
-  const vehicleColorOptions = useMemo(() => BMW_COLORS.filter(c => c.brand === (/^MINI\\b/i.test(selectedVehicle?.modelo || "") || selectedVehicle?.marca === "MINI" ? "MINI" : "BMW")), [selectedVehicle]);
+  const vehicleColorOptions = useMemo(() => { const isMini = String(selectedVehicle?.marca || "").trim().toUpperCase().startsWith("MINI") || String(selectedVehicle?.modelo || "").trim().toUpperCase().startsWith("MINI"); return BMW_COLORS.filter(c => c.brand === (isMini ? "MINI" : "BMW")); }, [selectedVehicle]);
   const newVehicleColorOptions = useMemo(() => BMW_COLORS.filter(c => c.brand === formData.marca), [formData.marca]);
 
   useEffect(() => {
