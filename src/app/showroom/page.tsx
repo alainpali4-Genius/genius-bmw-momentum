@@ -384,15 +384,13 @@ function ShowroomContent() {
 
   return (
     <div className="flex flex-col h-screen w-full bg-[#f4f7fa] overflow-hidden">
-      {!isStockOrigin && (
-<> 
-      <ShowroomEditor
+      {!isStockOrigin && <ShowroomEditor
         vehicles={vehiculos}
         movingVehicleId={movingVehicleId}
         onPlaceVehicle={(vehicleId, plazaId) => handleSwapOrMove(vehicleId, plazaId)}
         onSelectVehicle={setSelectedVehicleId}
         onCancelMove={() => setMovingVehicleId(null)}
-      />
+      />}
 
       {/* Diálogos y Sheets */}
       <Sheet open={!!selectedVehicleId} onOpenChange={o => !o && handleCloseDetail()}>
@@ -531,7 +529,6 @@ function ShowroomContent() {
           </div>
         </DialogContent>
       </Dialog>
-      </> )}
     </div>
   );
 
