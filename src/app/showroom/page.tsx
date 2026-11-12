@@ -280,6 +280,37 @@ function ShowroomContent() {
     router.replace(`/showroom${params.toString() ? `?${params.toString()}` : ''}`, { scroll: false });
   };
 
+  const [pendingStockVehicleId, setPendingStockVehicleId] = useState<string | null>(null);
+  const [stockDestination, setStockDestination] = useState("Entreplanta");
+
+  const handleVehicleStatusChange = async (vehicleId: string, status: string) => {
+    const vehicle = vehiculos.find(v => v.id === vehicleId);
+    if (!vehicle) return;
+    if (status === "Stock") {
+      setStockDestination("Entreplanta");
+      setPendingStockVehicleId(vehicleId);
+      return;
+    }
+    if (status === "Exposicion") {
+      const currentPlace = /^P(?:[1-9]|1[0-5])$/i.test(String(vehicle.ubicacion || "")) ? vehicle.ubicacion : null;
+      const freePlace = PLAZAS_LIST.find(p => !vehiculos.some(v => v.id !== vehicleId && v.ubicacion === p && !["Entregado","Cedido"].includes(String(v.estado || ""))));
+      const targetPlace = currentPlace || freePlace;
+      if (!targetPlace) {
+        toast({ variant: "destructive", title: "No hay plazas libres", description: "Libera una plaza del plano antes de pasar este vehículo a exposición." });
+        return;
+      }
+      await handleUpdateVehicle(vehicleId, { estado: "Exposicion", ubicacion: targetPlace });
+      return;
+    }
+    await handleUpdateVehicle(vehicleId, { estado: status, ubicacion: "No disponible" });
+  };
+
+  const confirmStockDestination = async () => {
+    if (!pendingStockVehicleId) return;
+    await handleUpdateVehicle(pendingStockVehicleId, { estado: "Stock", ubicacion: stockDestination });
+    setPendingStockVehicleId(null);
+  };
+
   const handleUpdateVehicle = async (vehicleId: string, updates: any) => {
     const docRef = doc(db, "vehiculos", vehicleId);
     const current = vehiculos.find(v => v.id === vehicleId);
@@ -445,6 +476,15 @@ function ShowroomContent() {
         onCancelMove={() => setMovingVehicleId(null)}
       />}
 
+      <Dialog open={!!pendingStockVehicleId} onOpenChange={open=>{if(!open)setPendingStockVehicleId(null);}}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Ubicación del vehículo en stock</DialogTitle></DialogHeader>
+          <p className="text-sm text-slate-600">El vehículo saldrá del plano de exposición. Selecciona dónde quedará guardado.</p>
+          <div className="space-y-2"><Label>Destino</Label><Select value={stockDestination} onValueChange={setStockDestination}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Entreplanta">Entreplanta</SelectItem><SelectItem value="Terraza">Terraza</SelectItem></SelectContent></Select></div>
+          <div className="flex justify-end gap-2"><Button variant="outline" onClick={()=>setPendingStockVehicleId(null)}>Cancelar</Button><Button onClick={confirmStockDestination}>Confirmar ubicación</Button></div>
+        </DialogContent>
+      </Dialog>
+
       {/* Diálogos y Sheets */}
       <Sheet open={!!selectedVehicleId} onOpenChange={o => !o && handleCloseDetail()}>
         <SheetContent side="bottom" className="h-[94vh] p-0 rounded-t-3xl border-none shadow-2xl overflow-hidden bg-slate-50">
@@ -486,8 +526,8 @@ function ShowroomContent() {
                   <h3 className="text-sm font-black uppercase text-secondary">Gestión comercial y logística</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-1"><Label>Cliente / destino del correo</Label><Input value={selectedVehicle.clienteLogistica || selectedVehicle.destinoLogistico || selectedVehicle.tipoLogistico || ""} readOnly className="bg-slate-50"/></div>
-                    <div className="space-y-1"><Label>Estado</Label><Select value={selectedVehicle.estado || "Stock"} onValueChange={v=>handleUpdateVehicle(selectedVehicle.id,{estado:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{ESTADOS.map(e=><SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent></Select></div>
-                    <div className="space-y-1"><Label>Ubicación física</Label><Select value={selectedVehicle.ubicacion || "Entreplanta"} onValueChange={v=>handleUpdateVehicle(selectedVehicle.id,{ubicacion:v, estado:v==="Demo en uso"?"Demo en uso":selectedVehicle.estado})}><SelectTrigger><SelectValue placeholder="Seleccionar ubicación"/></SelectTrigger><SelectContent><SelectItem value="Entreplanta">Entreplanta</SelectItem><SelectItem value="Terraza">Terraza</SelectItem><SelectItem value="Zona de entrega">Zona de entrega</SelectItem><SelectItem value="Demo en uso">Demo en uso</SelectItem><Separator className="my-1"/>{Array.from(new Set([...PLAZAS_LIST,...vehiculos.map(v=>String(v.ubicacion||"")).filter(v=>/^P\d+$/i.test(v))])).map(p=><SelectItem key={p} value={p}>Exposición · {p}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-1"><Label>Estado</Label><Select value={selectedVehicle.estado || "Stock"} onValueChange={v=>handleVehicleStatusChange(selectedVehicle.id,v)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{ESTADOS.map(e=><SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-1"><Label>Ubicación física</Label>{selectedVehicle.estado === "Exposicion" ? <Select value={selectedVehicle.ubicacion || ""} onValueChange={v=>handleUpdateVehicle(selectedVehicle.id,{ubicacion:v})}><SelectTrigger><SelectValue placeholder="Plaza de exposición"/></SelectTrigger><SelectContent>{PLAZAS_LIST.map(p=><SelectItem key={p} value={p}>Exposición · {p}</SelectItem>)}</SelectContent></Select> : selectedVehicle.estado === "Stock" ? <Select value={selectedVehicle.ubicacion === "Terraza" ? "Terraza" : "Entreplanta"} onValueChange={v=>handleUpdateVehicle(selectedVehicle.id,{ubicacion:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Entreplanta">Entreplanta</SelectItem><SelectItem value="Terraza">Terraza</SelectItem></SelectContent></Select> : <Input value="No disponible para exposición" readOnly className="bg-slate-100 text-slate-500"/>}</div>
                     <div className="space-y-1"><Label>Fecha de entrada</Label><Input type="date" value={selectedVehicle.fechaEntrada || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{fechaEntrada:e.target.value})}/></div>
                     <div className="space-y-1"><Label>Responsable</Label><Input value={selectedVehicle.responsable || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{responsable:e.target.value})}/></div>
                     {selectedVehicle.ubicacion === "Demo en uso" && <div className="space-y-1 md:col-span-2"><Label>Persona que tiene el demo</Label><Input value={selectedVehicle.demoAsignadoA || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{demoAsignadoA:e.target.value})} placeholder="Nombre y apellidos"/></div>}
