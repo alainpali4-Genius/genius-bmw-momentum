@@ -200,7 +200,7 @@ function ShowroomContent() {
   });
 
   const vehiculos = useMemo(() => (vehiculosRaw || []) as any[], [vehiculosRaw]);
-  const pendingStock = useMemo(() => vehiculos.filter(v => !PLAZAS_LIST.includes(v.ubicacion) && v.estado !== "Entregado"), [vehiculos]);
+  const pendingStock = useMemo(() => vehiculos.filter(v => !/^P\d+$/i.test(String(v.ubicacion || "")) && v.estado !== "Entregado"), [vehiculos]);
   const selectedVehicle = useMemo(() => vehiculos.find(v => v.id === selectedVehicleId), [vehiculos, selectedVehicleId]);
 
   useEffect(() => {
@@ -279,7 +279,7 @@ function ShowroomContent() {
     const targetCar = vehiculos.find(v => v.ubicacion === targetPlaza);
     
     if (targetCar && targetCar.id !== sourceId) {
-      const oldLocation = PLAZAS_LIST.includes(sourceCar.ubicacion) ? sourceCar.ubicacion : 'Stock';
+      const oldLocation = /^P\d+$/i.test(String(sourceCar.ubicacion || "")) ? sourceCar.ubicacion : 'Stock';
       await handleUpdateVehicle(sourceId, { ubicacion: targetPlaza, estado: 'Exposicion' });
       await handleUpdateVehicle(targetCar.id, { ubicacion: oldLocation });
       toast({ title: "Intercambio Realizado", description: `${sourceCar.modelo} ↔ ${targetCar.modelo}` });
@@ -436,7 +436,7 @@ function ShowroomContent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-1"><Label>Cliente / destino del correo</Label><Input value={selectedVehicle.clienteLogistica || selectedVehicle.destinoLogistico || selectedVehicle.tipoLogistico || ""} readOnly className="bg-slate-50"/></div>
                     <div className="space-y-1"><Label>Estado</Label><Select value={selectedVehicle.estado || "Stock"} onValueChange={v=>handleUpdateVehicle(selectedVehicle.id,{estado:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{ESTADOS.map(e=><SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent></Select></div>
-                    <div className="space-y-1"><Label>Ubicación física</Label><Select value={selectedVehicle.ubicacion || "Entreplanta"} onValueChange={v=>handleUpdateVehicle(selectedVehicle.id,{ubicacion:v, estado:v==="Demo en uso"?"Demo en uso":selectedVehicle.estado})}><SelectTrigger><SelectValue placeholder="Seleccionar ubicación"/></SelectTrigger><SelectContent><SelectItem value="Entreplanta">Entreplanta</SelectItem><SelectItem value="Terraza">Terraza</SelectItem><SelectItem value="Zona de entrega">Zona de entrega</SelectItem><SelectItem value="Demo en uso">Demo en uso</SelectItem><Separator className="my-1"/>{PLAZAS_LIST.map(p=><SelectItem key={p} value={p}>Exposición · {p}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-1"><Label>Ubicación física</Label><Select value={selectedVehicle.ubicacion || "Entreplanta"} onValueChange={v=>handleUpdateVehicle(selectedVehicle.id,{ubicacion:v, estado:v==="Demo en uso"?"Demo en uso":selectedVehicle.estado})}><SelectTrigger><SelectValue placeholder="Seleccionar ubicación"/></SelectTrigger><SelectContent><SelectItem value="Entreplanta">Entreplanta</SelectItem><SelectItem value="Terraza">Terraza</SelectItem><SelectItem value="Zona de entrega">Zona de entrega</SelectItem><SelectItem value="Demo en uso">Demo en uso</SelectItem><Separator className="my-1"/>{Array.from(new Set([...PLAZAS_LIST,...vehiculos.map(v=>String(v.ubicacion||"")).filter(v=>/^P\d+$/i.test(v))])).map(p=><SelectItem key={p} value={p}>Exposición · {p}</SelectItem>)}</SelectContent></Select></div>
                     <div className="space-y-1"><Label>Fecha de entrada</Label><Input type="date" value={selectedVehicle.fechaEntrada || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{fechaEntrada:e.target.value})}/></div>
                     <div className="space-y-1"><Label>Responsable</Label><Input value={selectedVehicle.responsable || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{responsable:e.target.value})}/></div>
                     {selectedVehicle.ubicacion === "Demo en uso" && <div className="space-y-1 md:col-span-2"><Label>Persona que tiene el demo</Label><Input value={selectedVehicle.demoAsignadoA || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{demoAsignadoA:e.target.value})} placeholder="Nombre y apellidos"/></div>}
