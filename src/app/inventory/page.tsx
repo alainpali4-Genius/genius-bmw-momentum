@@ -202,7 +202,8 @@ export default function InventarioGenius() {
 
       if (seven) {
         setManualVin(seven);
-        toast({ title: "VIN7 leído", description: "Revisa los 7 caracteres detectados y pulsa la flecha para buscar el vehículo." });
+        setProcessStep("Comprobando los últimos 7 caracteres...");
+        await handleAudit(seven);
       } else {
         toast({ variant: "destructive", title: "No se distingue el bastidor", description: "Prueba otra foto más cerca, enfocada y sin reflejos. También puedes introducir el VIN7 manualmente." });
       }
