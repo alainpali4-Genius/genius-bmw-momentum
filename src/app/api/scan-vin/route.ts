@@ -6,9 +6,9 @@ export const maxDuration = 30;
 
 export async function POST(request: NextRequest) {
   try {
-    if (!process.env.GOOGLE_GENAI_API_KEY) {
+    if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_GENAI_API_KEY) {
       return NextResponse.json(
-        { error: "Falta configurar GOOGLE_GENAI_API_KEY en las variables de entorno de Vercel." },
+        { error: "Falta configurar GEMINI_API_KEY en las variables de entorno de Vercel." },
         { status: 503 }
       );
     }
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : "Error desconocido";
     return NextResponse.json(
       { error: message.includes("API key") || message.includes("api key")
-          ? "La clave de Gemini no está configurada correctamente en Vercel."
+          ? "La clave GEMINI_API_KEY no está configurada correctamente en Vercel."
           : "Gemini no ha podido procesar la imagen. Comprueba la conexión e inténtalo de nuevo.",
         diagnostic: process.env.NODE_ENV === "development" ? message : undefined },
       { status: 500 }
