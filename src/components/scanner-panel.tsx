@@ -163,7 +163,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       if (!response.ok) {
         const diagnostic = typeof result?.diagnostic === "string" ? result.diagnostic.trim() : "";
         const providerStatus = result?.providerStatus ? " (HTTP " + result.providerStatus + ")" : "";
-        const detail = diagnostic ? "\\nDetalle técnico: " + diagnostic : "";
+        const detail = diagnostic ? "\nDetalle técnico: " + diagnostic : "";
         throw new Error((result?.error || "No se ha podido analizar la fotografía.") + providerStatus + detail);
       }
 
