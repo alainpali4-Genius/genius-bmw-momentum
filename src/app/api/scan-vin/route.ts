@@ -68,6 +68,7 @@ Reglas:
               properties: {
                 vin: { type: "STRING" },
                 modelo: { type: "STRING" },
+                colorCode: { type: "STRING" },
                 confianza: { type: "NUMBER" },
               },
               required: ["vin", "modelo", "colorCode", "confianza"],
