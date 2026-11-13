@@ -248,8 +248,10 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       const detailRaw = detailTexts.join("\n");
       plateText += "\n" + detailRaw;
       const detailCompact = detailRaw.toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/O/g, "0").replace(/[|Il]/g, "1");
-      const modelMatch = detailCompact.match(/(?:118|120|318|320|330|418|420|430|518|520|530|630|640|718|720|730|740|840|850)[DIE]/);
-      const modelDetected = modelMatch ? modelMatch[0].slice(0, -1) + modelMatch[0].slice(-1).toLowerCase() : "";
+      const modelMatch = detailCompact.match(/(?:118|120|318|320|330|418|420|430|518|520|530|630|640|718|720|730|740|840|850)[DIE0]/);
+      const modelDetected = modelMatch
+        ? modelMatch[0].slice(0, -1) + (modelMatch[0].endsWith("0") ? "d" : modelMatch[0].slice(-1).toLowerCase())
+        : "";
       const colorAliases: Record<string, string[]> = {
         A96: ["A96", "A9G", "A9B", "A9S"],
         A83: ["A83", "A8B", "A8S"],
