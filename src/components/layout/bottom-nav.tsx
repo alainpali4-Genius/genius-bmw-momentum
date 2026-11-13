@@ -11,7 +11,6 @@ const navItems = [
   { label: 'Expo', icon: Grid3X3, href: '/showroom' },
   { label: 'Stock', icon: Package, href: '/stock' },
   { label: 'Entregas', icon: CalendarDays, href: '/delivery' },
-  { label: 'Escáner', icon: ScanLine, href: '/scanner' },
 ];
 
 export function BottomNav() {
