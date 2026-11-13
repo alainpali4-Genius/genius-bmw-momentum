@@ -75,3 +75,24 @@ export const TIPOS_LOGISTICOS = [
   "Demo",
   "Devolucion Renting"
 ];
+
+
+// Motorization resolver shared by VIN camera, manual intake, stock and logistics imports.
+const MOTOR_RULES: Array<{ pattern: RegExp; value: string }> = [
+  { pattern: /COUNTRYMAN\s+SE\s+ALL4/i, value: "Eléctrico · SE ALL4 · 230 kW (313 CV)" },
+  { pattern: /COUNTRYMAN\s+E\b/i, value: "Eléctrico · E · 150 kW (204 CV)" },
+  { pattern: /ACEMAN\s+SE/i, value: "Eléctrico · SE · 160 kW (218 CV)" },
+  { pattern: /IX1.*EDRIVE20/i, value: "Eléctrico · eDrive20 · 150 kW (204 CV)" },
+  { pattern: /IX1.*XDRIVE30/i, value: "Eléctrico · xDrive30 · 230 kW (313 CV)" },
+  { pattern: /X5.*50E/i, value: "Híbrido enchufable · 3.0 gasolina + eléctrico · xDrive" },
+  { pattern: /330E/i, value: "Híbrido enchufable · 2.0 gasolina + eléctrico" },
+  { pattern: /420D/i, value: "Diésel · 2.0" },
+  { pattern: /430D|330D|530D|630D|730D|X3.*30D|X5.*30D|X5.*40D/i, value: "Diésel · 3.0" },
+  { pattern: /320D|520D|118D|218D|318D|518D|120D|220D|X3.*20D|X1.*20D|X2.*20D/i, value: "Diésel · 2.0" },
+  { pattern: /M340I|M440I/i, value: "Gasolina · 3.0 M TwinPower Turbo" },
+  { pattern: /M3|M4/i, value: "Gasolina · motor BMW M" },
+];
+export function suggestedMotor(model: string): string {
+  const normalized = String(model || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/BMW|MINI/g, " ").replace(/[^A-Z0-9]+/g, " ").trim();
+  return MOTOR_RULES.find(rule => rule.pattern.test(normalized))?.value || "";
+}
