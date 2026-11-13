@@ -87,26 +87,26 @@ Reglas:
       const googleMessage = googlePayload?.error?.message || "";
       console.error("[VIN_RECOGNITION_PROVIDER]", status, googleMessage);
       if (status === 400 || status === 403 || status === 401) {
-        // Devolvemos el diagnóstico del proveedor (nunca la clave) para distinguir
-        // una clave inválida de una API deshabilitada o una restricción de proyecto.
         const detail = String(googleMessage || "").slice(0, 280);
         let guidance = "Google ha rechazado la solicitud de Gemini.";
         if (/API_KEY_INVALID|invalid api key|API key not valid/i.test(detail)) {
-          guidance = "La clave configurada en Vercel no es válida. Crea una clave nueva en Google AI Studio y sustituye GEMINI_API_KEY.";
+          guidance = "La clave configurada en Vercel no es válida. Comprueba GEMINI_API_KEY.";
         } else if (/SERVICE_DISABLED|has not been used|not enabled|disabled/i.test(detail)) {
-          guidance = "La API Generative Language no está habilitada en el proyecto de Google asociado a la clave. Habilítala y vuelve a desplegar.";
+          guidance = "La API Generative Language no está habilitada en el proyecto de Google asociado a la clave.";
         } else if (/PERMISSION_DENIED|referer|IP address|blocked/i.test(detail)) {
-          guidance = "La clave tiene restricciones que bloquean las llamadas desde el servidor de Vercel. Revisa sus restricciones de API y de aplicación.";
+          guidance = "La clave tiene restricciones que bloquean las llamadas desde Vercel. Revisa las restricciones de API y aplicación.";
         }
-        return NextResponse.json(
-          { error: guidance, diagnostic: detail || `Respuesta HTTP ${status} de Google.` },
-          { status: 502 }
-        );
+        return NextResponse.json({ error: guidance, diagnostic: detail || `Respuesta HTTP ${status} de Google.` }, { status: 502 });
       }
       if (status === 429) {
-        return NextResponse.json({ error: "Se ha alcanzado temporalmente el límite de consultas de reconocimiento. Espera un minuto y vuelve a intentarlo." }, { status: 429 });
+        return NextResponse.json({ error: "Google ha limitado temporalmente las consultas. Espera un minuto y vuelve a intentarlo.", diagnostic: String(googleMessage || "HTTP 429").slice(0, 280) }, { status: 429 });
       }
-      return NextResponse.json({ error: "El servicio de reconocimiento no está disponible ahora. Inténtalo de nuevo." }, { status: 502 });
+      // Diagnóstico acotado: nunca devolver la clave ni cabeceras de la petición.
+      return NextResponse.json({
+        error: "Gemini ha devuelto un error al analizar la fotografía.",
+        diagnostic: String(googleMessage || `Respuesta HTTP ${status} de Google.`).slice(0, 280),
+        providerStatus: status,
+      }, { status: 502 });
     }
 
     const text = googlePayload?.candidates?.[0]?.content?.parts
