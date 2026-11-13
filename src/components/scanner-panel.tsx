@@ -110,6 +110,12 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
     );
 
     if (vehicle) {
+      const detectedColor = aiResult?.colorCode ? BMW_COLORS.find(c => c.code === aiResult.colorCode) : undefined;
+      const enrichment: Record<string, any> = {};
+      if (!vehicle.modelo && aiResult?.modelo) enrichment.modelo = aiResult.modelo;
+      if (!vehicle.colorCodigo && aiResult?.colorCode) enrichment.colorCodigo = aiResult.colorCode;
+      if (!vehicle.colorExterior && detectedColor) enrichment.colorExterior = detectedColor.name;
+      if (Object.keys(enrichment).length) await updateDoc(doc(db, "vehiculos", vehicle.id), { ...enrichment, updatedAt: new Date().toISOString() });
       const payload = {
         vehiculoId: vehicle.id,
         vehiculoInfo: `${vehicle.modelo} (${vehicle.vin7})`,
@@ -122,7 +128,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       };
       try {
         await addDoc(collection(db, "movimientos"), payload);
-        setLastAudit({ ...vehicle, vin: vinNorm, status: 'success', message: 'UBICACIÓN CONFIRMADA' });
+        setLastAudit({ ...vehicle, ...enrichment, vin: vinNorm, colorCodigo: enrichment.colorCodigo || vehicle.colorCodigo || aiResult?.colorCode, colorExterior: enrichment.colorExterior || vehicle.colorExterior || detectedColor?.name, status: 'success', message: 'UBICACIÓN CONFIRMADA · ' + (vehicle.ubicacion || 'SIN UBICACIÓN') });
         setManualVin("");
         toast({ title: "Vehículo Localizado", description: `${vehicle.modelo} en ${vehicle.ubicacion}` });
       } catch (e) {
@@ -266,6 +272,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
                 <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest leading-none mb-1">Resultado de identificación</p>
                 <h3 className="font-black text-secondary uppercase text-sm truncate">{lastAudit.modelo || 'BASTIDOR DESCONOCIDO'}</h3>
                 <p className="font-mono text-[9px] font-bold text-slate-400 tracking-widest truncate">{lastAudit.vin}</p>
+                {(lastAudit.colorCodigo || lastAudit.colorExterior) && <p className="mt-1 text-xs text-slate-500">Color: {lastAudit.colorExterior || "Sin nombre"} · Código {lastAudit.colorCodigo}</p>}
                 <p className={cn("text-[8px] font-black uppercase mt-2", lastAudit.status === 'success' ? 'text-emerald-600' : 'text-red-600')}>{lastAudit.message}</p>
               </div>
             </div>
