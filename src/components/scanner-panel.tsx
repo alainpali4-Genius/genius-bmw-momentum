@@ -161,7 +161,10 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error(result?.error || "No se ha podido analizar la fotografía.");
+        const diagnostic = typeof result?.diagnostic === "string" ? result.diagnostic.trim() : "";
+        const providerStatus = result?.providerStatus ? " (HTTP " + result.providerStatus + ")" : "";
+        const detail = diagnostic ? "\\nDetalle técnico: " + diagnostic : "";
+        throw new Error((result?.error || "No se ha podido analizar la fotografía.") + providerStatus + detail);
       }
 
       const recognized = String(result?.vin || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
