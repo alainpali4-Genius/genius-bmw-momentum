@@ -64,7 +64,7 @@ Reglas:
       }
       if (googleResponse.ok || ![429, 500, 502, 503, 504].includes(googleResponse.status)) break;
     }
-    if (!googleResponse) return NextResponse.json({ error: "No se ha recibido respuesta del servicio de reconocimiento." }, { status: 503 });    const googlePayload = await googleResponse.json().catch(() => ({}));
+    if (!googleResponse) return NextResponse.json({ error: "No se ha recibido respuesta del servicio de reconocimiento." }, { status: 503 });
     if (!googleResponse.ok) {
       const status = googleResponse.status;
       const googleMessage = googlePayload?.error?.message || "";
