@@ -127,8 +127,8 @@ Reglas:
 
     const vin = cleanVin(parsed?.vin);
     const plateText = String(parsed?.textoPlaca || "").toUpperCase();
-    const detectedModel = String(parsed?.modelo || "").trim() || (plateText.match(/\\b(?:[1-8]\\d{2}[A-Z]{1,3}|X[1-7]|Z4|XM|IX[1-9]?)\\b/)?.[0] || "");
-    const detectedColor = String(parsed?.colorCode || "").trim().toUpperCase() || (plateText.match(/\\b[A-Z]\\d{2}\\b/)?.[0] || "");
+    const detectedModel = String(parsed?.modelo || "").trim() || (plateText.match(/\b(?:[1-8]\d{2}[A-Z]{1,3}|X[1-7]|Z4|XM|IX[1-9]?)\b/)?.[0] || "");
+    const detectedColor = String(parsed?.colorCode || "").trim().toUpperCase() || (plateText.match(/\b[A-Z]\d{2}\b/)?.[0] || "");
     if (vin.length !== 7 && vin.length !== 17) {
       return NextResponse.json({ error: "No se ha podido identificar un VIN fiable. Acerca la cámara a los últimos 7 caracteres y evita reflejos." }, { status: 422 });
     }
