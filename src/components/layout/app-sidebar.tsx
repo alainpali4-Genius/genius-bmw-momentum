@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import {
-  LayoutDashboard, Grid3X3, Car, CalendarDays, Package, ClipboardPaste,
+  LayoutDashboard, Grid3X3, Car, CalendarDays, ScanLine, ClipboardPaste,
   History, Settings, ShieldAlert, LogOut, X
 } from "lucide-react"
 import {
@@ -22,7 +22,7 @@ const operations = [
   { title: "Importar correo BMW", url: "/import", icon: ClipboardPaste },
   { title: "Plano de exposición", url: "/showroom", icon: Grid3X3 },
   { title: "Entregas", url: "/delivery", icon: CalendarDays },
-  { title: "Inventario", url: "/inventory", icon: Package },
+  { title: "Escáner VIN", url: "/scanner", icon: ScanLine },
 ]
 const management = [
   { title: "Incidencias", url: "/incidents", icon: ShieldAlert },
