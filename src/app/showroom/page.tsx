@@ -18,7 +18,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams, useRouter } from "next/navigation";
 import ShowroomEditor from "@/components/showroom/showroom-editor";
-import { suggestedMotor as resolveSuggestedMotor } from "@/lib/vehicle-constants";\nimport { suggestedMotor as resolveSuggestedMotor } from "@/lib/vehicle-constants";
+import { suggestedMotor as resolveSuggestedMotor } from "@/lib/vehicle-constants";
 
 export const BMW_COLORS = [
   // BMW: gama habitual y colores BMW Individual/M.
