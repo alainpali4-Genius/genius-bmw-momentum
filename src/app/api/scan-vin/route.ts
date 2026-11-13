@@ -34,9 +34,10 @@ export async function POST(request: NextRequest) {
 
     const prompt = `Lee la inscripción del número de bastidor de este vehículo BMW o MINI.
 Devuelve exclusivamente JSON válido con estas propiedades:
-{"vin":"VIN completo de 17 caracteres o los últimos 7 caracteres si solo esos son legibles","modelo":"modelo o motorización visible en la placa, por ejemplo 420d; si no es legible, cadena vacía","colorCode":"código de color BMW/MINI visible en la placa, por ejemplo A96; si no es legible, cadena vacía","confianza":0.0}
+{"vin":"VIN completo de 17 caracteres o los últimos 7 caracteres si solo esos son legibles","modelo":"modelo o motorización impresa en la placa, por ejemplo 420d","colorCode":"código de pintura impreso en la placa, por ejemplo A96","textoPlaca":"transcripción literal de todo el texto legible de la placa","confianza":0.0}
 Reglas:
-- La placa BMW/MINI puede mostrar el modelo (por ejemplo 420d) y el código de pintura en la columna izquierda (por ejemplo A96). Lee esos datos solo si son claramente visibles.
+- Lee también el modelo/motorización y el código de pintura. En una placa BMW, por ejemplo, la columna izquierda puede mostrar 420d y A96. En la fotografía de una placa nítida no dejes esos campos vacíos si se distinguen.
+- Devuelve en textoPlaca todo el texto legible de la placa, respetando letras y números.
 - Prioriza el VIN de 17 caracteres situado en la zona central de la placa; en caso de que no sea legible completo, lee los últimos 7 caracteres consecutivos.
 - Un VIN tiene 17 caracteres y no contiene las letras I, O ni Q.
 - Si puedes leer el VIN completo, devuelve los 17 caracteres. Si solo se distinguen con claridad los últimos 7, devuelve esos 7.
@@ -69,9 +70,10 @@ Reglas:
                 vin: { type: "STRING" },
                 modelo: { type: "STRING" },
                 colorCode: { type: "STRING" },
+                textoPlaca: { type: "STRING" },
                 confianza: { type: "NUMBER" },
               },
-              required: ["vin", "modelo", "colorCode", "confianza"],
+              required: ["vin", "modelo", "colorCode", "textoPlaca", "confianza"],
             },
           },
         }),
@@ -124,14 +126,17 @@ Reglas:
     }
 
     const vin = cleanVin(parsed?.vin);
+    const plateText = String(parsed?.textoPlaca || "").toUpperCase();
+    const detectedModel = String(parsed?.modelo || "").trim() || (plateText.match(/\\b(?:[1-8]\\d{2}[A-Z]{1,3}|X[1-7]|Z4|XM|IX[1-9]?)\\b/)?.[0] || "");
+    const detectedColor = String(parsed?.colorCode || "").trim().toUpperCase() || (plateText.match(/\\b[A-Z]\\d{2}\\b/)?.[0] || "");
     if (vin.length !== 7 && vin.length !== 17) {
       return NextResponse.json({ error: "No se ha podido identificar un VIN fiable. Acerca la cámara a los últimos 7 caracteres y evita reflejos." }, { status: 422 });
     }
 
     return NextResponse.json({
       vin,
-      modelo: typeof parsed?.modelo === "string" ? parsed.modelo.trim() : "",
-      colorCode: typeof parsed?.colorCode === "string" ? parsed.colorCode.trim().toUpperCase() : "",
+      modelo: detectedModel,
+      colorCode: detectedColor,
       confianza: Math.max(0, Math.min(1, Number(parsed?.confianza) || 0)),
     });
   } catch (error) {
