@@ -189,7 +189,8 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
         if (possible) recognized = possible.slice(-7);
       }
       if (recognized.length !== 7 && recognized.length !== 17) throw new Error("No se ha podido leer un VIN claro. Limpia la placa, evita reflejos y fotografía la línea del bastidor de frente.");
-      setProcessStep("Comprobando el bastidor en el stock..."); await handleAudit(recognized);
+      setManualVin(recognized);
+      toast({ title: "VIN leído", description: "Comprueba los caracteres detectados y pulsa la flecha para consultar el stock." });
     } catch (err: any) {
       toast({ variant: "destructive", title: "No se ha podido leer la placa", description: err?.message || "Repite la fotografía o introduce manualmente los últimos siete caracteres del VIN." });
     } finally { setIsProcessing(false); setProcessStep(null); if (fileInputRef.current) fileInputRef.current.value = ""; }
