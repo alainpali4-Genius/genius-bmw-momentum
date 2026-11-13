@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BMW_COLORS, TIPOS_LOGISTICOS } from "../showroom/page";
+import { BMW_COLORS, TIPOS_LOGISTICOS } from "@/lib/vehicle-constants";
 
 const compressImage = (file: File, maxWidth = 1600, quality = 0.82): Promise<string> => {
   return new Promise((resolve, reject) => {
