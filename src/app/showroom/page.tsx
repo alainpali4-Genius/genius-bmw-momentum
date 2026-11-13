@@ -17,7 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGr
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams, useRouter } from "next/navigation";
-import ShowroomEditor from "@/components/showroom/showroom-editor";\nimport { suggestedMotor as resolveSuggestedMotor } from "@/lib/vehicle-constants";
+import ShowroomEditor from "@/components/showroom/showroom-editor";
+import { suggestedMotor as resolveSuggestedMotor } from "@/lib/vehicle-constants";\nimport { suggestedMotor as resolveSuggestedMotor } from "@/lib/vehicle-constants";
 
 export const BMW_COLORS = [
   // BMW: gama habitual y colores BMW Individual/M.
@@ -132,7 +133,7 @@ const MOTOR_BY_MODEL: Array<{ test: RegExp; motor: string }> = [
   { test: /i5.*eDRIVE40/i, motor: "Eléctrico · eDrive · 250 kW (340 CV)" },
 ];
 export function suggestedMotor(model: string) {
-  return MOTOR_BY_MODEL.find(item => item.test.test(model.trim()))?.motor || "";
+  return resolveSuggestedMotor(model) || MOTOR_BY_MODEL.find(item => item.test.test(model.trim()))?.motor || "";
 }
 export function suggestedColor(model: string) {
   const value = model.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
