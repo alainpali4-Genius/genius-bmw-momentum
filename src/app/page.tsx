@@ -10,6 +10,7 @@ import { collection, query } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getVehicleColor, suggestedMotor } from "./showroom/page";
+import { ScannerPanel } from "@/components/scanner-panel";
 
 const norm = (value: unknown) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 const isDemo = (v: any) => norm(v.tipoLogistico).includes("demo") || norm(v.ubicacion) === "demo en uso";
@@ -85,6 +86,11 @@ export default function GeniusDashboard() {
             <div><p className="text-xs text-slate-300">Entregados</p><p className="mt-1 text-3xl font-semibold">{loading ? "—" : stats.delivered}</p></div>
           </div>
         </div>
+
+        <section aria-label="Identificación rápida de vehículos" className="space-y-3">
+          <div className="flex items-end justify-between"><div><p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0872bd]">Acceso rápido</p><h2 className="text-xl font-semibold text-slate-900">Identificar vehículo</h2></div><Link href="/scanner" className="text-sm font-medium text-[#0066b3] hover:underline">Abrir escáner completo <ArrowUpRight className="ml-1 inline h-4 w-4"/></Link></div>
+          <ScannerPanel compact />
+        </section>
 
         <section className="space-y-3">
           <div className="flex items-end justify-between"><div><p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0872bd]">Ubicación física</p><h2 className="text-xl font-semibold text-slate-900">¿Dónde están los vehículos?</h2></div><Link href="/stock" className="text-sm font-medium text-[#0066b3] hover:underline">Ver stock completo <ArrowUpRight className="ml-1 inline h-4 w-4"/></Link></div>
