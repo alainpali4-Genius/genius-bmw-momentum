@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BMW_COLORS, TIPOS_LOGISTICOS } from "@/lib/vehicle-constants";
+import { BMW_COLORS, TIPOS_LOGISTICOS, suggestedMotor } from "@/lib/vehicle-constants";
 
 const compressImage = (file: File, maxWidth = 1600, quality = 0.82): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -126,7 +126,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       const enrichment: Record<string, any> = {};
       if (!vehicle.modelo && aiResult?.modelo) enrichment.modelo = aiResult.modelo;
       if (!vehicle.colorCodigo && aiResult?.colorCode) enrichment.colorCodigo = aiResult.colorCode;
-      if (!vehicle.colorExterior && detectedColor) enrichment.colorExterior = detectedColor.name;
+      if (!vehicle.colorExterior && detectedColor) enrichment.colorExterior = detectedColor.name;\n      if (!vehicle.motor && (aiResult?.modelo || vehicle.modelo)) { const motor = suggestedMotor(aiResult?.modelo || vehicle.modelo); if (motor) enrichment.motor = motor; }
       if (Object.keys(enrichment).length) await updateDoc(doc(db, "vehiculos", vehicle.id), { ...enrichment, updatedAt: new Date().toISOString() });
       const payload = {
         vehiculoId: vehicle.id,
@@ -150,7 +150,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       setLastAudit({ vin: vinNorm, status: 'error', message: 'BASTIDOR NO ENCONTRADO EN STOCK' });
       setNewVehicleData({
         modelo: aiResult?.modelo || "",
-        motor: aiResult?.modelo ? suggestedScannerMotor(aiResult.modelo) : "",
+        motor: aiResult?.modelo ? suggestedMotor(aiResult.modelo) : "",
         vin: vinNorm,
         vin7: vin7,
         colorBMW: BMW_COLORS.some(c => c.code === aiResult?.colorCode) ? aiResult!.colorCode! : "",
@@ -295,7 +295,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       return;
     }
     const color = BMW_COLORS.find(c => c.code === newVehicleData.colorBMW);
-    const payload = { ...newVehicleData, motor: newVehicleData.motor || suggestedScannerMotor(newVehicleData.modelo), vin: newVehicleData.vin.toUpperCase(), vin7: newVehicleData.vin7.toUpperCase(), colorExterior: color?.name || "", colorCodigo: newVehicleData.colorBMW || "", estado: "Stock", fechaEntrada: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    const payload = { ...newVehicleData, motor: newVehicleData.motor || suggestedMotor(newVehicleData.modelo), vin: newVehicleData.vin.toUpperCase(), vin7: newVehicleData.vin7.toUpperCase(), colorExterior: color?.name || "", colorCodigo: newVehicleData.colorBMW || "", estado: "Stock", fechaEntrada: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     try {
       const docRef = await addDoc(collection(db, "vehiculos"), payload);
       await addDoc(collection(db, "movimientos"), {
@@ -377,7 +377,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
           <div className="bg-[#0066b3] p-5 text-center text-sm font-semibold text-white">VEHÍCULO NO ENCONTRADO · NUEVA ALTA</div>
           <div className="p-6 space-y-4 bg-white max-h-[80vh] overflow-y-auto">
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Bastidor reconocido (VIN)</Label><Input value={newVehicleData.vin} onChange={e => { const vin = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 17); setNewVehicleData({...newVehicleData, vin, vin7: vin.slice(-7)}); }} maxLength={17} className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-xs tracking-wide" /></div>
-            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Modelo detectado · editable</Label><Input value={newVehicleData.modelo} placeholder="Modelo no identificado: introdúcelo" onChange={e => setNewVehicleData({...newVehicleData, modelo: e.target.value})} className="h-11 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
+            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Modelo detectado · editable</Label><Input value={newVehicleData.modelo} placeholder="Modelo no identificado: introdúcelo" onChange={e => { const modelo = e.target.value; setNewVehicleData({...newVehicleData, modelo, motor: suggestedMotor(modelo) || newVehicleData.motor}); }} className="h-11 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Motorización sugerida</Label><Input value={newVehicleData.motor} placeholder="Se completa según el modelo" onChange={e => setNewVehicleData({...newVehicleData, motor: e.target.value})} className="h-11 bg-slate-50 border-none rounded-xl text-[10px]" /></div>
             <div className="space-y-1">
               <Label className="text-[8px] font-black uppercase text-slate-400 px-1">Tipo Logístico</Label>
