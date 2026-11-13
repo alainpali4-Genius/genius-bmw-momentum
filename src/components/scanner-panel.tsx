@@ -194,6 +194,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
         variants.push(canvas.toDataURL("image/png"));
       }
       let recognized = "";
+      const recognizedCandidates: string[] = [];
       let plateText = "";
       const bmwWmi = /^(WBA|WBS|WBY|WBX|WMW|3MW|5UX|5YM|4US|4WZ)/;
       // Leer las tres versiones completas aunque el VIN aparezca pronto: el modelo y
@@ -206,9 +207,11 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
         const compact = text.toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/O/g, "0").replace(/[IQ]/g, "1");
         const matches = compact.match(/(?:WBA|WBS|WBY|WBX|WMW|3MW|5UX|5YM|4US|4WZ)[A-Z0-9]{14}/g) || [];
         const valid = matches.find(candidate => candidate.length === 17 && bmwWmi.test(candidate) && /^[A-HJ-NPR-Z0-9]{17}$/.test(candidate));
-        if (!recognized && valid) recognized = valid;
+        if (valid) recognizedCandidates.push(valid);
       }
-      if (!recognized) throw new Error("No se ha podido extraer el bastidor completo. Prueba una foto más cercana, enfocada y sin reflejos, o introduce el VIN7 manualmente.");
+      if (!recognizedCandidates.length) throw new Error("No se ha podido extraer el bastidor completo. Prueba una foto más cercana, enfocada y sin reflejos, o introduce el VIN7 manualmente.");
+      const candidateCounts = recognizedCandidates.reduce((counts, candidate) => { counts[candidate] = (counts[candidate] || 0) + 1; return counts; }, {} as Record<string, number>);
+      recognized = Object.entries(candidateCounts).sort((a, b) => b[1] - a[1])[0][0];
 
 
       // Lectura dedicada de la columna izquierda de la placa BMW.
@@ -373,7 +376,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
         <DialogContent className="p-0 border-none rounded-3xl overflow-hidden max-w-[90vw] md:max-w-md shadow-2xl">
           <div className="bg-[#0066b3] p-5 text-center text-sm font-semibold text-white">VEHÍCULO NO ENCONTRADO · NUEVA ALTA</div>
           <div className="p-6 space-y-4 bg-white max-h-[80vh] overflow-y-auto">
-            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Bastidor reconocido (VIN)</Label><Input value={newVehicleData.vin} readOnly className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-xs tracking-wide" /></div>
+            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Bastidor reconocido (VIN)</Label><Input value={newVehicleData.vin} onChange={e => { const vin = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 17); setNewVehicleData({...newVehicleData, vin, vin7: vin.slice(-7)}); }} maxLength={17} className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-xs tracking-wide" /></div>
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Modelo detectado · editable</Label><Input value={newVehicleData.modelo} placeholder="Modelo no identificado: introdúcelo" onChange={e => setNewVehicleData({...newVehicleData, modelo: e.target.value})} className="h-11 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Motorización sugerida</Label><Input value={newVehicleData.motor} placeholder="Se completa según el modelo" onChange={e => setNewVehicleData({...newVehicleData, motor: e.target.value})} className="h-11 bg-slate-50 border-none rounded-xl text-[10px]" /></div>
             <div className="space-y-1">
