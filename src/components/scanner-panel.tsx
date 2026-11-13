@@ -100,7 +100,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
 
   const vehiculos = (vehiculosRaw || []) as any[];
 
-  const handleAudit = async (vinToFind: string, aiResult?: { modelo?: string }) => {
+  const handleAudit = async (vinToFind: string, aiResult?: { modelo?: string; colorCode?: string }) => {
     if (!vinToFind) return;
     const vinNorm = vinToFind.trim().toUpperCase();
     const vin7 = vinNorm.length >= 7 ? vinNorm.slice(-7) : vinNorm;
@@ -134,7 +134,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
         modelo: aiResult?.modelo || "",
         vin: vinNorm,
         vin7: vin7,
-        colorBMW: "300",
+        colorBMW: BMW_COLORS.some(c => c.code === aiResult?.colorCode) ? aiResult!.colorCode! : "300",
         bodyType: "SUV",
         ubicacion: "Stock",
         tipoLogistico: "Stock Expo",
@@ -150,63 +150,36 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
     setIsProcessing(true);
     setProcessStep("Preparando fotografía...");
     try {
-      const image = await compressImage(file, 2200, 0.94);
-      setProcessStep("Preparando lector de bastidor...");
-      const ocr = await loadLocalOcr();
-      setProcessStep("Leyendo el número de bastidor...");
-      const result = await ocr.recognize(image, "eng", {
-        logger: (info: any) => {
-          if (info?.status === "recognizing text") {
-            setProcessStep(`Leyendo placa: ${Math.round((info.progress || 0) * 100)}%`);
-          }
-        },
+      // La lectura se realiza en servidor con Gemini Vision. El OCR local no
+      // interpretaba correctamente las placas BMW fotografiadas desde iPhone.
+      const photoDataUri = await compressImage(file, 2200, 0.94);
+      setProcessStep("Analizando placa BMW/MINI...");
+      const response = await fetch("/api/scan-vin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photoDataUri }),
       });
-      const rawText = String(result?.data?.text || "");
-      const compact = normalizeOcr(rawText);
-      const fullVin = compact.match(/[A-HJ-NPR-Z0-9]{17}/)?.[0];
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result?.error || "No se ha podido analizar la fotografía.");
+      }
 
-      // Primero se intenta identificar un VIN7 que coincida con un vehículo real del stock.
-      const stockMatches = vehiculos.filter((vehicle: any) => {
-        const known = String(vehicle.vin7 || vehicle.vin || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-        if (known.length < 7) return false;
-        const key = known.slice(-7);
-        return compact.includes(key) || compact.includes(key.replace(/0/g, "O"));
+      const recognized = String(result?.vin || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+      if (recognized.length !== 7 && recognized.length !== 17) {
+        throw new Error("La placa se ha procesado, pero no se ha reconocido un VIN fiable. Repite la foto enfocando la línea del bastidor.");
+      }
+
+      setProcessStep("Comprobando vehículo en stock...");
+      await handleAudit(recognized, {
+        modelo: String(result?.modelo || ""),
+        colorCode: String(result?.colorCode || ""),
       });
-
-      if (stockMatches.length === 1) {
-        setProcessStep("Vehículo localizado en stock...");
-        await handleAudit(stockMatches[0].vin7 || stockMatches[0].vin);
-        return;
-      }
-
-      if (stockMatches.length > 1) {
-        toast({ variant: "destructive", title: "Lectura ambigua", description: "Se han encontrado varias coincidencias. Introduce manualmente los últimos 7 caracteres." });
-        return;
-      }
-
-      if (fullVin) {
-        setProcessStep("Comprobando bastidor...");
-        await handleAudit(fullVin);
-        return;
-      }
-
-      // Si la placa solo deja leer siete caracteres, se muestran para validación manual.
-      const candidates = rawText.toUpperCase().match(/[A-HJ-NPR-Z0-9][A-HJ-NPR-Z0-9\s-]{5,12}[A-HJ-NPR-Z0-9]/g) || [];
-      const seven = candidates
-        .map((candidate: string) => candidate.replace(/[^A-Z0-9]/g, ""))
-        .filter((candidate: string) => candidate.length >= 7)
-        .map((candidate: string) => candidate.slice(-7))
-        .find((candidate: string) => /^[A-HJ-NPR-Z0-9]{7}$/.test(candidate));
-
-      if (seven) {
-        setManualVin(seven);
-        setProcessStep("Comprobando los últimos 7 caracteres...");
-        await handleAudit(seven);
-      } else {
-        toast({ variant: "destructive", title: "No se distingue el bastidor", description: "Prueba otra foto más cerca, enfocada y sin reflejos. También puedes introducir el VIN7 manualmente." });
-      }
     } catch (err: any) {
-      toast({ variant: "destructive", title: "Error en el lector de placa", description: err?.message || "No se ha podido leer la fotografía." });
+      toast({
+        variant: "destructive",
+        title: "No se ha podido identificar el vehículo",
+        description: err?.message || "Comprueba la conexión y vuelve a fotografiar la placa.",
+      });
     } finally {
       setIsProcessing(false);
       setProcessStep(null);
