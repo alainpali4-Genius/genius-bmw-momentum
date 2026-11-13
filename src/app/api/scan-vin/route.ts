@@ -34,9 +34,10 @@ export async function POST(request: NextRequest) {
 
     const prompt = `Lee la inscripción del número de bastidor de este vehículo BMW o MINI.
 Devuelve exclusivamente JSON válido con estas propiedades:
-{"vin":"VIN completo de 17 caracteres o los últimos 7 caracteres si solo esos son legibles","modelo":"modelo si aparece escrito claramente, si no cadena vacía","confianza":0.0}
+{"vin":"VIN completo de 17 caracteres o los últimos 7 caracteres si solo esos son legibles","modelo":"modelo o motorización visible en la placa, por ejemplo 420d; si no es legible, cadena vacía","colorCode":"código de color BMW/MINI visible en la placa, por ejemplo A96; si no es legible, cadena vacía","confianza":0.0}
 Reglas:
-- Prioriza el VIN troquelado o impreso en la placa del vehículo, no números de referencia ni códigos de piezas.
+- La placa BMW/MINI puede mostrar el modelo (por ejemplo 420d) y el código de pintura en la columna izquierda (por ejemplo A96). Lee esos datos solo si son claramente visibles.
+- Prioriza el VIN de 17 caracteres situado en la zona central de la placa; en caso de que no sea legible completo, lee los últimos 7 caracteres consecutivos.
 - Un VIN tiene 17 caracteres y no contiene las letras I, O ni Q.
 - Si puedes leer el VIN completo, devuelve los 17 caracteres. Si solo se distinguen con claridad los últimos 7, devuelve esos 7.
 - No inventes ni completes caracteres dudosos. Si no puedes leer al menos 7 caracteres consecutivos del VIN, devuelve vin vacío y confianza 0.
@@ -69,7 +70,7 @@ Reglas:
                 modelo: { type: "STRING" },
                 confianza: { type: "NUMBER" },
               },
-              required: ["vin", "modelo", "confianza"],
+              required: ["vin", "modelo", "colorCode", "confianza"],
             },
           },
         }),
@@ -118,6 +119,7 @@ Reglas:
     return NextResponse.json({
       vin,
       modelo: typeof parsed?.modelo === "string" ? parsed.modelo.trim() : "",
+      colorCode: typeof parsed?.colorCode === "string" ? parsed.colorCode.trim().toUpperCase() : "",
       confianza: Math.max(0, Math.min(1, Number(parsed?.confianza) || 0)),
     });
   } catch (error) {
