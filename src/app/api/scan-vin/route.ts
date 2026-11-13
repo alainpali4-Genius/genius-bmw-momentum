@@ -84,9 +84,20 @@ Reglas:
       const status = googleResponse.status;
       const googleMessage = googlePayload?.error?.message || "";
       console.error("[VIN_RECOGNITION_PROVIDER]", status, googleMessage);
-      if (status === 400 || status === 403) {
+      if (status === 400 || status === 403 || status === 401) {
+        // Devolvemos el diagnóstico del proveedor (nunca la clave) para distinguir
+        // una clave inválida de una API deshabilitada o una restricción de proyecto.
+        const detail = String(googleMessage || "").slice(0, 280);
+        let guidance = "Google ha rechazado la solicitud de Gemini.";
+        if (/API_KEY_INVALID|invalid api key|API key not valid/i.test(detail)) {
+          guidance = "La clave configurada en Vercel no es válida. Crea una clave nueva en Google AI Studio y sustituye GEMINI_API_KEY.";
+        } else if (/SERVICE_DISABLED|has not been used|not enabled|disabled/i.test(detail)) {
+          guidance = "La API Generative Language no está habilitada en el proyecto de Google asociado a la clave. Habilítala y vuelve a desplegar.";
+        } else if (/PERMISSION_DENIED|referer|IP address|blocked/i.test(detail)) {
+          guidance = "La clave tiene restricciones que bloquean las llamadas desde el servidor de Vercel. Revisa sus restricciones de API y de aplicación.";
+        }
         return NextResponse.json(
-          { error: "Google ha rechazado la clave Gemini o no tiene habilitada la API Generative Language. Revisa la clave y sus restricciones en Google AI Studio." },
+          { error: guidance, diagnostic: detail || `Respuesta HTTP ${status} de Google.` },
           { status: 502 }
         );
       }
