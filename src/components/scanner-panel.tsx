@@ -183,23 +183,42 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       let recognized = "";
       let plateText = "";
       const bmwWmi = /^(WBA|WBS|WBY|WBX|WMW|3MW|5UX|5YM|4US|4WZ)/;
+      // Leer las tres versiones completas aunque el VIN aparezca pronto: el modelo y
+      // el código de pintura están en la columna izquierda de la placa.
       for (let i = 0; i < variants.length; i++) {
         setProcessStep("Leyendo bastidor, modelo y color (" + (i + 1) + "/3)...");
         const result = await engine.recognize(variants[i], "eng", { tessedit_char_whitelist: "ABCDEFGHJKLMNPRSTUVWXYZ0123456789", preserve_interword_spaces: "1", tessedit_pageseg_mode: "11" });
         const text = String(result?.data?.text || "");
         plateText += "\n" + text;
-        // El OCR puede dividir el VIN en varias líneas: probar líneas y texto completo.
-        const sources = [text.toUpperCase(), text.toUpperCase().replace(/[^A-Z0-9]/g, "")];
-        for (const source of sources) {
-          const compact = source.replace(/[^A-Z0-9]/g, "").replace(/O/g, "0").replace(/[IQ]/g, "1");
-          const matches = compact.match(/(?:WBA|WBS|WBY|WBX|WMW|3MW|5UX|5YM|4US|4WZ)[A-Z0-9]{14}/g) || [];
-          const valid = matches.find(candidate => candidate.length === 17 && bmwWmi.test(candidate) && /^[A-HJ-NPR-Z0-9]{17}$/.test(candidate));
-          if (valid) { recognized = valid; break; }
-        }
-        if (recognized) break;
+        const compact = text.toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/O/g, "0").replace(/[IQ]/g, "1");
+        const matches = compact.match(/(?:WBA|WBS|WBY|WBX|WMW|3MW|5UX|5YM|4US|4WZ)[A-Z0-9]{14}/g) || [];
+        const valid = matches.find(candidate => candidate.length === 17 && bmwWmi.test(candidate) && /^[A-HJ-NPR-Z0-9]{17}$/.test(candidate));
+        if (!recognized && valid) recognized = valid;
       }
       if (!recognized) throw new Error("No se ha podido extraer el bastidor completo. Prueba una foto más cercana, enfocada y sin reflejos, o introduce el VIN7 manualmente.");
-            const modelMatch = plateText.toUpperCase().match(/\b(?:M?\d{2,3}[A-Z]{0,3}|I[0-9X]{1,2}|X[1-7]|Z[4])\b/);
+
+      // OCR adicional de la columna izquierda: ahí figuran 420d y A96 en esta placa.
+      const detailCanvas = document.createElement("canvas");
+      const detailCtx = detailCanvas.getContext("2d");
+      if (detailCtx) {
+        const sx = Math.round(image.width * 0.02);
+        const sy = Math.round(image.height * 0.18);
+        const sw = Math.round(image.width * 0.40);
+        const sh = Math.round(image.height * 0.62);
+        detailCanvas.width = sw * 3;
+        detailCanvas.height = sh * 3;
+        detailCtx.drawImage(image, sx, sy, sw, sh, 0, 0, detailCanvas.width, detailCanvas.height);
+        const detailResult = await engine.recognize(detailCanvas.toDataURL("image/png"), "eng", {
+          tessedit_char_whitelist: "ABCDEFGHJKLMNPRSTUVWXYZ0123456789",
+          preserve_interword_spaces: "1",
+          tessedit_pageseg_mode: "6"
+        });
+        plateText += "\n" + String(detailResult?.data?.text || "");
+      }
+
+      // Evitar números de homologación (p. ej. 858) y priorizar las
+      // denominaciones comerciales BMW con sufijo de motorización.
+      const modelMatch = plateText.toUpperCase().match(/\b(?:M?\d{2,3}[DEI]|IX[1-9]|I[0-9]{1,2}|X[1-7]|Z4)\b/);
       const modelDetected = modelMatch?.[0] || "";
       const colorCode = BMW_COLORS.find(color => new RegExp("(^|[^A-Z0-9])" + color.code + "([^A-Z0-9]|$)", "i").test(plateText))?.code || "";
       const detectedDetails = { modelo: modelDetected, colorCode };
