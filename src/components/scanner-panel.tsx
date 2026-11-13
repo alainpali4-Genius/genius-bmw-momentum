@@ -270,7 +270,8 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
         <DialogContent className="p-0 border-none rounded-3xl overflow-hidden max-w-[90vw] md:max-w-md shadow-2xl">
           <div className="bg-[#0066b3] p-5 text-center text-sm font-semibold text-white">VEHÍCULO NO ENCONTRADO · NUEVA ALTA</div>
           <div className="p-6 space-y-4 bg-white max-h-[80vh] overflow-y-auto">
-            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Modelo Detectado</Label><Input value={newVehicleData.modelo} onChange={e => setNewVehicleData({...newVehicleData, modelo: e.target.value})} className="h-11 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
+            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Bastidor reconocido (VIN)</Label><Input value={newVehicleData.vin} readOnly className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-xs tracking-wide" /></div>
+            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Modelo detectado · editable</Label><Input value={newVehicleData.modelo} placeholder="Modelo no identificado: introdúcelo" onChange={e => setNewVehicleData({...newVehicleData, modelo: e.target.value})} className="h-11 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
             <div className="space-y-1">
               <Label className="text-[8px] font-black uppercase text-slate-400 px-1">Tipo Logístico</Label>
               <Select value={newVehicleData.tipoLogistico} onValueChange={v => setNewVehicleData({...newVehicleData, tipoLogistico: v})}>
