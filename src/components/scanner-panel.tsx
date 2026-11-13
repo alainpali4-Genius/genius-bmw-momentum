@@ -219,10 +219,21 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       }
 
       const normalizedDetails = plateText.toUpperCase().replace(/[^A-Z0-9]/g, "");
-      // Modelo comercial BMW: priorizar 420d/420i/430d, evitando números
-      // de homologación como 858.
-      const modelMatch = normalizedDetails.match(/(?:M?\d{2,3}[DEI]|IX[1-9]|I[0-9]{1,2}|X[1-7]|Z4)/);
-      const modelDetected = modelMatch?.[0] || "";
+      // El modelo comercial está impreso en la columna izquierda de la placa.
+      // No buscar "I38" ni otros códigos aislados: provocan falsos positivos
+      // al confundir el número de homologación (p. ej. 2018/858) con un modelo.
+      // Priorizar modelos BMW de tres cifras + combustible, como 420d.
+      const modelLines = plateText
+        .split(/\\r?\\n/)
+        .map(line => line.toUpperCase().replace(/[|]/g, "1").replace(/O/g, "0"));
+      const modelCandidates = modelLines.flatMap(line => {
+        const matches = line.match(/\\b[1-9][0-9]{2}\\s*[DIE]\\b|\\b[1-9][0-9]\\s*[DIE]\\b/g) || [];
+        return matches.map(value => value.replace(/\\s/g, ""));
+      });
+      const preferredModel = modelCandidates.find(value => /^(318|320|330|418|420|430|518|520|530|630|640|718|720|730|740|840|850)[DIE]$/.test(value));
+      const modelDetected = preferredModel
+        ? preferredModel.slice(0, -1) + preferredModel.slice(-1).toLowerCase()
+        : "";
       // Tolerar confusiones habituales del OCR en códigos de tres caracteres.
       const colorCode = BMW_COLORS.find(color => {
         const code = color.code.toUpperCase();
