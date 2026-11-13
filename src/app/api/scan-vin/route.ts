@@ -45,51 +45,26 @@ Reglas:
 - No confundas 0 con O ni 1 con I; en un VIN las letras I, O y Q no se utilizan.
 - confianza es un número entre 0 y 1.`;
 
-    const geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent";
-    const geminiRequest = {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": apiKey,
-      },
-      body: JSON.stringify({
-        contents: [{
-          role: "user",
-          parts: [
-            { text: prompt },
-            { inline_data: { mime_type: match[1], data: match[2] } },
-          ],
-        }],
-        generationConfig: {
-          temperature: 0,
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: "OBJECT",
-            properties: {
-              vin: { type: "STRING" },
-              modelo: { type: "STRING" },
-              colorCode: { type: "STRING" },
-              textoPlaca: { type: "STRING" },
-              confianza: { type: "NUMBER" },
-            },
-            required: ["vin", "modelo", "colorCode", "textoPlaca", "confianza"],
-          },
-        },
-      }),
-      cache: "no-store" as RequestCache,
-    };
-
-    // Reintenta errores transitorios de saturación del proveedor.
+    const modelIds = ["gemini-3.8-flash", "gemini-3.7-flash"];
     let googleResponse: Response | undefined;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      googleResponse = await fetch(geminiUrl, geminiRequest);
-      if (googleResponse.ok || ![429, 500, 502, 503, 504].includes(googleResponse.status) || attempt === 2) break;
-      await new Promise((resolve) => setTimeout(resolve, 900 * (attempt + 1)));
+    let googlePayload: any = {};
+    for (const modelId of modelIds) {
+      const geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/" + modelId + ":generateContent";
+      for (let attempt = 0; attempt < 2; attempt++) {
+        googleResponse = await fetch(geminiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
+          body: JSON.stringify({ contents: [{ role: "user", parts: [{ text: prompt }, { inline_data: { mime_type: match[1], data: match[2] } }] }], generationConfig: { temperature: 0, responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { vin: { type: "STRING" }, modelo: { type: "STRING" }, colorCode: { type: "STRING" }, textoPlaca: { type: "STRING" }, confianza: { type: "NUMBER" } }, required: ["vin", "modelo", "colorCode", "textoPlaca", "confianza"] } } }),
+          cache: "no-store",
+        });
+        googlePayload = await googleResponse.json().catch(() => ({}));
+        if (googleResponse.ok) break;
+        if (![429, 500, 502, 503, 504].includes(googleResponse.status)) break;
+        if (attempt === 0) await new Promise((resolve) => setTimeout(resolve, 800));
+      }
+      if (googleResponse.ok || ![429, 500, 502, 503, 504].includes(googleResponse.status)) break;
     }
-    if (!googleResponse) {
-      return NextResponse.json({ error: "No se ha recibido respuesta del servicio de reconocimiento." }, { status: 503 });
-    }
-    const googlePayload = await googleResponse.json().catch(() => ({}));
+    if (!googleResponse) return NextResponse.json({ error: "No se ha recibido respuesta del servicio de reconocimiento." }, { status: 503 });    const googlePayload = await googleResponse.json().catch(() => ({}));
     if (!googleResponse.ok) {
       const status = googleResponse.status;
       const googleMessage = googlePayload?.error?.message || "";
@@ -148,9 +123,10 @@ Reglas:
       confianza: Math.max(0, Math.min(1, Number(parsed?.confianza) || 0)),
     });
   } catch (error) {
-    console.error("[VIN_RECOGNITION_ERROR]", error);
+    const diagnostic = error instanceof Error ? error.message.slice(0, 220) : "Error inesperado de red o procesamiento.";
+    console.error("[VIN_RECOGNITION_ERROR]", diagnostic);
     return NextResponse.json(
-      { error: "No se ha podido procesar la fotografía. Comprueba la conexión e inténtalo de nuevo." },
+      { error: "No se ha podido completar la lectura de la fotografía.", diagnostic },
       { status: 500 }
     );
   }
