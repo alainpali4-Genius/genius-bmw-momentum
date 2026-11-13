@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Grid3X3, Package, CalendarDays, PlusCircle } from 'lucide-react';
+import { Home, Grid3X3, Package, CalendarDays, ScanLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -11,6 +11,7 @@ const navItems = [
   { label: 'Expo', icon: Grid3X3, href: '/showroom' },
   { label: 'Stock', icon: Package, href: '/stock' },
   { label: 'Entregas', icon: CalendarDays, href: '/delivery' },
+  { label: 'Escáner', icon: ScanLine, href: '/scanner' },
 ];
 
 export function BottomNav() {
@@ -31,9 +32,9 @@ export function BottomNav() {
           <span className="text-[9px] font-black uppercase tracking-tight">{item.label}</span>
         </Link>
       ))}
-      <Link href="/showroom?add=true" className="bottom-nav-item">
+      <Link href="/scanner" className="bottom-nav-item">
         <div className="w-12 h-12 bg-secondary rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-all">
-          <PlusCircle className="w-7 h-7 text-white" />
+          <ScanLine className="w-7 h-7 text-white" />
         </div>
       </Link>
     </nav>
