@@ -10,7 +10,7 @@ import { useFirestore, useCollection } from "@/firebase";
 import { collection, query, orderBy } from "firebase/firestore";
 import { differenceInDays, parseISO, isValid } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getVehicleColor, suggestedMotor } from "../showroom/page";
+import { getVehicleColor } from "../showroom/page";\nimport { suggestedMotor } from "@/lib/vehicle-constants";
 
 type FilterType = 'all' | 'terraza' | 'entreplanta' | 'entrega' | 'exposicion' | 'demo';
 
