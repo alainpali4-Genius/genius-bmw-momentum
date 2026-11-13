@@ -224,11 +224,11 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       // al confundir el número de homologación (p. ej. 2018/858) con un modelo.
       // Priorizar modelos BMW de tres cifras + combustible, como 420d.
       const modelLines = plateText
-        .split(/\\r?\\n/)
+        .split(/\r?\n/)
         .map(line => line.toUpperCase().replace(/[|]/g, "1").replace(/O/g, "0"));
       const modelCandidates = modelLines.flatMap(line => {
-        const matches = line.match(/\\b[1-9][0-9]{2}\\s*[DIE]\\b|\\b[1-9][0-9]\\s*[DIE]\\b/g) || [];
-        return matches.map(value => value.replace(/\\s/g, ""));
+        const matches = line.match(/\b[1-9][0-9]{2}\s*[DIE]\b|\b[1-9][0-9]\s*[DIE]\b/g) || [];
+        return matches.map(value => value.replace(/\s/g, ""));
       });
       const preferredModel = modelCandidates.find(value => /^(318|320|330|418|420|430|518|520|530|630|640|718|720|730|740|840|850)[DIE]$/.test(value));
       const modelDetected = preferredModel
