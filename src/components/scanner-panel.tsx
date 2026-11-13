@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BMW_COLORS, TIPOS_LOGISTICOS } from "@/lib/vehicle-constants";
+import { BMW_COLORS, TIPOS_LOGISTICOS, suggestedMotor } from "@/lib/vehicle-constants";
 
 const compressImage = (file: File, maxWidth = 1600, quality = 0.82): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -89,6 +89,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
   const [isNewVehicleDialogOpen, setIsNewVehicleDialogOpen] = useState(false);
   const [newVehicleData, setNewVehicleData] = useState({
     modelo: "",
+    motor: "",
     vin: "",
     vin7: "",
     colorBMW: "",
@@ -128,9 +129,9 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       };
       try {
         await addDoc(collection(db, "movimientos"), payload);
-        setLastAudit({ ...vehicle, ...enrichment, vin: vinNorm, colorCodigo: enrichment.colorCodigo || vehicle.colorCodigo || aiResult?.colorCode, colorExterior: enrichment.colorExterior || vehicle.colorExterior || detectedColor?.name, status: 'success', message: 'UBICACIÓN CONFIRMADA · ' + (vehicle.ubicacion || 'SIN UBICACIÓN') });
+        setLastAudit({ ...vehicle, ...enrichment, vin: vinNorm, colorCodigo: enrichment.colorCodigo || vehicle.colorCodigo || aiResult?.colorCode, colorExterior: enrichment.colorExterior || vehicle.colorExterior || detectedColor?.name, status: 'success', message: 'VEHÍCULO YA EXISTE EN STOCK · ' + (vehicle.ubicacion || 'SIN UBICACIÓN') });
         setManualVin("");
-        toast({ title: "Vehículo Localizado", description: `${vehicle.modelo} en ${vehicle.ubicacion}` });
+        toast({ title: "Vehículo ya registrado", description: `${vehicle.modelo || "Modelo pendiente"} · ${vehicle.ubicacion || "Sin ubicación"}. No se ha creado un duplicado.` });
       } catch (e) {
         toast({ variant: "destructive", title: "Error al registrar auditoría" });
       }
@@ -138,6 +139,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       setLastAudit({ vin: vinNorm, status: 'error', message: 'BASTIDOR NO ENCONTRADO EN STOCK' });
       setNewVehicleData({
         modelo: aiResult?.modelo || "",
+        motor: aiResult?.modelo ? suggestedMotor(aiResult.modelo) : "",
         vin: vinNorm,
         vin7: vin7,
         colorBMW: BMW_COLORS.some(c => c.code === aiResult?.colorCode) ? aiResult!.colorCode! : "",
@@ -197,41 +199,57 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       }
       if (!recognized) throw new Error("No se ha podido extraer el bastidor completo. Prueba una foto más cercana, enfocada y sin reflejos, o introduce el VIN7 manualmente.");
 
-      // La placa BMW separa los datos: modelo/motor y código de pintura
-      // están en la columna izquierda, no junto al VIN.
-      const detailCanvas = document.createElement("canvas");
-      const detailCtx = detailCanvas.getContext("2d");
-      if (detailCtx) {
-        const sx = Math.round(image.width * 0.025);
-        const sy = Math.round(image.height * 0.18);
-        const sw = Math.round(image.width * 0.38);
-        const sh = Math.round(image.height * 0.58);
-        detailCanvas.width = sw * 4;
-        detailCanvas.height = sh * 4;
-        detailCtx.drawImage(image, sx, sy, sw, sh, 0, 0, detailCanvas.width, detailCanvas.height);
-        for (const psm of ["6", "11", "12"]) {
-          const detailResult = await engine.recognize(detailCanvas.toDataURL("image/png"), "eng", {
-            preserve_interword_spaces: "1",
-            tessedit_pageseg_mode: psm
-          });
-          plateText += "\n" + String(detailResult?.data?.text || "");
-        }
-      }
 
-      const normalizedDetails = plateText.toUpperCase().replace(/[^A-Z0-9]/g, "");
-      // El modelo comercial está impreso en la columna izquierda de la placa.
-      // No buscar "I38" ni otros códigos aislados: provocan falsos positivos
-      // al confundir el número de homologación (p. ej. 2018/858) con un modelo.
-      // Priorizar modelos BMW de tres cifras + combustible, como 420d.
-      // La OCR puede unir el modelo con el código de pintura (420dA96).
-      // Buscamos el patrón BMW en todo el texto de la columna, sin exigir
-      // un límite de palabra después de la letra de combustible.
-      const detailCompact = plateText.toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/O/g, "0");
-      const modelMatch = detailCompact.match(/(?:318|320|330|418|420|430|518|520|530|630|640|718|720|730|740|840|850)[DIE]/);
-      const modelDetected = modelMatch
-        ? modelMatch[0].slice(0, -1) + modelMatch[0].slice(-1).toLowerCase()
-        : "";
-      // Tolerar confusiones habituales del OCR en códigos de tres caracteres.
+      // Lectura dedicada de la columna izquierda de la placa BMW.
+      // Se amplían por separado las zonas del modelo y del código de pintura.
+      const detailTexts: string[] = [];
+      const readPlateCrop = async (x: number, y: number, w: number, h: number) => {
+        const sx = Math.max(0, Math.round(image.width * x));
+        const sy = Math.max(0, Math.round(image.height * y));
+        const sw = Math.min(image.width - sx, Math.round(image.width * w));
+        const sh = Math.min(image.height - sy, Math.round(image.height * h));
+        if (sw < 20 || sh < 20) return;
+        const crop = document.createElement("canvas");
+        crop.width = sw * 6;
+        crop.height = sh * 6;
+        const ctx = crop.getContext("2d");
+        if (!ctx) return;
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(image, sx, sy, sw, sh, 0, 0, crop.width, crop.height);
+        for (const psm of ["6", "11", "12", "13"]) {
+          const result = await engine.recognize(crop.toDataURL("image/png"), "eng", {
+            preserve_interword_spaces: "1",
+            tessedit_pageseg_mode: psm,
+            tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+          });
+          detailTexts.push(String(result?.data?.text || ""));
+        }
+        const pixels = ctx.getImageData(0, 0, crop.width, crop.height);
+        for (let i = 0; i < pixels.data.length; i += 4) {
+          const gray = pixels.data[i] * 0.299 + pixels.data[i + 1] * 0.587 + pixels.data[i + 2] * 0.114;
+          const value = gray > 150 ? 255 : 0;
+          pixels.data[i] = value; pixels.data[i + 1] = value; pixels.data[i + 2] = value;
+        }
+        ctx.putImageData(pixels, 0, 0);
+        for (const psm of ["6", "11", "13"]) {
+          const result = await engine.recognize(crop.toDataURL("image/png"), "eng", {
+            preserve_interword_spaces: "1",
+            tessedit_pageseg_mode: psm,
+            tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+          });
+          detailTexts.push(String(result?.data?.text || ""));
+        }
+      };
+      // Placa: texto vertical de identificación en el lateral izquierdo.
+      await readPlateCrop(0.01, 0.14, 0.27, 0.58);
+      await readPlateCrop(0.01, 0.22, 0.24, 0.27);
+      await readPlateCrop(0.01, 0.43, 0.24, 0.25);
+
+      const detailRaw = detailTexts.join("\n");
+      plateText += "\n" + detailRaw;
+      const detailCompact = detailRaw.toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/O/g, "0").replace(/[|Il]/g, "1");
+      const modelMatch = detailCompact.match(/(?:118|120|318|320|330|418|420|430|518|520|530|630|640|718|720|730|740|840|850)[DIE]/);
+      const modelDetected = modelMatch ? modelMatch[0].slice(0, -1) + modelMatch[0].slice(-1).toLowerCase() : "";
       const colorAliases: Record<string, string[]> = {
         A96: ["A96", "A9G", "A9B", "A9S"],
         A83: ["A83", "A8B", "A8S"],
@@ -241,8 +259,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
         B45: ["B45", "B4S"]
       };
       const colorCode = BMW_COLORS.find(color =>
-        (colorAliases[color.code.toUpperCase()] || [color.code.toUpperCase()])
-          .some(alias => detailCompact.includes(alias))
+        (colorAliases[color.code.toUpperCase()] || [color.code.toUpperCase()]).some(alias => detailCompact.includes(alias))
       )?.code || "";
       const detectedDetails = { modelo: modelDetected, colorCode };
             setManualVin(recognized);
@@ -253,9 +270,16 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
     } finally { setIsProcessing(false); setProcessStep(null); if (fileInputRef.current) fileInputRef.current.value = ""; }
   };
   const handleCreateNewVehicle = async () => {
-    if (!newVehicleData.modelo || !newVehicleData.vin) return toast({ variant: "destructive", title: "Faltan datos" });
+    if (!newVehicleData.modelo || !newVehicleData.vin) return toast({ variant: "destructive", title: "Faltan datos", description: "Introduce o confirma el modelo antes de guardar." });
+    const duplicate = vehiculos.find(v => String(v.vin || "").toUpperCase() === newVehicleData.vin.toUpperCase() || String(v.vin7 || "").toUpperCase() === newVehicleData.vin7.toUpperCase() || String(v.vin || "").toUpperCase().endsWith(newVehicleData.vin7.toUpperCase()));
+    if (duplicate) {
+      setIsNewVehicleDialogOpen(false);
+      setLastAudit({ ...duplicate, status: "success", message: "VEHÍCULO YA EXISTE EN STOCK · NO SE HA DUPLICADO" });
+      toast({ title: "Vehículo duplicado detectado", description: `${duplicate.modelo || "Modelo pendiente"} · ${duplicate.ubicacion || "Sin ubicación"}` });
+      return;
+    }
     const color = BMW_COLORS.find(c => c.code === newVehicleData.colorBMW);
-    const payload = { ...newVehicleData, vin: newVehicleData.vin.toUpperCase(), vin7: newVehicleData.vin7.toUpperCase(), colorExterior: color?.name || "", colorCodigo: newVehicleData.colorBMW || "", estado: "Stock", fechaEntrada: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    const payload = { ...newVehicleData, motor: newVehicleData.motor || suggestedMotor(newVehicleData.modelo), vin: newVehicleData.vin.toUpperCase(), vin7: newVehicleData.vin7.toUpperCase(), colorExterior: color?.name || "", colorCodigo: newVehicleData.colorBMW || "", estado: "Stock", fechaEntrada: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     try {
       const docRef = await addDoc(collection(db, "vehiculos"), payload);
       await addDoc(collection(db, "movimientos"), {
@@ -338,6 +362,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
           <div className="p-6 space-y-4 bg-white max-h-[80vh] overflow-y-auto">
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Bastidor reconocido (VIN)</Label><Input value={newVehicleData.vin} readOnly className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-xs tracking-wide" /></div>
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Modelo detectado · editable</Label><Input value={newVehicleData.modelo} placeholder="Modelo no identificado: introdúcelo" onChange={e => setNewVehicleData({...newVehicleData, modelo: e.target.value})} className="h-11 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
+            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Motorización sugerida</Label><Input value={newVehicleData.motor} placeholder="Se completa según el modelo" onChange={e => setNewVehicleData({...newVehicleData, motor: e.target.value})} className="h-11 bg-slate-50 border-none rounded-xl text-[10px]" /></div>
             <div className="space-y-1">
               <Label className="text-[8px] font-black uppercase text-slate-400 px-1">Tipo Logístico</Label>
               <Select value={newVehicleData.tipoLogistico} onValueChange={v => setNewVehicleData({...newVehicleData, tipoLogistico: v})}>
