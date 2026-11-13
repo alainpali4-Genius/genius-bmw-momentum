@@ -91,7 +91,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
     modelo: "",
     vin: "",
     vin7: "",
-    colorBMW: "300",
+    colorBMW: "",
     bodyType: "SUV",
     ubicacion: "Stock",
     tipoLogistico: "Stock Expo",
@@ -140,7 +140,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
         modelo: aiResult?.modelo || "",
         vin: vinNorm,
         vin7: vin7,
-        colorBMW: BMW_COLORS.some(c => c.code === aiResult?.colorCode) ? aiResult!.colorCode! : "300",
+        colorBMW: BMW_COLORS.some(c => c.code === aiResult?.colorCode) ? aiResult!.colorCode! : "",
         bodyType: "SUV",
         ubicacion: "Stock",
         tipoLogistico: "Stock Expo",
@@ -197,30 +197,40 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       }
       if (!recognized) throw new Error("No se ha podido extraer el bastidor completo. Prueba una foto más cercana, enfocada y sin reflejos, o introduce el VIN7 manualmente.");
 
-      // OCR adicional de la columna izquierda: ahí figuran 420d y A96 en esta placa.
+      // La placa BMW separa los datos: modelo/motor y código de pintura
+      // están en la columna izquierda, no junto al VIN.
       const detailCanvas = document.createElement("canvas");
       const detailCtx = detailCanvas.getContext("2d");
       if (detailCtx) {
-        const sx = Math.round(image.width * 0.02);
+        const sx = Math.round(image.width * 0.025);
         const sy = Math.round(image.height * 0.18);
-        const sw = Math.round(image.width * 0.40);
-        const sh = Math.round(image.height * 0.62);
-        detailCanvas.width = sw * 3;
-        detailCanvas.height = sh * 3;
+        const sw = Math.round(image.width * 0.38);
+        const sh = Math.round(image.height * 0.58);
+        detailCanvas.width = sw * 4;
+        detailCanvas.height = sh * 4;
         detailCtx.drawImage(image, sx, sy, sw, sh, 0, 0, detailCanvas.width, detailCanvas.height);
-        const detailResult = await engine.recognize(detailCanvas.toDataURL("image/png"), "eng", {
-          tessedit_char_whitelist: "ABCDEFGHJKLMNPRSTUVWXYZ0123456789",
-          preserve_interword_spaces: "1",
-          tessedit_pageseg_mode: "6"
-        });
-        plateText += "\n" + String(detailResult?.data?.text || "");
+        for (const psm of ["6", "11", "12"]) {
+          const detailResult = await engine.recognize(detailCanvas.toDataURL("image/png"), "eng", {
+            preserve_interword_spaces: "1",
+            tessedit_pageseg_mode: psm
+          });
+          plateText += "\n" + String(detailResult?.data?.text || "");
+        }
       }
 
-      // Evitar números de homologación (p. ej. 858) y priorizar las
-      // denominaciones comerciales BMW con sufijo de motorización.
-      const modelMatch = plateText.toUpperCase().match(/\b(?:M?\d{2,3}[DEI]|IX[1-9]|I[0-9]{1,2}|X[1-7]|Z4)\b/);
+      const normalizedDetails = plateText.toUpperCase().replace(/[^A-Z0-9]/g, "");
+      // Modelo comercial BMW: priorizar 420d/420i/430d, evitando números
+      // de homologación como 858.
+      const modelMatch = normalizedDetails.match(/(?:M?\d{2,3}[DEI]|IX[1-9]|I[0-9]{1,2}|X[1-7]|Z4)/);
       const modelDetected = modelMatch?.[0] || "";
-      const colorCode = BMW_COLORS.find(color => new RegExp("(^|[^A-Z0-9])" + color.code + "([^A-Z0-9]|$)", "i").test(plateText))?.code || "";
+      // Tolerar confusiones habituales del OCR en códigos de tres caracteres.
+      const colorCode = BMW_COLORS.find(color => {
+        const code = color.code.toUpperCase();
+        if (normalizedDetails.includes(code)) return true;
+        if (code === "A96" && /A9[6G]|A[96]6/.test(normalizedDetails)) return true;
+        if (code === "A83" && /A8[3B]|A[83]3/.test(normalizedDetails)) return true;
+        return false;
+      })?.code || "";
       const detectedDetails = { modelo: modelDetected, colorCode };
             setManualVin(recognized);
       await handleAudit(recognized, detectedDetails);
@@ -232,7 +242,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
   const handleCreateNewVehicle = async () => {
     if (!newVehicleData.modelo || !newVehicleData.vin) return toast({ variant: "destructive", title: "Faltan datos" });
     const color = BMW_COLORS.find(c => c.code === newVehicleData.colorBMW);
-    const payload = { ...newVehicleData, vin: newVehicleData.vin.toUpperCase(), vin7: newVehicleData.vin7.toUpperCase(), colorExterior: color?.name || "Alpine White", colorCodigo: newVehicleData.colorBMW, estado: "Stock", fechaEntrada: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    const payload = { ...newVehicleData, vin: newVehicleData.vin.toUpperCase(), vin7: newVehicleData.vin7.toUpperCase(), colorExterior: color?.name || "", colorCodigo: newVehicleData.colorBMW || "", estado: "Stock", fechaEntrada: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     try {
       const docRef = await addDoc(collection(db, "vehiculos"), payload);
       await addDoc(collection(db, "movimientos"), {
@@ -329,7 +339,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
               </div>
             )}
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Color exterior</Label><Select value={newVehicleData.colorBMW} onValueChange={v => setNewVehicleData({...newVehicleData, colorBMW: v})}><SelectTrigger className="h-11 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent className="max-h-[200px]">{BMW_COLORS.map(c => <SelectItem key={c.code} value={c.code} className="text-[9px]">{c.name}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Color exterior</Label><Select value={newVehicleData.colorBMW} onValueChange={v => setNewVehicleData({...newVehicleData, colorBMW: v})}><SelectTrigger className="h-11 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue placeholder="Seleccionar color"/></SelectTrigger><SelectContent className="max-h-[200px]">{BMW_COLORS.map(c => <SelectItem key={c.code} value={c.code} className="text-[9px]">{c.name}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Ubicación</Label><Select value={newVehicleData.ubicacion} onValueChange={v => setNewVehicleData({...newVehicleData, ubicacion: v})}><SelectTrigger className="h-11 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent>{["Stock", "Terraza", "Entreplanta", "Lavadero"].map(u => <SelectItem key={u} value={u} className="text-[9px] uppercase">{u}</SelectItem>)}</SelectContent></Select></div>
             </div>
             <Button onClick={handleCreateNewVehicle} className="mt-2 h-12 w-full rounded-lg bg-[#0066b3] text-sm font-semibold text-white hover:bg-[#00549a]">CONFIRMAR ALTA UNIDAD</Button>
