@@ -16,7 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BMW_COLORS, TIPOS_LOGISTICOS, suggestedMotor } from "@/lib/vehicle-constants";
+import { BMW_COLORS, TIPOS_LOGISTICOS } from "@/lib/vehicle-constants";
 
 const compressImage = (file: File, maxWidth = 1600, quality = 0.82): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -71,6 +71,17 @@ const loadLocalOcr = async (): Promise<any> => {
 
 const normalizeOcr = (value: string) =>
   value.toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/O/g, "0");
+
+const suggestedScannerMotor = (model: string) => {
+  const value = model.trim().toLowerCase();
+  if (/^420d$/.test(value)) return "Diésel · 2.0 · 140 kW (190 CV)";
+  if (/^320d$/.test(value)) return "Diésel · 2.0 · 140 kW (190 CV)";
+  if (/^330d$/.test(value)) return "Diésel · 3.0 · 210 kW (286 CV)";
+  if (/^520d$/.test(value)) return "Diésel · 2.0";
+  if (/^118d$/.test(value)) return "Diésel · 2.0 · 110 kW (150 CV)";
+  if (/^120d$/.test(value)) return "Diésel · 2.0 · 120 kW (163 CV)";
+  return "";
+};
 
 export function ScannerPanel({ compact = false }: { compact?: boolean }) {
   const db = useFirestore();
@@ -139,7 +150,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       setLastAudit({ vin: vinNorm, status: 'error', message: 'BASTIDOR NO ENCONTRADO EN STOCK' });
       setNewVehicleData({
         modelo: aiResult?.modelo || "",
-        motor: aiResult?.modelo ? suggestedMotor(aiResult.modelo) : "",
+        motor: aiResult?.modelo ? suggestedScannerMotor(aiResult.modelo) : "",
         vin: vinNorm,
         vin7: vin7,
         colorBMW: BMW_COLORS.some(c => c.code === aiResult?.colorCode) ? aiResult!.colorCode! : "",
@@ -281,7 +292,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       return;
     }
     const color = BMW_COLORS.find(c => c.code === newVehicleData.colorBMW);
-    const payload = { ...newVehicleData, motor: newVehicleData.motor || suggestedMotor(newVehicleData.modelo), vin: newVehicleData.vin.toUpperCase(), vin7: newVehicleData.vin7.toUpperCase(), colorExterior: color?.name || "", colorCodigo: newVehicleData.colorBMW || "", estado: "Stock", fechaEntrada: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    const payload = { ...newVehicleData, motor: newVehicleData.motor || suggestedScannerMotor(newVehicleData.modelo), vin: newVehicleData.vin.toUpperCase(), vin7: newVehicleData.vin7.toUpperCase(), colorExterior: color?.name || "", colorCodigo: newVehicleData.colorBMW || "", estado: "Stock", fechaEntrada: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     try {
       const docRef = await addDoc(collection(db, "vehiculos"), payload);
       await addDoc(collection(db, "movimientos"), {
