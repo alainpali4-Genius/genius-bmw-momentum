@@ -148,48 +148,52 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
     const file = e.target.files?.[0];
     if (!file) return;
     setIsProcessing(true);
-    setProcessStep("Preparando fotografía...");
+    setProcessStep("Preparando imagen para lectura local...");
     try {
-      // La lectura se realiza en servidor con Gemini Vision. El OCR local no
-      // interpretaba correctamente las placas BMW fotografiadas desde iPhone.
-      const photoDataUri = await compressImage(file, 2200, 0.94);
-      setProcessStep("Analizando placa BMW/MINI...");
-      const response = await fetch("/api/scan-vin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photoDataUri }),
-      });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        const diagnostic = typeof result?.diagnostic === "string" ? result.diagnostic.trim() : "";
-        const providerStatus = result?.providerStatus ? " (HTTP " + result.providerStatus + ")" : "";
-        const detail = diagnostic ? "\nDetalle técnico: " + diagnostic : "";
-        throw new Error((result?.error || "No se ha podido analizar la fotografía.") + providerStatus + detail);
+      const photoDataUri = await compressImage(file, 2600, 0.96);
+      setProcessStep("Cargando lector OCR en el dispositivo...");
+      const engine = await loadLocalOcr();
+      const image = new Image(); image.src = photoDataUri;
+      await new Promise<void>((resolve, reject) => { image.onload = () => resolve(); image.onerror = () => reject(new Error("No se ha podido preparar la fotografía.")); });
+      const variants: string[] = [];
+      for (const threshold of [null, 155, 190]) {
+        const canvas = document.createElement("canvas");
+        const scale = Math.min(2, 3200 / Math.max(image.width, image.height));
+        canvas.width = Math.round(image.width * scale); canvas.height = Math.round(image.height * scale);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) throw new Error("El navegador no permite procesar la fotografía.");
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        if (threshold !== null) {
+          const pixels = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          for (let i = 0; i < pixels.data.length; i += 4) {
+            const gray = pixels.data[i] * 0.299 + pixels.data[i + 1] * 0.587 + pixels.data[i + 2] * 0.114;
+            const value = gray > threshold ? 255 : 0;
+            pixels.data[i] = value; pixels.data[i + 1] = value; pixels.data[i + 2] = value;
+          }
+          ctx.putImageData(pixels, 0, 0);
+        }
+        variants.push(canvas.toDataURL("image/png"));
       }
-
-      const recognized = String(result?.vin || "").toUpperCase().replace(/[^A-Z0-9]/g, "");
-      if (recognized.length !== 7 && recognized.length !== 17) {
-        throw new Error("La placa se ha procesado, pero no se ha reconocido un VIN fiable. Repite la foto enfocando la línea del bastidor.");
+      let recognized = ""; let ocrText = "";
+      for (let i = 0; i < variants.length; i++) {
+        setProcessStep("Analizando fotografía (" + (i + 1) + "/3)...");
+        const result = await engine.recognize(variants[i], "eng", { tessedit_char_whitelist: "ABCDEFGHJKLMNPRSTUVWXYZ0123456789", preserve_interword_spaces: "1" });
+        const text = String(result?.data?.text || ""); ocrText += "\n" + text;
+        const normalized = text.toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/O/g, "0").replace(/I/g, "1").replace(/Q/g, "0");
+        const fullVin = normalized.match(/[A-HJ-NPR-Z0-9]{17}/);
+        if (fullVin) { recognized = fullVin[0]; break; }
       }
-
-      setProcessStep("Comprobando vehículo en stock...");
-      await handleAudit(recognized, {
-        modelo: String(result?.modelo || ""),
-        colorCode: String(result?.colorCode || ""),
-      });
+      if (!recognized) {
+        const lines = ocrText.toUpperCase().split(/\r?\n/).map((line) => line.replace(/[^A-Z0-9]/g, "").replace(/O/g, "0").replace(/I/g, "1").replace(/Q/g, "0"));
+        const possible = lines.find((line) => line.length >= 7 && /[A-HJ-NPR-Z]/.test(line));
+        if (possible) recognized = possible.slice(-7);
+      }
+      if (recognized.length !== 7 && recognized.length !== 17) throw new Error("No se ha podido leer un VIN claro. Limpia la placa, evita reflejos y fotografía la línea del bastidor de frente.");
+      setProcessStep("Comprobando el bastidor en el stock..."); await handleAudit(recognized);
     } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "No se ha podido identificar el vehículo",
-        description: err?.message || "Comprueba la conexión y vuelve a fotografiar la placa.",
-      });
-    } finally {
-      setIsProcessing(false);
-      setProcessStep(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
+      toast({ variant: "destructive", title: "No se ha podido leer la placa", description: err?.message || "Repite la fotografía o introduce manualmente los últimos siete caracteres del VIN." });
+    } finally { setIsProcessing(false); setProcessStep(null); if (fileInputRef.current) fileInputRef.current.value = ""; }
   };
-
   const handleCreateNewVehicle = async () => {
     if (!newVehicleData.modelo || !newVehicleData.vin) return toast({ variant: "destructive", title: "Faltan datos" });
     const color = BMW_COLORS.find(c => c.code === newVehicleData.colorBMW);
@@ -219,7 +223,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       {!compact && <div className="flex flex-col gap-0.5">
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0066b3]">Operaciones · Momentum Navarra</p>
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Escáner VIN</h1>
-        <p className="mt-1 text-sm text-slate-500">Identifica un vehículo con la cámara o introduce sus últimos siete caracteres.</p>
+        <p className="mt-1 text-sm text-slate-500">Lectura local de la placa con OCR. La fotografía se procesa en este dispositivo.</p>
       </div>}
 
       <Card className="overflow-hidden rounded-xl border-slate-200/80 bg-white text-slate-900 shadow-sm">
