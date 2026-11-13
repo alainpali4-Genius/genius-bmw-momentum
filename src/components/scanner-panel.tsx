@@ -223,25 +223,27 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       // No buscar "I38" ni otros códigos aislados: provocan falsos positivos
       // al confundir el número de homologación (p. ej. 2018/858) con un modelo.
       // Priorizar modelos BMW de tres cifras + combustible, como 420d.
-      const modelLines = plateText
-        .split(/\r?\n/)
-        .map(line => line.toUpperCase().replace(/[|]/g, "1").replace(/O/g, "0"));
-      const modelCandidates = modelLines.flatMap(line => {
-        const matches = line.match(/\b[1-9][0-9]{2}\s*[DIE]\b|\b[1-9][0-9]\s*[DIE]\b/g) || [];
-        return matches.map(value => value.replace(/\s/g, ""));
-      });
-      const preferredModel = modelCandidates.find(value => /^(318|320|330|418|420|430|518|520|530|630|640|718|720|730|740|840|850)[DIE]$/.test(value));
-      const modelDetected = preferredModel
-        ? preferredModel.slice(0, -1) + preferredModel.slice(-1).toLowerCase()
+      // La OCR puede unir el modelo con el código de pintura (420dA96).
+      // Buscamos el patrón BMW en todo el texto de la columna, sin exigir
+      // un límite de palabra después de la letra de combustible.
+      const detailCompact = plateText.toUpperCase().replace(/[^A-Z0-9]/g, "").replace(/O/g, "0");
+      const modelMatch = detailCompact.match(/(?:318|320|330|418|420|430|518|520|530|630|640|718|720|730|740|840|850)[DIE]/);
+      const modelDetected = modelMatch
+        ? modelMatch[0].slice(0, -1) + modelMatch[0].slice(-1).toLowerCase()
         : "";
       // Tolerar confusiones habituales del OCR en códigos de tres caracteres.
-      const colorCode = BMW_COLORS.find(color => {
-        const code = color.code.toUpperCase();
-        if (normalizedDetails.includes(code)) return true;
-        if (code === "A96" && /A9[6G]|A[96]6/.test(normalizedDetails)) return true;
-        if (code === "A83" && /A8[3B]|A[83]3/.test(normalizedDetails)) return true;
-        return false;
-      })?.code || "";
+      const colorAliases: Record<string, string[]> = {
+        A96: ["A96", "A9G", "A9B", "A9S"],
+        A83: ["A83", "A8B", "A8S"],
+        A52: ["A52", "AS2"],
+        A75: ["A75", "A7S"],
+        B39: ["B39", "B3G"],
+        B45: ["B45", "B4S"]
+      };
+      const colorCode = BMW_COLORS.find(color =>
+        (colorAliases[color.code.toUpperCase()] || [color.code.toUpperCase()])
+          .some(alias => detailCompact.includes(alias))
+      )?.code || "";
       const detectedDetails = { modelo: modelDetected, colorCode };
             setManualVin(recognized);
       await handleAudit(recognized, detectedDetails);
