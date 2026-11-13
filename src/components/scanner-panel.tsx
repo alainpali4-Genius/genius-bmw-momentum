@@ -185,18 +185,21 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       const bmwWmi = /^(WBA|WBS|WBY|WBX|WMW|3MW|5UX|5YM|4US|4WZ)/;
       for (let i = 0; i < variants.length; i++) {
         setProcessStep("Leyendo bastidor, modelo y color (" + (i + 1) + "/3)...");
-        const result = await engine.recognize(variants[i], "eng", { tessedit_char_whitelist: "ABCDEFGHJKLMNPRSTUVWXYZ0123456789", preserve_interword_spaces: "1", tessedit_pageseg_mode: "6" });
+        const result = await engine.recognize(variants[i], "eng", { tessedit_char_whitelist: "ABCDEFGHJKLMNPRSTUVWXYZ0123456789", preserve_interword_spaces: "1", tessedit_pageseg_mode: "11" });
         const text = String(result?.data?.text || "");
         plateText += "\n" + text;
-        const lines = text.toUpperCase().split(/\r?\n/);
-        for (const line of lines) {
-          const candidate = line.replace(/[^A-Z0-9]/g, "").replace(/O/g, "0").replace(/I/g, "1").replace(/Q/g, "0");
-          if (candidate.length === 17 && /^[A-HJ-NPR-Z0-9]{17}$/.test(candidate) && bmwWmi.test(candidate)) { recognized = candidate; break; }
+        // El OCR puede dividir el VIN en varias líneas: probar líneas y texto completo.
+        const sources = [text.toUpperCase(), text.toUpperCase().replace(/[^A-Z0-9]/g, "")];
+        for (const source of sources) {
+          const compact = source.replace(/[^A-Z0-9]/g, "").replace(/O/g, "0").replace(/[IQ]/g, "1");
+          const matches = compact.match(/(?:WBA|WBS|WBY|WBX|WMW|3MW|5UX|5YM|4US|4WZ)[A-Z0-9]{14}/g) || [];
+          const valid = matches.find(candidate => candidate.length === 17 && bmwWmi.test(candidate) && /^[A-HJ-NPR-Z0-9]{17}$/.test(candidate));
+          if (valid) { recognized = valid; break; }
         }
         if (recognized) break;
       }
-      if (!recognized) throw new Error("No se ha identificado un VIN BMW/MINI válido de 17 caracteres.");
-      const modelMatch = plateText.toUpperCase().match(/\b(?:M?\d{2,3}[A-Z]{0,3}|I[0-9X]{1,2}|X[1-7]|Z[4])\b/);
+      if (!recognized) throw new Error("No se ha podido extraer el bastidor completo. Prueba una foto más cercana, enfocada y sin reflejos, o introduce el VIN7 manualmente.");
+            const modelMatch = plateText.toUpperCase().match(/\b(?:M?\d{2,3}[A-Z]{0,3}|I[0-9X]{1,2}|X[1-7]|Z[4])\b/);
       const modelDetected = modelMatch?.[0] || "";
       const colorCode = BMW_COLORS.find(color => new RegExp("(^|[^A-Z0-9])" + color.code + "([^A-Z0-9]|$)", "i").test(plateText))?.code || "";
       const detectedDetails = { modelo: modelDetected, colorCode };
