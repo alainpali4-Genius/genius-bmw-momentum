@@ -86,13 +86,14 @@ const MOTOR_RULES: Array<{ pattern: RegExp; value: string }> = [
   { pattern: /IX1.*XDRIVE30/i, value: "Eléctrico · xDrive30 · 230 kW (313 CV)" },
   { pattern: /X5.*50E/i, value: "Híbrido enchufable · 3.0 gasolina + eléctrico · xDrive" },
   { pattern: /330E/i, value: "Híbrido enchufable · 2.0 gasolina + eléctrico" },
+  { pattern: /X3\s*30E/i, value: "Híbrido enchufable · 2.0 gasolina + eléctrico · 215 kW (292 CV) · xDrive" },
   { pattern: /420D/i, value: "Diésel · 2.0" },
   { pattern: /430D|330D|530D|630D|730D|X3.*30D|X5.*30D|X5.*40D/i, value: "Diésel · 3.0" },
   { pattern: /320D|520D|118D|218D|318D|518D|120D|220D|X3.*20D|X1.*20D|X2.*20D/i, value: "Diésel · 2.0" },
   { pattern: /M340I|M440I/i, value: "Gasolina · 3.0 M TwinPower Turbo" },
   { pattern: /M3|M4/i, value: "Gasolina · motor BMW M" },
 ];
-export function suggestedMotor(model: string): string {
+export function findBmwColorByName(raw: string) {\n  const value = String(raw || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().replace(/\\bmetalizado\\b/g, "metallic").replace(/\\s+/g, " ").trim();\n  if (!value) return null;\n  const aliases: Array<[RegExp, string]> = [\n    [/black sapphire/, "475"], [/brooklyn grey/, "C4P"], [/skyscraper grey/, "C4W"], [/dravit grey/, "C36"],\n    [/arctic race blue/, "C4F"], [/portimao blue/, "C31"], [/alpine white/, "300"], [/carbon black/, "416"],\n    [/mineral white/, "A96"], [/san remo green/, "C4E"], [/isle of man green/, "C4G"],\n    [/estoril blue/, "B45"], [/phytonic blue/, "C1M"], [/tanzanite blue/, "C3Z"],\n    [/jet black/, "668"], [/glacier silver/, "A83"], [/melbourne red/, "A75"]\n  ];\n  const alias = aliases.find(([pattern]) => pattern.test(value));\n  if (alias) return BMW_COLORS.find(color => color.code === alias[1]) || null;\n  return BMW_COLORS.find(color => {\n    const name = color.name.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().replace(/\\bmetalizado\\b/g, "metallic");\n    return value === name || value.includes(name) || name.includes(value);\n  }) || null;\n}\n\nexport function suggestedMotor(model: string): string {
   const normalized = String(model || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/BMW|MINI/g, " ").replace(/[^A-Z0-9]+/g, " ").trim();
   return MOTOR_RULES.find(rule => rule.pattern.test(normalized))?.value || "";
 }
