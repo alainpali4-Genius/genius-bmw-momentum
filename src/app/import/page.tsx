@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ClipboardPaste, FileSpreadsheet, Upload, AlertTriangle, History } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";\nimport { suggestedMotor, findBmwColorByName } from "@/lib/vehicle-constants";
 
 type Row = { transporte:string; fecha:string; llegada:string; vin:string; matricula:string; comision:string; vendedor:string; cliente:string; modelo:string; color:string };
 const norm=(s:string)=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
@@ -61,7 +61,7 @@ export default function ImportLogisticsPage(){
     const clienteOriginal=r.cliente||"";
     const categoriaComercial=/^STOCK\s*EXPOSICION$/i.test(clienteOriginal.trim())?"Stock Expo":/^DEMO$/i.test(clienteOriginal.trim())?"Demo":/^ENTREGA\s+EXTERNA/i.test(clienteOriginal.trim())?"Entrega Cliente":clienteOriginal?"Asignación cliente/renting":"Sin clasificar";
     const entidadRenting=/\b(ALPHABET|SANTANDER|BBVA|AYVENS|ARVAL)\b/i.exec(clienteOriginal)?.[1]||"";
-    const fields:any={vin7:r.vin.slice(-7),marca,modelo:r.modelo,matricula:r.matricula||"",colorExterior:r.color||"",colorCorreo:r.color||"",colorCodigo:colorCode||null,colorBMW:colorCode||null,destinoLogistico:clienteOriginal,clienteLogistica:clienteOriginal,categoriaComercial,tipoLogistico:categoriaComercial,entidadRenting,transporte:r.transporte||"",fechaRecepcionCorreo:r.fecha||"",fechaEntrada,llegada:r.llegada||"",comision:r.comision||"",vendedorLogistica:r.vendedor||"",responsable:r.vendedor||"",origenImportacion:"Correo logística BMW",updatedAt:now};
+    const fields:any={vin7:r.vin.slice(-7),marca,modelo:r.modelo,...(motor?{motor}:{}),matricula:r.matricula||"",colorExterior:r.color||"",colorCorreo:r.color||"",colorCodigo:colorCode||null,colorBMW:colorCode||null,destinoLogistico:clienteOriginal,clienteLogistica:clienteOriginal,categoriaComercial,tipoLogistico:categoriaComercial,entidadRenting,transporte:r.transporte||"",fechaRecepcionCorreo:r.fecha||"",fechaEntrada,llegada:r.llegada||"",comision:r.comision||"",vendedorLogistica:r.vendedor||"",responsable:r.vendedor||"",origenImportacion:"Correo logística BMW",updatedAt:now};
     Object.keys(fields).forEach(k=>{if(fields[k]==="")delete fields[k]});
     if(match){
      if(!match.vin||String(match.vin).length===7)fields.vin=r.vin;
