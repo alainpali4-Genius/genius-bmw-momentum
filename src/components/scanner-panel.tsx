@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useFirestore, useCollection } from "@/firebase";
-import { collection, query, orderBy, addDoc, limit, doc, updateDoc } from "firebase/firestore";
+import { collection, query, orderBy, addDoc, limit, doc, updateDoc, getDocs } from "firebase/firestore";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BMW_COLORS, TIPOS_LOGISTICOS, suggestedMotor } from "@/lib/vehicle-constants";
+
+const normalizeVin = (value: unknown) => String(value || "").replace(/\\s+/g, "").toUpperCase();
 
 const compressImage = (file: File, maxWidth = 1600, quality = 0.82): Promise<string> => {
   return new Promise((resolve, reject) => {
@@ -292,11 +294,26 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
   };
   const handleCreateNewVehicle = async () => {
     if (!newVehicleData.modelo || !newVehicleData.vin) return toast({ variant: "destructive", title: "Faltan datos", description: "Introduce o confirma el modelo antes de guardar." });
-    const duplicate = vehiculos.find(v => String(v.vin || "").toUpperCase() === newVehicleData.vin.toUpperCase() || String(v.vin7 || "").toUpperCase() === newVehicleData.vin7.toUpperCase() || String(v.vin || "").toUpperCase().endsWith(newVehicleData.vin7.toUpperCase()));
+    let duplicate:any = null;
+    try {
+      const latestVehicles = await getDocs(collection(db, "vehiculos"));
+      const vin = normalizeVin(newVehicleData.vin);
+      const vin7 = normalizeVin(newVehicleData.vin7) || vin.slice(-7);
+      duplicate = latestVehicles.docs.map(item => ({ id:item.id, ...item.data() } as any)).find(vehicle => {
+        const savedVin = normalizeVin(vehicle.vin);
+        const savedVin7 = normalizeVin(vehicle.vin7) || (savedVin.length === 7 ? savedVin : savedVin.slice(-7));
+        return (vin.length === 17 && savedVin.length === 17 && savedVin === vin)
+          || ((!vin || savedVin.length !== 17) && savedVin7 === vin7)
+          || (savedVin7 === vin7 && (!savedVin || savedVin.length < 17));
+      });
+    } catch (error) {
+      toast({ variant:"destructive", title:"No se pudo verificar el bastidor", description:"No se ha guardado el vehículo. Comprueba la conexión e inténtalo de nuevo." });
+      return;
+    }
     if (duplicate) {
       setIsNewVehicleDialogOpen(false);
-      setLastAudit({ ...duplicate, status: "success", message: "VEHÍCULO YA EXISTE EN STOCK · NO SE HA DUPLICADO" });
-      toast({ title: "Vehículo duplicado detectado", description: `${duplicate.modelo || "Modelo pendiente"} · ${duplicate.ubicacion || "Sin ubicación"}` });
+      setLastAudit({ ...duplicate, status:"success", message:"VEHÍCULO YA REGISTRADO · NO SE HA DUPLICADO" });
+      toast({ title:"Vehículo ya registrado", description: duplicate.modelo || "El bastidor ya existe en stock. No se ha creado otro registro." });
       return;
     }
     const color = BMW_COLORS.find(c => c.code === newVehicleData.colorBMW);
