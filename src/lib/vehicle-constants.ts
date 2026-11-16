@@ -93,26 +93,54 @@ const MOTOR_RULES: Array<{ pattern: RegExp; value: string }> = [
   { pattern: /M340I|M440I/i, value: "Gasolina · 3.0 M TwinPower Turbo" },
   { pattern: /M3|M4/i, value: "Gasolina · motor BMW M" },
 ];
+const normalizeColorText = (value: string) =>
+  String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\bmetalizado\b/g, "metallic")
+    .replace(/\bmetallic\b/g, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+
 export function findBmwColorByName(raw: string) {
-  const value = String(raw || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().replace(/\\bmetalizado\\b/g, "metallic").replace(/\\s+/g, " ").trim();
+  const original = String(raw || "").trim();
+  if (!original) return null;
+
+  // Admite códigos escritos solos o incluidos entre paréntesis, guiones o texto adicional.
+  const compact = original.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const byExactCode = BMW_COLORS.find(color => compact === color.code.toUpperCase());
+  if (byExactCode) return byExactCode;
+
+  const codeMatch = original.toUpperCase().match(/(?:^|[^A-Z0-9])([A-Z0-9]{3})(?=$|[^A-Z0-9])/g);
+  if (codeMatch) {
+    for (const candidate of codeMatch) {
+      const code = candidate.replace(/[^A-Z0-9]/g, "");
+      const found = BMW_COLORS.find(color => color.code.toUpperCase() === code);
+      if (found) return found;
+    }
+  }
+
+  const value = normalizeColorText(original);
   if (!value) return null;
-  const compact = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-  const byCode = BMW_COLORS.find(color => compact === color.code.toUpperCase() || new RegExp("(^|[^A-Z0-9])" + color.code.toUpperCase() + "([^A-Z0-9]|$)").test(String(raw).toUpperCase()));
-  if (byCode) return byCode;
-  const aliases: Array<[RegExp, string]> = [
-    [/black sapphire/, "475"], [/brooklyn grey/, "C4P"], [/skyscraper grey/, "C4W"], [/dravit grey/, "C36"],
-    [/arctic race blue/, "C4F"], [/portimao blue/, "C31"], [/alpine white/, "300"], [/carbon black/, "416"],
-    [/mineral white/, "A96"], [/san remo green/, "C4E"], [/isle of man green/, "C4G"],
-    [/estoril blue/, "B45"], [/phytonic blue/, "C1M"], [/tanzanite blue/, "C3Z"],
-    [/jet black/, "668"], [/glacier silver/, "A83"], [/melbourne red/, "A75"],
-    [/mineral grey/, "B39"], [/space grey/, "A52"], [/imperial blue/, "A89"],
-    [/mediterranean blue/, "C10"], [/toronto red/, "C3G"], [/storm bay/, "C3N"],
-    [/sunset orange/, "C1X"], [/blue ridge mountain/, "C35"], [/manhattan/, "C3D"]
+
+  const aliases: Array<[string, string]> = [
+    ["black sapphire", "475"], ["brooklyn grey", "C4P"], ["skyscraper grey", "C4W"],
+    ["dravit grey", "C36"], ["arctic race blue", "C4F"], ["portimao blue", "C31"],
+    ["alpine white", "300"], ["carbon black", "416"], ["mineral white", "A96"],
+    ["san remo green", "C4E"], ["isle of man green", "C4G"], ["estoril blue", "B45"],
+    ["phytonic blue", "C1M"], ["tanzanite blue", "C3Z"], ["jet black", "668"],
+    ["glacier silver", "A83"], ["melbourne red", "A75"], ["mineral grey", "B39"],
+    ["space grey", "A52"], ["imperial blue", "A89"], ["mediterranean blue", "C10"],
+    ["toronto red", "C3G"], ["storm bay", "C3N"], ["sunset orange", "C1X"],
+    ["blue ridge mountain", "C35"], ["manhattan", "C3D"]
   ];
-  const alias = aliases.find(([pattern]) => pattern.test(value));
+  const alias = aliases.find(([name]) => value.includes(name));
   if (alias) return BMW_COLORS.find(color => color.code === alias[1]) || null;
+
   return BMW_COLORS.find(color => {
-    const name = color.name.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+    const name = normalizeColorText(color.name);
     return value === name || value.includes(name) || name.includes(value);
   }) || null;
 }
