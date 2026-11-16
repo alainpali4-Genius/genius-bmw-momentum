@@ -22,10 +22,10 @@ export function BrandLogo({ className, variant = 'full' }: BrandLogoProps) {
   const { width, height } = dimensions[variant];
 
   return (
-    <div className={cn("relative flex items-center justify-center overflow-hidden rounded-md bg-[#111827] px-3 py-2", className)}>
+    <div className={cn("relative flex items-center justify-center", className)}>
       <Image 
-        src="/bmw-m-logo.svg" 
-        alt="BMW M"
+        src="/logo-product-genius.png" 
+        alt="Product Genius Logo"
         width={width}
         height={height}
         className="object-contain"
