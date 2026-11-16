@@ -29,6 +29,13 @@ export const BMW_COLORS = [
   {code:"C4H",name:"Sao Paulo Yellow",hex:"#E3C52D",brand:"BMW"},
   {code:"C4P",name:"Brooklyn Grey Metallic",hex:"#7B7D7E",brand:"BMW"},
   {code:"C4W",name:"Skyscraper Grey Metallic",hex:"#8B8E91",brand:"BMW"},
+  {code:"C5Y",name:"Cape York Green Metallic",hex:"#466B5B",brand:"BMW"},
+  {code:"C67",name:"Space Silver Metallic",hex:"#BFC3C5",brand:"BMW"},
+  {code:"C68",name:"Fire Red Metallic",hex:"#A51D2D",brand:"BMW"},
+  {code:"C7A",name:"Dune Grey Metallic",hex:"#B8B2A4",brand:"BMW"},
+  {code:"C7R",name:"Night Dusk Blue Metallic",hex:"#35445D",brand:"BMW"},
+  {code:"C66",name:"Utah Orange Metallic",hex:"#B86B3D",brand:"BMW"},
+  {code:"C5L",name:"Blue Bay Lagoon Metallic",hex:"#4D8292",brand:"BMW"},
   {code:"X1F",name:"Frozen Pure Grey Metallic",hex:"#85898B",brand:"BMW"},
   {code:"X1G",name:"Frozen Tanzanite Blue Metallic",hex:"#263C62",brand:"BMW"},
   // MINI: colores clásicos y actuales. La disponibilidad depende del modelo y año.
@@ -89,7 +96,7 @@ const MOTOR_RULES: Array<{ pattern: RegExp; value: string }> = [
   { pattern: /X3\s*30E/i, value: "Híbrido enchufable · 2.0 gasolina + eléctrico · 215 kW (292 CV) · xDrive" },
   { pattern: /420D/i, value: "Diésel · 2.0" },
   { pattern: /430D|330D|530D|630D|730D|X3.*30D|X5.*30D|X5.*40D/i, value: "Diésel · 3.0" },
-  { pattern: /320D|520D|118D|218D|318D|518D|120D|220D|X3.*20D|X1.*20D|X2.*20D/i, value: "Diésel · 2.0" },
+  { pattern: /320D|520D|118D|218D|318D|518D|120D|220D|X3.*20D|X1.*20D|X2.*20D|X1.*18D|X2.*18D/i, value: "Diésel · 2.0" },
   { pattern: /M340I|M440I/i, value: "Gasolina · 3.0 M TwinPower Turbo" },
   { pattern: /M3|M4/i, value: "Gasolina · motor BMW M" },
 ];
@@ -126,7 +133,7 @@ export function findBmwColorByName(raw: string) {
   if (!value) return null;
 
   const aliases: Array<[string, string]> = [
-    ["black sapphire", "475"], ["brooklyn grey", "C4P"], ["skyscraper grey", "C4W"],
+    ["black sapphire", "475"], ["brooklyn grey", "C4P"], ["skyscraper grey", "C4W"], ["cape york green", "C5Y"], ["fire red", "C68"], ["vegas red", "C68"], ["space silver", "C67"], ["dune grey", "C7A"], ["night dusk blue", "C7R"], ["utah orange", "C66"], ["blue bay lagoon", "C5L"],
     ["dravit grey", "C36"], ["arctic race blue", "C4F"], ["portimao blue", "C31"],
     ["alpine white", "300"], ["carbon black", "416"], ["mineral white", "A96"],
     ["san remo green", "C4E"], ["isle of man green", "C4G"], ["estoril blue", "B45"],
