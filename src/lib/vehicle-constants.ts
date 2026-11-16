@@ -153,7 +153,7 @@ const MOTOR_RULES: Array<{ pattern: RegExp; value: string }> = [
   { pattern: /X3.*20D|X3.*30D/i, value: "Diésel · 2.0/3.0 según versión · xDrive" },
   { pattern: /540D/i, value: "Diésel · 3.0 mild hybrid · 223 kW (303 CV)" },
   { pattern: /420D/i, value: "Diésel · 2.0 TwinPower Turbo · 140 kW (190 CV)" },
-  { pattern: /SERIE1.*120D|^120D$|120D/i, value: "Diésel · 2.0 TwinPower Turbo · 120 kW (163 CV) en generaciones actuales; 140 kW (190 CV) en generaciones anteriores" },
+  { pattern: /SERIE1.*120D|^120D$|120D/i, value: "Diésel · 2.0 TwinPower Turbo · 120 kW (163 CV) · sDrive" },
   { pattern: /118D|218D|220D/i, value: "Diésel · 2.0 TwinPower Turbo · 110 kW (150 CV) en versiones actuales; según generación" },
   { pattern: /320D|520D|318D/i, value: "Diésel · 2.0 TwinPower Turbo · 140 kW (190 CV) en versiones actuales" },
   { pattern: /740D/i, value: "Diésel · 3.0 mild hybrid · potencia según generación" },
