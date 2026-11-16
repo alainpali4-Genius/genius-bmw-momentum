@@ -53,8 +53,7 @@ export default function StockManagement() {
         || (/(?:18D|20D|30D|40D|35D|420D|520D|120D)$/.test(normalizedModel)
         && /gasolina|sdrive20i|twinpower turbo.*gasolina/i.test(currentMotor));
       // Los modelos actuales del configurador tienen potencia exacta; sustituimos también textos antiguos ambiguos.
-      const exactCurrentModel = normalizedModel === "BMW118D".replace(/BMW/g, "") || normalizedModel === "118D"
-        || normalizedModel === "SERIE120D" || normalizedModel === "120D";
+      const exactCurrentModel = normalizedModel.endsWith("118D") || normalizedModel.endsWith("120D");
       if ((!currentMotor || currentMotor === "—" || genericMotor || wrongFuelType || exactCurrentModel) && suggested) {
         if (suggested !== currentMotor) patch.motor = suggested;
       }
