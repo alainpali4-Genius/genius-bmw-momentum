@@ -104,7 +104,9 @@ const MOTOR_RULES: Array<{ pattern: RegExp; value: string }> = [
   { pattern: /M340I|M440I/i, value: "Gasolina · 3.0 M TwinPower Turbo" },
   { pattern: /M3|M4/i, value: "Gasolina · motor BMW M" },
   // Diésel.
-  { pattern: /540D|X3.*40D|X5.*40D|X5.*30D|X3.*30D|430D|330D|530D|630D|730D/i, value: "Diésel · 3.0 · 223 kW (303 CV) en versiones 40d actuales" },
+  { pattern: /X5.*40D/i, value: "Diésel · 3.0 · 259 kW (352 CV) · xDrive" },
+  { pattern: /540D|X3.*40D/i, value: "Diésel · 3.0 · 223 kW (303 CV) · xDrive" },
+  { pattern: /X5.*30D|X3.*30D|430D|330D|530D|630D|730D/i, value: "Diésel · 3.0" },
   { pattern: /420D/i, value: "Diésel · 2.0 · 140 kW (190 CV)" },
   { pattern: /320D|520D|118D|218D|318D|518D|120D|220D|X3.*20D|X1.*20D|X2.*20D|X1.*18D|X2.*18D/i, value: "Diésel · 2.0" },
 ];
