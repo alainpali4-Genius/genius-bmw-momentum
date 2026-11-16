@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useFirestore, useCollection } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
+import { collection, query, orderBy, writeBatch, doc } from "firebase/firestore";
 import { differenceInDays, parseISO, isValid } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getVehicleColor } from "../showroom/page";
-import { suggestedMotor } from "@/lib/vehicle-constants";
+import { suggestedMotor, findBmwColorByName } from "@/lib/vehicle-constants";
 
 type FilterType = 'all' | 'terraza' | 'entreplanta' | 'entrega' | 'exposicion' | 'demo';
 
@@ -30,6 +30,33 @@ export default function StockManagement() {
     setActiveFilter(next && validFilters.includes(next) ? next : 'all');
   }, [searchParams]);
   const vehicles = (rawVehicles || []) as any[];
+
+  // Completa de forma conservadora los datos que faltan en unidades ya importadas.
+  // Nunca sobrescribe una motorización ni un código de color existente.
+  useEffect(() => {
+    if (!vehicles.length) return;
+    const batch = writeBatch(db);
+    let changes = 0;
+    vehicles.forEach(vehicle => {
+      const patch: Record<string, string> = {};
+      if (!String(vehicle.motor || "").trim() || String(vehicle.motor).trim() === "—") {
+        const motor = suggestedMotor(vehicle.modelo || "");
+        if (motor) patch.motor = motor;
+      }
+      if (!vehicle.colorCodigo || !vehicle.colorBMW) {
+        const color = findBmwColorByName(vehicle.colorExterior || vehicle.colorCorreo || "");
+        if (color) {
+          if (!vehicle.colorCodigo) patch.colorCodigo = color.code;
+          if (!vehicle.colorBMW) patch.colorBMW = color.code;
+        }
+      }
+      if (Object.keys(patch).length) {
+        batch.update(doc(db, "vehiculos", vehicle.id), { ...patch, updatedAt: new Date().toISOString() });
+        changes++;
+      }
+    });
+    if (changes) batch.commit().catch(error => console.error("No se pudo completar la ficha de stock", error));
+  }, [db, vehicles]);
 
   const stats = useMemo(() => ({
     total: vehicles.length,
