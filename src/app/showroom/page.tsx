@@ -22,7 +22,7 @@ import { BMW_COLORS, suggestedMotor, findBmwColorByName } from "@/lib/vehicle-co
 
 export { BMW_COLORS } from "@/lib/vehicle-constants";
 export function suggestedColor(model: string) {
-  const value = model.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+  const value = model.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   return BMW_COLORS.find(color => value.includes(color.name.toLowerCase().replace(" metallic", ""))) || null;
 }
 
