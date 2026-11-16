@@ -7,14 +7,13 @@ export const contentType = 'image/png';
 export default function Icon() {
   return new ImageResponse(
     (
-      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'transparent' }}>
-        <svg width="64" height="64" viewBox="0 0 360 360" xmlns="http://www.w3.org/2000/svg">
-          <g transform="translate(0 55)">
-            <path d="M5 232 L72 18 L120 18 L53 232 Z" fill="#25A6D1"/>
-            <path d="M53 232 L120 18 L169 18 L102 232 Z" fill="#292B83"/>
-            <path d="M102 232 L169 18 L216 18 L149 232 Z" fill="#D32630"/>
-            <path d="M149 232 L216 18 L265 18 L247 111 L290 18 L355 18 L334 232 L282 232 L300 119 L251 232 Z" fill="#F1F2F3"/>
-          </g>
+      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#c6c6c6' }}>
+        <svg width="64" height="64" viewBox="0 0 948 335" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+          <rect x="0" y="0" width="948" height="335" fill="#c6c6c6"/>
+          <path d="M196 0 H334 L139 335 H0 Z" fill="#0871b8"/>
+          <path d="M334 0 H474 L279 335 H139 Z" fill="#073f78"/>
+          <path d="M474 0 H614 L419 335 H279 Z" fill="#ed2118"/>
+          <path d="M614 0 H742 V139 L822 0 H948 V335 H830 V194 L750 335 H638 V194 L558 335 H419 Z" fill="#ffffff"/>
         </svg>
       </div>
     ),
