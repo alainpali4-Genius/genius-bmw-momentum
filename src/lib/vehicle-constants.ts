@@ -7,12 +7,14 @@ export const BMW_COLORS = [
   {code:"416",name:"Carbon Black Metallic",hex:"#111827",brand:"BMW"},
   {code:"A96",name:"Mineral White Metallic",hex:"#F3F3F1",brand:"BMW"},
   {code:"A83",name:"Glacier Silver Metallic",hex:"#AEB4B8",brand:"BMW"},
+  {code:"A90",name:"Sophisto Grey Brilliant Effect",hex:"#55585C",brand:"BMW"},
   {code:"A75",name:"Melbourne Red Metallic",hex:"#8E1824",brand:"BMW"},
   {code:"B39",name:"Mineral Grey Metallic",hex:"#686C70",brand:"BMW"},
   {code:"B45",name:"Estoril Blue Metallic",hex:"#07549A",brand:"BMW"},
   {code:"A52",name:"Space Grey Metallic",hex:"#737A80",brand:"BMW"},
   {code:"A89",name:"Imperial Blue Metallic",hex:"#172D50",brand:"BMW"},
   {code:"C1M",name:"Phytonic Blue Metallic",hex:"#245A91",brand:"BMW"},
+  {code:"C1K",name:"Jucaro Beige Metallic",hex:"#A99D88",brand:"BMW"},
   {code:"C1X",name:"Sunset Orange Metallic",hex:"#C65B20",brand:"BMW"},
   {code:"C10",name:"Mediterranean Blue Metallic",hex:"#164B78",brand:"BMW"},
   {code:"C31",name:"Portimao Blue Metallic",hex:"#004D8D",brand:"BMW"},
@@ -21,6 +23,7 @@ export const BMW_COLORS = [
   {code:"C35",name:"Blue Ridge Mountain Metallic",hex:"#526D83",brand:"BMW"},
   {code:"C36",name:"Dravit Grey Metallic",hex:"#5D5A55",brand:"BMW"},
   {code:"C3D",name:"Manhattan Metallic",hex:"#77766F",brand:"BMW"},
+  {code:"C3A",name:"Cashmere Silver Metallic",hex:"#B9B5AA",brand:"BMW"},
   {code:"C3G",name:"Toronto Red Metallic",hex:"#A51E2D",brand:"BMW"},
   {code:"C3N",name:"Storm Bay Metallic",hex:"#687A83",brand:"BMW"},
   {code:"C4E",name:"San Remo Green Metallic",hex:"#526A54",brand:"BMW"},
@@ -85,30 +88,58 @@ export const TIPOS_LOGISTICOS = [
 
 
 // Motorization resolver shared by VIN camera, manual intake, stock and logistics imports.
+// Reglas normalizadas sin espacios: admiten "420d", "420 D GC", "420d Gran Coupe", etc.
 const MOTOR_RULES: Array<{ pattern: RegExp; value: string }> = [
-  // Eléctricos e híbridos enchufables: reglas específicas antes de las genéricas.
-  { pattern: /I5.*XDRIVE40/i, value: "Eléctrico · xDrive40 · 290 kW (394 CV)" },
-  { pattern: /I5.*EDRIVE40/i, value: "Eléctrico · eDrive40 · 250 kW (340 CV)" },
-  { pattern: /COUNTRYMAN\s+SE\s+ALL4/i, value: "Eléctrico · SE ALL4 · 230 kW (313 CV)" },
-  { pattern: /COUNTRYMAN\s+E\b/i, value: "Eléctrico · E · 150 kW (204 CV)" },
-  { pattern: /ACEMAN\s+SE/i, value: "Eléctrico · SE · 160 kW (218 CV)" },
+  { pattern: /^(MINI)?(COOPER)?(ELECTRICO)?(E|SE|J C W E|JCWE)$/i, value: "Eléctrico · MINI Cooper E/SE" },
+  { pattern: /ACEMAN.*JCW|JCW.*ACEMAN/i, value: "Eléctrico · MINI JCW Aceman · 190 kW (258 CV)" },
+  { pattern: /ACEMAN.*SE/i, value: "Eléctrico · MINI Aceman SE · 160 kW (218 CV)" },
+  { pattern: /ACEMAN.*E/i, value: "Eléctrico · MINI Aceman E · 135 kW (184 CV)" },
+  { pattern: /COUNTRYMAN.*SE.*ALL4/i, value: "Eléctrico · MINI Countryman SE ALL4 · 230 kW (313 CV)" },
+  { pattern: /COUNTRYMAN.*ELECTRICO|COUNTRYMAN.*EDRIVE/i, value: "Eléctrico · MINI Countryman E · 150 kW (204 CV)" },
+  { pattern: /COUNTRYMAN.*JCW/i, value: "Gasolina · 2.0 turbo · 221 kW (300 CV) · ALL4" },
+  { pattern: /COUNTRYMAN.*S.*ALL4/i, value: "Gasolina mild hybrid · 2.0 turbo · 150 kW (204 CV) · ALL4" },
+  { pattern: /COUNTRYMAN.*D/i, value: "Diésel · 2.0 turbo · 110 kW (150 CV)" },
+  { pattern: /COUNTRYMAN.*C/i, value: "Gasolina mild hybrid · 1.5 turbo · 115 kW (156 CV)" },
+  { pattern: /MINI.*COOPER.*JCW|COOPER.*JCW/i, value: "Gasolina · 2.0 turbo · 170 kW (231 CV)" },
+  { pattern: /MINI.*COOPER.*S|COOPER.*S/i, value: "Gasolina · 2.0 turbo · 150 kW (204 CV)" },
+  { pattern: /MINI.*COOPER.*C|COOPER.*C/i, value: "Gasolina · 1.5 turbo · 115 kW (156 CV)" },
   { pattern: /IX1.*EDRIVE20/i, value: "Eléctrico · eDrive20 · 150 kW (204 CV)" },
   { pattern: /IX1.*XDRIVE30/i, value: "Eléctrico · xDrive30 · 230 kW (313 CV)" },
-  { pattern: /M5.*TOURING|TOURING.*M5/i, value: "Híbrido enchufable · 4.4 V8 gasolina + eléctrico · M xDrive · 535 kW (727 CV)" },
+  { pattern: /IX2.*EDRIVE20/i, value: "Eléctrico · eDrive20 · 150 kW (204 CV)" },
+  { pattern: /IX2.*XDRIVE30/i, value: "Eléctrico · xDrive30 · 230 kW (313 CV)" },
+  { pattern: /I4.*EDRIVE35/i, value: "Eléctrico · eDrive35 · 210 kW (286 CV)" },
+  { pattern: /I4.*EDRIVE40/i, value: "Eléctrico · eDrive40 · 250 kW (340 CV)" },
+  { pattern: /I4.*M60/i, value: "Eléctrico · M60 xDrive · 400 kW (544 CV)" },
+  { pattern: /I5.*XDRIVE40/i, value: "Eléctrico · xDrive40 · 290 kW (394 CV)" },
+  { pattern: /I5.*EDRIVE40/i, value: "Eléctrico · eDrive40 · 250 kW (340 CV)" },
+  { pattern: /I5.*M60/i, value: "Eléctrico · M60 xDrive · 442 kW (601 CV)" },
+  { pattern: /IX.*XDRIVE60/i, value: "Eléctrico · xDrive60" },
+  { pattern: /IX3/i, value: "Eléctrico · iX3" },
+  { pattern: /M5.*TOURING|M5.*BERLINA/i, value: "Híbrido enchufable · 4.4 V8 M TwinPower Turbo + eléctrico · 535 kW (727 CV) · M xDrive" },
   { pattern: /X5.*50E/i, value: "Híbrido enchufable · 3.0 gasolina + eléctrico · xDrive" },
-  { pattern: /330E/i, value: "Híbrido enchufable · 2.0 gasolina + eléctrico" },
-  { pattern: /X3\s*30E/i, value: "Híbrido enchufable · 2.0 gasolina + eléctrico · 215 kW (292 CV) · xDrive" },
-  // Gasolina y versiones M.
+  { pattern: /X3.*30E|330E/i, value: "Híbrido enchufable · 2.0 gasolina + eléctrico" },
+  { pattern: /X1.*25E|X1.*30E/i, value: "Híbrido enchufable · 1.5 gasolina + eléctrico · xDrive" },
+  { pattern: /225E|230E/i, value: "Híbrido enchufable · 1.5 gasolina + eléctrico · Active Tourer" },
   { pattern: /X2.*M35I/i, value: "Gasolina · 2.0 TwinPower Turbo · 221 kW (300 CV) · xDrive" },
-  { pattern: /X1.*SDRIVE18I|X1\s+18I/i, value: "Gasolina · 1.5 TwinPower Turbo · 100 kW (136 CV)" },
-  { pattern: /M340I|M440I/i, value: "Gasolina · 3.0 M TwinPower Turbo" },
-  { pattern: /M3|M4/i, value: "Gasolina · motor BMW M" },
-  // Diésel.
-  { pattern: /X5.*40D/i, value: "Diésel · 3.0 · 259 kW (352 CV) · xDrive" },
-  { pattern: /540D|X3.*40D/i, value: "Diésel · 3.0 · 223 kW (303 CV) · xDrive" },
-  { pattern: /X5.*30D|X3.*30D|430D|330D|530D|630D|730D/i, value: "Diésel · 3.0" },
-  { pattern: /420D/i, value: "Diésel · 2.0 · 140 kW (190 CV)" },
-  { pattern: /320D|520D|118D|218D|318D|518D|120D|220D|X3.*20D|X1.*20D|X2.*20D|X1.*18D|X2.*18D/i, value: "Diésel · 2.0" },
+  { pattern: /X1.*M35I/i, value: "Gasolina · 2.0 TwinPower Turbo · 221 kW (300 CV) · xDrive" },
+  { pattern: /X3.*M50|M340I|M440I/i, value: "Gasolina · 3.0 M TwinPower Turbo" },
+  { pattern: /M3|M4|M2/i, value: "Gasolina · motor BMW M" },
+  { pattern: /X5.*40D|X7.*40D|X6.*40D|X3.*40D|M340D/i, value: "Diésel · 3.0 mild hybrid · xDrive" },
+  { pattern: /X5.*30D|X6.*30D|X3.*30D|330D|430D|530D|630D|730D/i, value: "Diésel · 3.0" },
+  { pattern: /X2.*20D|X2.*2[.]0D|X2.*SDRIVE20D|X2.*XDRIVE20D/i, value: "Diésel · 2.0 · sDrive/xDrive según versión" },
+  { pattern: /X2.*18D/i, value: "Diésel · 2.0 · 110 kW (150 CV)" },
+  { pattern: /X1.*20D|X1.*2[.]0D/i, value: "Diésel · 2.0 · sDrive/xDrive según versión" },
+  { pattern: /X1.*18D/i, value: "Diésel · 2.0 · 110 kW (150 CV)" },
+  { pattern: /X3.*20D|X4.*20D/i, value: "Diésel · 2.0 · xDrive" },
+  { pattern: /X2.*20I|X1.*20I|X3.*20I|X4.*20I/i, value: "Gasolina · 2.0 TwinPower Turbo" },
+  { pattern: /X1.*23I/i, value: "Gasolina · 2.0 TwinPower Turbo · 160 kW (218 CV)" },
+  { pattern: /X5.*40I/i, value: "Gasolina · 3.0 TwinPower Turbo · xDrive" },
+  { pattern: /X4.*M40D/i, value: "Diésel · 3.0 M Performance · xDrive" },
+  { pattern: /X4.*M40I/i, value: "Gasolina · 3.0 M Performance · xDrive" },
+  { pattern: /X3.*20D|X3.*30D/i, value: "Diésel · 2.0/3.0 según versión · xDrive" },
+  { pattern: /740D|540D|420D|220D|320D|520D|218D|118D|120D|318D/i, value: "Diésel · 2.0/3.0 según versión" },
+  { pattern: /420I|430I|220I|320I|520I|118I|120I|218I|318I/i, value: "Gasolina · TwinPower Turbo" },
+  { pattern: /330E/i, value: "Híbrido enchufable · 2.0 gasolina + eléctrico · 215 kW (292 CV)" },
 ];
 const normalizeColorText = (value: string) =>
   String(value || "")
@@ -163,6 +194,7 @@ export function findBmwColorByName(raw: string) {
 }
 
 export function suggestedMotor(model: string): string {
-  const normalized = String(model || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/BMW|MINI/g, " ").replace(/[^A-Z0-9]+/g, " ").trim();
+  const normalized = String(model || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/BMW|MINI/g, " ").replace(/[^A-Z0-9]+/g, "");
+  if (!normalized) return "";
   return MOTOR_RULES.find(rule => rule.pattern.test(normalized))?.value || "";
 }
