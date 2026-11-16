@@ -46,8 +46,9 @@ export default function ImportLogisticsPage(){
    for(const r of rows){
     const match=existing.find(v=>{
      const full=String(v.vin||"").replace(/\s/g,"").toUpperCase();
-     const short=String(v.vin7||"").replace(/\s/g,"").toUpperCase()||(full.length===7?full:"");
-     return r.vin.length===17?full===r.vin:short===r.vin.slice(-7);
+     const short=String(v.vin7||"").replace(/\s/g,"").toUpperCase()||(full.length===7?full:full.slice(-7));
+     if(r.vin.length===17 && full.length===17) return full===r.vin;
+     return short===r.vin.slice(-7);
     });
     const marca=/^MINI\b/i.test(r.modelo.trim())?"MINI":"BMW";
     const motor=suggestedMotor(r.modelo);
@@ -65,7 +66,11 @@ export default function ImportLogisticsPage(){
      batch.update(doc(db,"vehiculos",match.id),fields);updated++;
     }else{
      const newRef=doc(collection(db,"vehiculos"));
-     batch.set(newRef,{...fields,vin:r.vin,estado:"Disponible",ubicacion:"Pendiente de ubicación",createdAt:now});created++;
+     batch.set(newRef,{...fields,vin:r.vin,estado:"Disponible",ubicacion:"Pendiente de ubicación",createdAt:now});
+     // Incluye los vehículos preparados en este mismo lote para que otra fila
+     // con el mismo bastidor actualice el registro y no cree un segundo documento.
+     existing.push({id:newRef.id,vin:r.vin,vin7:r.vin.slice(-7),...fields});
+     created++;
     }
     imported.push(r.vin);
    }
