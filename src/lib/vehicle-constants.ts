@@ -118,7 +118,8 @@ const MOTOR_RULES: Array<{ pattern: RegExp; value: string }> = [
   { pattern: /IX3/i, value: "Eléctrico · iX3" },
   { pattern: /M5.*TOURING|M5.*BERLINA/i, value: "Híbrido enchufable · 4.4 V8 M TwinPower Turbo + eléctrico · 535 kW (727 CV) · M xDrive" },
   { pattern: /X5.*50E/i, value: "Híbrido enchufable · 3.0 gasolina + eléctrico · xDrive" },
-  { pattern: /X3.*30E|330E/i, value: "Híbrido enchufable · 2.0 gasolina + eléctrico" },
+  { pattern: /X3.*30E/i, value: "Híbrido enchufable · 2.0 gasolina + eléctrico · xDrive" },
+  { pattern: /330E/i, value: "Híbrido enchufable · 2.0 gasolina + eléctrico · 215 kW (292 CV)" },
   { pattern: /X1.*25E|X1.*30E/i, value: "Híbrido enchufable · 1.5 gasolina + eléctrico · xDrive" },
   { pattern: /225E|230E/i, value: "Híbrido enchufable · 1.5 gasolina + eléctrico · Active Tourer" },
   { pattern: /X2.*M35I/i, value: "Gasolina · 2.0 TwinPower Turbo · 221 kW (300 CV) · xDrive" },
@@ -138,10 +139,11 @@ const MOTOR_RULES: Array<{ pattern: RegExp; value: string }> = [
   { pattern: /X4.*M40D/i, value: "Diésel · 3.0 M Performance · xDrive" },
   { pattern: /X4.*M40I/i, value: "Gasolina · 3.0 M Performance · xDrive" },
   { pattern: /X3.*20D|X3.*30D/i, value: "Diésel · 2.0/3.0 según versión · xDrive" },
-  { pattern: /740D|540D|420D|220D|320D|520D|218D|118D|120D|318D/i, value: "Diésel · 2.0/3.0 según versión" },
+  { pattern: /540D/i, value: "Diésel · 3.0 mild hybrid · 223 kW (303 CV)" },
+  { pattern: /420D/i, value: "Diésel · 2.0 · 140 kW (190 CV)" },
+  { pattern: /740D|220D|320D|520D|218D|118D|120D|318D/i, value: "Diésel · motor TwinPower Turbo; cilindrada según versión" },
   { pattern: /420I|430I|220I|320I|520I|118I|120I|218I|318I/i, value: "Gasolina · TwinPower Turbo" },
-  { pattern: /330E/i, value: "Híbrido enchufable · 2.0 gasolina + eléctrico · 215 kW (292 CV)" },
-];
+ ];
 const normalizeColorText = (value: string) =>
   String(value || "")
     .normalize("NFD")
