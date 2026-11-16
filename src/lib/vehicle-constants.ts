@@ -102,7 +102,7 @@ const MOTOR_RULES: Array<{ pattern: RegExp; value: string }> = [
   { pattern: /X2.*M35I/i, value: "Gasolina · 2.0 TwinPower Turbo · 221 kW (300 CV) · xDrive" },
   { pattern: /X1.*SDRIVE18I|X1\\s+18I/i, value: "Gasolina · 1.5 TwinPower Turbo · 100 kW (136 CV)" },
   { pattern: /M340I|M440I/i, value: "Gasolina · 3.0 M TwinPower Turbo" },
-  { pattern: /X2.*M35I|M3|M4/i, value: "Gasolina · motor BMW M" },
+  { pattern: /M3|M4/i, value: "Gasolina · motor BMW M" },
   // Diésel.
   { pattern: /540D|X3.*40D|X5.*40D|X5.*30D|X3.*30D|430D|330D|530D|630D|730D/i, value: "Diésel · 3.0 · 223 kW (303 CV) en versiones 40d actuales" },
   { pattern: /420D/i, value: "Diésel · 2.0 · 140 kW (190 CV)" },
