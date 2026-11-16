@@ -82,7 +82,8 @@ export default function ShowroomEditor({vehicles,movingVehicleId,onPlaceVehicle,
       <div className="flex items-center gap-2"><span className="text-xs text-slate-500">{saved?"Guardado":"Cambios sin guardar"}</span><Button onClick={async()=>{if(editing){if(await save())setEditing(false);}else setEditing(true);}} variant={editing?"destructive":"default"}>{editing?"Finalizar edición":"Editar plano"}</Button></div>
     </div>
     {editing&&<div className="flex flex-wrap items-center gap-2 rounded-xl border bg-white p-2 shadow-sm">
-      <Button variant="outline" onClick={addPlaza}><Plus className="mr-1 h-4 w-4"/> Nueva plaza</Button>\n      <Button variant="outline" onClick={addZone}><Plus className="mr-1 h-4 w-4"/> Nueva zona</Button>
+      <Button variant="outline" onClick={addPlaza}><Plus className="mr-1 h-4 w-4"/> Nueva plaza</Button>
+      <Button variant="outline" onClick={addZone}><Plus className="mr-1 h-4 w-4"/> Nueva zona</Button>
       <Button variant="outline" onClick={align}><AlignCenter className="mr-1 h-4 w-4"/> Alinear</Button>
       <Button variant="outline" size="icon" onClick={undo} disabled={!history.length}><Undo2 className="h-4 w-4"/></Button>
       <Button variant="outline" size="icon" onClick={redo} disabled={!future.length}><Redo2 className="h-4 w-4"/></Button>
