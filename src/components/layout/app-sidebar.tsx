@@ -14,7 +14,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { BrandLogo } from "./brand-logo"
 
 const operations = [
   { title: "Inicio", url: "/", icon: LayoutDashboard },
@@ -57,7 +56,21 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-slate-200 bg-white text-slate-800">
       <SidebarHeader className="h-[116px] justify-center border-b border-slate-100 px-5">
         <div className="flex items-center justify-between gap-2">
-          <BrandLogo variant={state === "expanded" ? "sidebar" : "mobile"} />
+          {state === "expanded" ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#55c5e8]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#0877bd]" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#e51b32]" />
+                </div>
+                <span className="text-[17px] font-semibold tracking-tight text-slate-900">Momentum</span>
+              </div>
+              <span className="pl-[34px] text-[9px] font-medium uppercase tracking-[0.25em] text-slate-400">GENIUS SHOWROOM</span>
+            </div>
+          ) : (
+            <div className="flex gap-1"><span className="h-2 w-2 rounded-full bg-[#55c5e8]" /><span className="h-2 w-2 rounded-full bg-[#0877bd]" /><span className="h-2 w-2 rounded-full bg-[#e51b32]" /></div>
+          )}
           {isMobile && <Button variant="ghost" size="icon" onClick={() => setOpenMobile(false)} className="ml-auto text-slate-500 hover:bg-slate-100"><X className="h-5 w-5" /></Button>}
         </div>
       </SidebarHeader>
