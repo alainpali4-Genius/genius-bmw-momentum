@@ -52,7 +52,10 @@ export default function StockManagement() {
       const wrongFuelType = (/M3|M4|M2|M35I/.test(normalizedModel) && !/390 kW|375 kW|353 kW|221 kW|300 CV|530 CV|510 CV|480 CV/.test(currentMotor))
         || (/(?:18D|20D|30D|40D|35D|420D|520D|120D)$/.test(normalizedModel)
         && /gasolina|sdrive20i|twinpower turbo.*gasolina/i.test(currentMotor));
-      if ((!currentMotor || currentMotor === "—" || genericMotor || wrongFuelType) && suggested) {
+      // Los modelos actuales del configurador tienen potencia exacta; sustituimos también textos antiguos ambiguos.
+      const exactCurrentModel = normalizedModel === "BMW118D".replace(/BMW/g, "") || normalizedModel === "118D"
+        || normalizedModel === "SERIE120D" || normalizedModel === "120D";
+      if ((!currentMotor || currentMotor === "—" || genericMotor || wrongFuelType || exactCurrentModel) && suggested) {
         if (suggested !== currentMotor) patch.motor = suggested;
       }
       const currentColorCode = String(vehicle.colorCodigo || vehicle.colorBMW || "").trim().toUpperCase();
