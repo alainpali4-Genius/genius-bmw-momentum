@@ -1,0 +1,68 @@
+/**
+ * Catálogo maestro BMW/MINI: modelos y generaciones comercializados desde 2016.
+ * Mercado de referencia: Europa/España. Las cifras solo se incluyen cuando la
+ * variante está suficientemente identificada; no se extrapolan entre años.
+ */
+export type EngineVariant = {
+  aliases: string[];
+  fuel: "Gasolina" | "Diésel" | "Híbrido enchufable" | "Eléctrico";
+  description: string;
+  displacement?: string;
+  powerKw?: number;
+  powerCv?: number;
+  drivetrain?: string;
+};
+export type ModelGeneration = { brand:"BMW"|"MINI"; model:string; generation:string; from:number; to?:number };
+export type MasterModel = { brand:"BMW"|"MINI"; model:string; generations:ModelGeneration[]; engines:EngineVariant[] };
+
+const gen = (brand:"BMW"|"MINI", model:string, rows:Array<[string,number,number?]>):ModelGeneration[] =>
+  rows.map(([generation,from,to])=>({brand,model,generation,from,...(to?{to}:{})}));
+const p=(aliases:string[],description:string,displacement?:string,powerKw?:number,powerCv?:number,drivetrain?:string):EngineVariant=>({aliases,fuel:"Gasolina",description,...(displacement?{displacement}:{}),...(powerKw?{powerKw}:{}),...(powerCv?{powerCv}:{}),...(drivetrain?{drivetrain}:{})});
+const d=(aliases:string[],description:string,displacement?:string,powerKw?:number,powerCv?:number,drivetrain?:string):EngineVariant=>({aliases,fuel:"Diésel",description,...(displacement?{displacement}:{}),...(powerKw?{powerKw}:{}),...(powerCv?{powerCv}:{}),...(drivetrain?{drivetrain}:{})});
+const h=(aliases:string[],description:string,powerKw?:number,powerCv?:number,drivetrain?:string):EngineVariant=>({aliases,fuel:"Híbrido enchufable",description,...(powerKw?{powerKw}:{}),...(powerCv?{powerCv}:{}),...(drivetrain?{drivetrain}:{})});
+const e=(aliases:string[],description:string,powerKw?:number,powerCv?:number,drivetrain?:string):EngineVariant=>({aliases,fuel:"Eléctrico",description,...(powerKw?{powerKw}:{}),...(powerCv?{powerCv}:{}),...(drivetrain?{drivetrain}:{})});
+
+export const BMW_MINI_MASTER_CATALOG:MasterModel[]=[
+{brand:"BMW",model:"Serie 1",generations:gen("BMW","Serie 1",[["F20/F21",2016,2019],["F40",2019,2024],["F70",2024]]),engines:[p(["116i","118i"],"TwinPower Turbo","1.5/1.6"),p(["120i"],"TwinPower Turbo","2.0"),p(["125i"],"TwinPower Turbo","2.0"),d(["116d","118d"],"TwinPower Turbo","1.5/2.0"),d(["120d"],"TwinPower Turbo","2.0"),d(["125d"],"TwinPower Turbo biturbo","2.0"),p(["M135i"],"M TwinPower Turbo","2.0",225,306,"xDrive")]},
+{brand:"BMW",model:"Serie 2",generations:gen("BMW","Serie 2",[["F22/F23",2016,2021],["F44",2019,2024],["G42",2021],["U06",2021]]),engines:[p(["218i"],"TwinPower Turbo","1.5"),p(["220i"],"TwinPower Turbo","2.0"),p(["230i"],"TwinPower Turbo","2.0"),p(["M240i"],"seis cilindros M Performance","3.0",275,374),d(["216d","218d"],"TwinPower Turbo","1.5/2.0"),d(["220d"],"TwinPower Turbo","2.0"),h(["225xe","225e"],"1.5 gasolina + eléctrico"),h(["230e"],"1.5 gasolina + eléctrico")]},
+{brand:"BMW",model:"Serie 3",generations:gen("BMW","Serie 3",[["F30/F31/F34",2016,2019],["G20/G21",2019]]),engines:[p(["318i"],"TwinPower Turbo","2.0"),p(["320i"],"TwinPower Turbo","2.0"),p(["330i"],"TwinPower Turbo","2.0"),p(["340i","M340i"],"seis cilindros M Performance","3.0"),d(["316d","318d"],"TwinPower Turbo","2.0"),d(["320d"],"TwinPower Turbo","2.0"),d(["330d"],"seis cilindros","3.0"),d(["335d"],"seis cilindros biturbo","3.0"),d(["M340d"],"seis cilindros M Performance mild hybrid","3.0"),h(["320e"],"2.0 gasolina + eléctrico"),h(["330e"],"2.0 gasolina + eléctrico",215,292)]},
+{brand:"BMW",model:"Serie 4",generations:gen("BMW","Serie 4",[["F32/F33/F36",2016,2020],["G22/G23/G26",2020]]),engines:[p(["420i"],"TwinPower Turbo","2.0"),p(["430i"],"TwinPower Turbo","2.0"),p(["440i","M440i"],"seis cilindros M Performance","3.0"),d(["418d"],"TwinPower Turbo","2.0"),d(["420d"],"TwinPower Turbo","2.0"),d(["430d"],"seis cilindros","3.0"),d(["M440d"],"seis cilindros M Performance","3.0"),e(["i4 eDrive35"],"BMW eDrive",210,286),e(["i4 eDrive40"],"BMW eDrive",250,340),e(["i4 M50"],"BMW M eléctrico",400,544,"xDrive"),e(["i4 M60"],"BMW M eléctrico",442,601,"xDrive")]},
+{brand:"BMW",model:"Serie 5",generations:gen("BMW","Serie 5",[["G30/G31",2017,2023],["G60/G61",2023]]),engines:[p(["520i"],"TwinPower Turbo","2.0"),p(["530i"],"TwinPower Turbo","2.0"),p(["540i"],"seis cilindros","3.0"),d(["518d"],"TwinPower Turbo","2.0"),d(["520d"],"TwinPower Turbo","2.0"),d(["530d"],"seis cilindros","3.0"),d(["540d"],"seis cilindros mild hybrid","3.0"),h(["530e"],"gasolina + eléctrico"),h(["545e","550e"],"gasolina + eléctrico"),e(["i5 eDrive40"],"BMW eDrive",250,340),e(["i5 xDrive40"],"BMW eDrive",290,394,"xDrive"),e(["i5 M60"],"BMW M eléctrico",442,601,"xDrive")]},
+{brand:"BMW",model:"Serie 6",generations:gen("BMW","Serie 6",[["G32 Gran Turismo",2017,2023]]),engines:[p(["630i"],"TwinPower Turbo","2.0"),p(["640i"],"TwinPower Turbo","3.0"),d(["620d"],"TwinPower Turbo","2.0"),d(["630d"],"seis cilindros","3.0"),d(["640d"],"seis cilindros biturbo","3.0")]},
+{brand:"BMW",model:"Serie 7",generations:gen("BMW","Serie 7",[["G11/G12",2016,2022],["G70",2022]]),engines:[p(["730i","740i"],"TwinPower Turbo","2.0/3.0"),d(["730d"],"seis cilindros","3.0"),d(["740d"],"seis cilindros mild hybrid","3.0"),h(["745e","750e","M760e"],"gasolina + eléctrico"),e(["i7 eDrive50"],"BMW eDrive",335,455),e(["i7 xDrive60"],"BMW eDrive",400,544,"xDrive"),e(["i7 M70"],"BMW M eléctrico",485,659,"xDrive")]},
+{brand:"BMW",model:"Serie 8",generations:gen("BMW","Serie 8",[["G14/G15/G16",2018]]),engines:[p(["840i"],"seis cilindros TwinPower Turbo","3.0"),p(["M850i"],"V8 M TwinPower Turbo","4.4"),d(["840d"],"seis cilindros diésel","3.0"),p(["M8"],"V8 BMW M","4.4")]},
+{brand:"BMW",model:"X1",generations:gen("BMW","X1",[["F48",2016,2022],["U11",2022]]),engines:[p(["sDrive18i","xDrive18i"],"TwinPower Turbo","1.5/2.0"),p(["sDrive20i","xDrive20i"],"TwinPower Turbo","2.0"),p(["xDrive23i"],"mild hybrid","2.0"),d(["sDrive16d","sDrive18d","xDrive18d"],"TwinPower Turbo","1.5/2.0"),d(["sDrive20d","xDrive20d"],"TwinPower Turbo","2.0"),h(["xDrive25e","xDrive30e"],"gasolina + eléctrico"),e(["iX1 eDrive20"],"BMW eDrive",150,204),e(["iX1 xDrive30"],"BMW eDrive",230,313,"xDrive")]},
+{brand:"BMW",model:"X2",generations:gen("BMW","X2",[["F39",2018,2023],["U10",2023]]),engines:[p(["sDrive18i"],"TwinPower Turbo","1.5"),p(["sDrive20i","xDrive20i"],"TwinPower Turbo","2.0"),p(["M35i"],"M TwinPower Turbo","2.0",221,300,"xDrive"),d(["sDrive18d","xDrive18d"],"TwinPower Turbo","2.0"),d(["sDrive20d","xDrive20d"],"TwinPower Turbo","2.0"),e(["iX2 eDrive20"],"BMW eDrive",150,204),e(["iX2 xDrive30"],"BMW eDrive",230,313,"xDrive")]},
+{brand:"BMW",model:"X3",generations:gen("BMW","X3",[["G01",2017,2024],["G45",2024]]),engines:[p(["xDrive20i"],"TwinPower Turbo","2.0"),p(["xDrive30i"],"TwinPower Turbo","2.0"),p(["M40i","M50"],"seis cilindros M Performance","3.0"),d(["xDrive18d","xDrive20d"],"TwinPower Turbo","2.0"),d(["xDrive30d"],"seis cilindros","3.0"),d(["xDrive40d"],"seis cilindros mild hybrid","3.0"),h(["xDrive30e"],"gasolina + eléctrico"),e(["iX3"],"BMW eDrive eléctrico")]},
+{brand:"BMW",model:"X4",generations:gen("BMW","X4",[["G02",2018,2025]]),engines:[p(["xDrive20i"],"TwinPower Turbo","2.0"),p(["M40i"],"seis cilindros M Performance","3.0"),d(["xDrive20d"],"TwinPower Turbo","2.0"),d(["xDrive30d"],"seis cilindros","3.0"),d(["M40d"],"seis cilindros M Performance","3.0")]},
+{brand:"BMW",model:"X5",generations:gen("BMW","X5",[["G05",2018,2026],["G65",2026]]),engines:[p(["xDrive40i"],"seis cilindros TwinPower Turbo","3.0"),p(["M50i","M60i"],"V8 M TwinPower Turbo","4.4"),p(["X5 M"],"V8 BMW M","4.4"),d(["xDrive25d"],"TwinPower Turbo","2.0"),d(["xDrive30d"],"seis cilindros","3.0"),d(["xDrive40d"],"seis cilindros mild hybrid","3.0"),h(["xDrive45e","xDrive50e"],"gasolina + eléctrico"),h(["M60e"],"V8 gasolina + eléctrico M Performance")]},
+{brand:"BMW",model:"X6",generations:gen("BMW","X6",[["G06",2019]]),engines:[p(["xDrive40i"],"seis cilindros","3.0"),p(["M50i","M60i"],"V8 M TwinPower Turbo","4.4"),p(["X6 M"],"V8 BMW M","4.4"),d(["xDrive30d"],"seis cilindros","3.0"),d(["xDrive40d"],"seis cilindros mild hybrid","3.0"),d(["M50d"],"seis cilindros","3.0")]},
+{brand:"BMW",model:"X7",generations:gen("BMW","X7",[["G07",2019]]),engines:[p(["xDrive40i"],"seis cilindros","3.0"),p(["M50i","M60i"],"V8 M TwinPower Turbo","4.4"),d(["xDrive30d"],"seis cilindros","3.0"),d(["xDrive40d"],"seis cilindros mild hybrid","3.0"),d(["M50d"],"seis cilindros","3.0")]},
+{brand:"BMW",model:"Z4",generations:gen("BMW","Z4",[["G29",2018]]),engines:[p(["sDrive20i"],"TwinPower Turbo","2.0"),p(["sDrive30i"],"TwinPower Turbo","2.0"),p(["M40i"],"seis cilindros M Performance","3.0")]},
+{brand:"BMW",model:"iX",generations:gen("BMW","iX",[["I20",2021]]),engines:[e(["xDrive40","xDrive45","xDrive50","xDrive60"],"BMW eDrive"),e(["M60","M70"],"BMW M eléctrico")]},
+{brand:"BMW",model:"XM",generations:gen("BMW","XM",[["G09",2022]]),engines:[h(["XM","XM Label"],"V8 M TwinPower Turbo + motor eléctrico")]},
+{brand:"MINI",model:"MINI 3 puertas",generations:gen("MINI","MINI 3 puertas",[["F56",2016,2024],["F66",2024]]),engines:[p(["One"],"gasolina turbo","1.2/1.5"),p(["Cooper","Cooper C"],"gasolina turbo","1.5"),p(["Cooper S"],"gasolina turbo","2.0"),p(["John Cooper Works","JCW"],"John Cooper Works turbo","2.0"),d(["One D","Cooper D"],"diésel","1.5"),d(["Cooper SD"],"diésel","2.0"),e(["Cooper E"],"MINI Electric",135,184),e(["Cooper SE"],"MINI Electric",160,218),e(["JCW Electric"],"MINI Electric John Cooper Works")]},
+{brand:"MINI",model:"MINI 5 puertas",generations:gen("MINI","MINI 5 puertas",[["F55",2016,2024],["F65",2024]]),engines:[p(["One"],"gasolina turbo","1.2/1.5"),p(["Cooper","Cooper C"],"gasolina turbo","1.5"),p(["Cooper S"],"gasolina turbo","2.0"),d(["One D","Cooper D"],"diésel","1.5/2.0"),d(["Cooper SD"],"diésel","2.0")]},
+{brand:"MINI",model:"MINI Cabrio",generations:gen("MINI","MINI Cabrio",[["F57",2016,2024],["F67",2024]]),engines:[p(["Cooper"],"gasolina turbo","1.5"),p(["Cooper S"],"gasolina turbo","2.0"),p(["John Cooper Works","JCW"],"John Cooper Works turbo","2.0")]},
+{brand:"MINI",model:"MINI Clubman",generations:gen("MINI","MINI Clubman",[["F54",2016,2024]]),engines:[p(["One","Cooper"],"gasolina turbo","1.5"),p(["Cooper S"],"gasolina turbo","2.0"),p(["JCW"],"John Cooper Works turbo","2.0"),d(["One D","Cooper D"],"diésel","1.5/2.0"),d(["Cooper SD"],"diésel","2.0")]},
+{brand:"MINI",model:"MINI Countryman",generations:gen("MINI","MINI Countryman",[["F60",2017,2023],["U25",2023]]),engines:[p(["One"],"gasolina turbo","1.5"),p(["Cooper","Countryman C"],"gasolina turbo","1.5"),p(["Cooper S","Countryman S"],"gasolina turbo","2.0"),p(["JCW"],"John Cooper Works turbo","2.0"),d(["One D","Cooper D"],"diésel","2.0"),d(["Cooper SD"],"diésel","2.0"),h(["Cooper SE ALL4"],"gasolina + eléctrico"),e(["Countryman E"],"MINI Electric",150,204),e(["Countryman SE ALL4"],"MINI Electric",230,313,"ALL4"),e(["Countryman JCW ALL4"],"MINI Electric John Cooper Works")]},
+{brand:"MINI",model:"MINI Aceman",generations:gen("MINI","MINI Aceman",[["J05",2024]]),engines:[e(["Aceman E"],"MINI Electric",135,184),e(["Aceman SE"],"MINI Electric",160,218),e(["Aceman JCW","JCW Aceman"],"MINI Electric John Cooper Works",190,258)]}
+];
+
+const normalize=(s:string)=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/BMW|MINI/g," ").replace(/[^A-Z0-9]+/g," ").trim().replace(/\s+/g," ");
+export function findMasterEngine(modelName:string):{brand:"BMW"|"MINI";model:string;generation?:string;engine:EngineVariant}|null{
+ const value=" "+normalize(modelName)+" ";
+ if(value.trim().length<2)return null;
+ const hits=BMW_MINI_MASTER_CATALOG.flatMap(model=>model.engines.flatMap(engine=>engine.aliases.map(alias=>({model,engine,alias:normalize(alias)}))))
+  .filter(item=>item.alias&&value.includes(" "+item.alias+" "))
+  .sort((a,b)=>b.alias.length-a.alias.length);
+ const found=hits[0]; if(!found)return null;
+ const generation=[...found.model.generations].reverse().find(g=>!g.to||g.to>=2026);
+ return {brand:found.model.brand,model:found.model.model,...(generation?{generation:generation.generation}:{}),engine:found.engine};
+}
+export function formatMasterEngine(engine:EngineVariant):string{
+ const size=engine.displacement?" · "+engine.displacement:"";
+ const power=engine.powerKw&&engine.powerCv?" · "+engine.powerKw+" kW ("+engine.powerCv+" CV)":"";
+ const drive=engine.drivetrain?" · "+engine.drivetrain:"";
+ return engine.fuel+" · "+engine.description+size+power+drive;
+}
