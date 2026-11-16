@@ -126,7 +126,8 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       const enrichment: Record<string, any> = {};
       if (!vehicle.modelo && aiResult?.modelo) enrichment.modelo = aiResult.modelo;
       if (!vehicle.colorCodigo && aiResult?.colorCode) enrichment.colorCodigo = aiResult.colorCode;
-      if (!vehicle.colorExterior && detectedColor) enrichment.colorExterior = detectedColor.name;\n      if (!vehicle.motor && (aiResult?.modelo || vehicle.modelo)) { const motor = suggestedMotor(aiResult?.modelo || vehicle.modelo); if (motor) enrichment.motor = motor; }
+      if (!vehicle.colorExterior && detectedColor) enrichment.colorExterior = detectedColor.name;
+      if (!vehicle.motor && (aiResult?.modelo || vehicle.modelo)) { const motor = suggestedMotor(aiResult?.modelo || vehicle.modelo); if (motor) enrichment.motor = motor; }
       if (Object.keys(enrichment).length) await updateDoc(doc(db, "vehiculos", vehicle.id), { ...enrichment, updatedAt: new Date().toISOString() });
       const payload = {
         vehiculoId: vehicle.id,
