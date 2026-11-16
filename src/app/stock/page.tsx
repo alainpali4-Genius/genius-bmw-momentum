@@ -45,7 +45,11 @@ export default function StockManagement() {
       // antes de ampliar el catálogo (p. ej. "Diésel · 2.0").
       const genericMotor = /^(di[eé]sel|gasolina)\s*[·-]\s*(1[.]\d|2[.]\d|3[.]\d)(\s*(turbo|twinpower turbo))?$/i.test(currentMotor)
         || /^(di[eé]sel|gasolina)\s*[·-]\s*(motor )?(twinpower turbo)$/i.test(currentMotor);
-      if ((!currentMotor || currentMotor === "—" || genericMotor) && suggested) {
+      const normalizedModel = String(vehicle.modelo || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+      // Corrige datos incompatibles importados anteriormente (ej.: 120d etiquetado como sDrive20i).
+      const wrongFuelType = /(?:18D|20D|30D|40D|35D|M35D|420D|520D|120D)$/.test(normalizedModel)
+        && /gasolina|sdrive20i|twinpower turbo.*gasolina/i.test(currentMotor);
+      if ((!currentMotor || currentMotor === "—" || genericMotor || wrongFuelType) && suggested) {
         if (suggested !== currentMotor) patch.motor = suggested;
       }
       const currentColorCode = String(vehicle.colorCodigo || vehicle.colorBMW || "").trim().toUpperCase();
