@@ -89,18 +89,18 @@ const MOTOR_RULES: Array<{ pattern: RegExp; value: string }> = [
   // Eléctricos e híbridos enchufables: reglas específicas antes de las genéricas.
   { pattern: /I5.*XDRIVE40/i, value: "Eléctrico · xDrive40 · 290 kW (394 CV)" },
   { pattern: /I5.*EDRIVE40/i, value: "Eléctrico · eDrive40 · 250 kW (340 CV)" },
-  { pattern: /COUNTRYMAN\\s+SE\\s+ALL4/i, value: "Eléctrico · SE ALL4 · 230 kW (313 CV)" },
-  { pattern: /COUNTRYMAN\\s+E\\b/i, value: "Eléctrico · E · 150 kW (204 CV)" },
-  { pattern: /ACEMAN\\s+SE/i, value: "Eléctrico · SE · 160 kW (218 CV)" },
+  { pattern: /COUNTRYMAN\s+SE\s+ALL4/i, value: "Eléctrico · SE ALL4 · 230 kW (313 CV)" },
+  { pattern: /COUNTRYMAN\s+E\b/i, value: "Eléctrico · E · 150 kW (204 CV)" },
+  { pattern: /ACEMAN\s+SE/i, value: "Eléctrico · SE · 160 kW (218 CV)" },
   { pattern: /IX1.*EDRIVE20/i, value: "Eléctrico · eDrive20 · 150 kW (204 CV)" },
   { pattern: /IX1.*XDRIVE30/i, value: "Eléctrico · xDrive30 · 230 kW (313 CV)" },
   { pattern: /M5.*TOURING|TOURING.*M5/i, value: "Híbrido enchufable · 4.4 V8 gasolina + eléctrico · M xDrive · 535 kW (727 CV)" },
   { pattern: /X5.*50E/i, value: "Híbrido enchufable · 3.0 gasolina + eléctrico · xDrive" },
   { pattern: /330E/i, value: "Híbrido enchufable · 2.0 gasolina + eléctrico" },
-  { pattern: /X3\\s*30E/i, value: "Híbrido enchufable · 2.0 gasolina + eléctrico · 215 kW (292 CV) · xDrive" },
+  { pattern: /X3\s*30E/i, value: "Híbrido enchufable · 2.0 gasolina + eléctrico · 215 kW (292 CV) · xDrive" },
   // Gasolina y versiones M.
   { pattern: /X2.*M35I/i, value: "Gasolina · 2.0 TwinPower Turbo · 221 kW (300 CV) · xDrive" },
-  { pattern: /X1.*SDRIVE18I|X1\\s+18I/i, value: "Gasolina · 1.5 TwinPower Turbo · 100 kW (136 CV)" },
+  { pattern: /X1.*SDRIVE18I|X1\s+18I/i, value: "Gasolina · 1.5 TwinPower Turbo · 100 kW (136 CV)" },
   { pattern: /M340I|M440I/i, value: "Gasolina · 3.0 M TwinPower Turbo" },
   { pattern: /M3|M4/i, value: "Gasolina · motor BMW M" },
   // Diésel.
