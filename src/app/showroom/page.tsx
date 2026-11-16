@@ -50,6 +50,13 @@ export const BMW_COLORS = [
   {code:"C4H",name:"Sao Paulo Yellow",hex:"#E3C52D",brand:"BMW"},
   {code:"C4P",name:"Brooklyn Grey Metallic",hex:"#7B7D7E",brand:"BMW"},
   {code:"C4W",name:"Skyscraper Grey Metallic",hex:"#8B8E91",brand:"BMW"},
+  {code:"C5Y",name:"Cape York Green Metallic",hex:"#466B5B",brand:"BMW"},
+  {code:"C67",name:"Space Silver Metallic",hex:"#BFC3C5",brand:"BMW"},
+  {code:"C68",name:"Fire Red Metallic",hex:"#A51D2D",brand:"BMW"},
+  {code:"C7A",name:"Dune Grey Metallic",hex:"#B8B2A4",brand:"BMW"},
+  {code:"C7R",name:"Night Dusk Blue Metallic",hex:"#35445D",brand:"BMW"},
+  {code:"C66",name:"Utah Orange Metallic",hex:"#B86B3D",brand:"BMW"},
+  {code:"C5L",name:"Blue Bay Lagoon Metallic",hex:"#4D8292",brand:"BMW"},
   {code:"X1F",name:"Frozen Pure Grey Metallic",hex:"#85898B",brand:"BMW"},
   {code:"X1G",name:"Frozen Tanzanite Blue Metallic",hex:"#263C62",brand:"BMW"},
   // MINI: colores clásicos y actuales. La disponibilidad depende del modelo y año.
