@@ -18,137 +18,15 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams, useRouter } from "next/navigation";
 import ShowroomEditor from "@/components/showroom/showroom-editor";
-import { suggestedMotor as resolveSuggestedMotor, findBmwColorByName } from "@/lib/vehicle-constants";
+import { BMW_COLORS, suggestedMotor, findBmwColorByName } from "@/lib/vehicle-constants";
 
-export const BMW_COLORS = [
-  // BMW: gama habitual y colores BMW Individual/M.
-  {code:"300",name:"Alpine White III",hex:"#F5F5F5",brand:"BMW"},
-  {code:"668",name:"Jet Black",hex:"#080808",brand:"BMW"},
-  {code:"475",name:"Black Sapphire Metallic",hex:"#1A1A1A",brand:"BMW"},
-  {code:"416",name:"Carbon Black Metallic",hex:"#111827",brand:"BMW"},
-  {code:"A96",name:"Mineral White Metallic",hex:"#F3F3F1",brand:"BMW"},
-  {code:"A83",name:"Glacier Silver Metallic",hex:"#AEB4B8",brand:"BMW"},
-  {code:"A75",name:"Melbourne Red Metallic",hex:"#8E1824",brand:"BMW"},
-  {code:"B39",name:"Mineral Grey Metallic",hex:"#686C70",brand:"BMW"},
-  {code:"B45",name:"Estoril Blue Metallic",hex:"#07549A",brand:"BMW"},
-  {code:"A52",name:"Space Grey Metallic",hex:"#737A80",brand:"BMW"},
-  {code:"A89",name:"Imperial Blue Metallic",hex:"#172D50",brand:"BMW"},
-  {code:"C1M",name:"Phytonic Blue Metallic",hex:"#245A91",brand:"BMW"},
-  {code:"C1X",name:"Sunset Orange Metallic",hex:"#C65B20",brand:"BMW"},
-  {code:"C10",name:"Mediterranean Blue Metallic",hex:"#164B78",brand:"BMW"},
-  {code:"C31",name:"Portimao Blue Metallic",hex:"#004D8D",brand:"BMW"},
-  {code:"C3Z",name:"Tanzanite Blue II Metallic",hex:"#172C52",brand:"BMW"},
-  {code:"C34",name:"San Francisco Red Metallic",hex:"#8E2634",brand:"BMW"},
-  {code:"C35",name:"Blue Ridge Mountain Metallic",hex:"#526D83",brand:"BMW"},
-  {code:"C36",name:"Dravit Grey Metallic",hex:"#5D5A55",brand:"BMW"},
-  {code:"C3D",name:"Manhattan Metallic",hex:"#77766F",brand:"BMW"},
-  {code:"C3G",name:"Toronto Red Metallic",hex:"#A51E2D",brand:"BMW"},
-  {code:"C3N",name:"Storm Bay Metallic",hex:"#687A83",brand:"BMW"},
-  {code:"C4E",name:"San Remo Green Metallic",hex:"#526A54",brand:"BMW"},
-  {code:"C4F",name:"Arctic Race Blue Metallic",hex:"#2A5C9A",brand:"BMW"},
-  {code:"C4G",name:"Isle of Man Green Metallic",hex:"#176044",brand:"BMW"},
-  {code:"C4H",name:"Sao Paulo Yellow",hex:"#E3C52D",brand:"BMW"},
-  {code:"C4P",name:"Brooklyn Grey Metallic",hex:"#7B7D7E",brand:"BMW"},
-  {code:"C4W",name:"Skyscraper Grey Metallic",hex:"#8B8E91",brand:"BMW"},
-  {code:"C5Y",name:"Cape York Green Metallic",hex:"#466B5B",brand:"BMW"},
-  {code:"C67",name:"Space Silver Metallic",hex:"#BFC3C5",brand:"BMW"},
-  {code:"C68",name:"Fire Red Metallic",hex:"#A51D2D",brand:"BMW"},
-  {code:"C7A",name:"Dune Grey Metallic",hex:"#B8B2A4",brand:"BMW"},
-  {code:"C7R",name:"Night Dusk Blue Metallic",hex:"#35445D",brand:"BMW"},
-  {code:"C66",name:"Utah Orange Metallic",hex:"#B86B3D",brand:"BMW"},
-  {code:"C5L",name:"Blue Bay Lagoon Metallic",hex:"#4D8292",brand:"BMW"},
-  {code:"X1F",name:"Frozen Pure Grey Metallic",hex:"#85898B",brand:"BMW"},
-  {code:"X1G",name:"Frozen Tanzanite Blue Metallic",hex:"#263C62",brand:"BMW"},
-  // MINI: colores clásicos y actuales. La disponibilidad depende del modelo y año.
-  {code:"850",name:"Pepper White",hex:"#F0EEE4",brand:"MINI"},
-  {code:"851",name:"Chili Red",hex:"#B51F2A",brand:"MINI"},
-  {code:"A94",name:"Midnight Black Metallic",hex:"#17191D",brand:"MINI"},
-  {code:"A62",name:"White Silver Metallic",hex:"#BFC4C7",brand:"MINI"},
-  {code:"B22",name:"British Racing Green",hex:"#174B36",brand:"MINI"},
-  {code:"B26",name:"Oxford Green",hex:"#243D32",brand:"MINI"},
-  {code:"B30",name:"Reef Blue",hex:"#28749A",brand:"MINI"},
-  {code:"B47",name:"Rooftop Grey",hex:"#85898C",brand:"MINI"},
-  {code:"B58",name:"Thunder Grey",hex:"#777C80",brand:"MINI"},
-  {code:"B62",name:"Starlight Blue",hex:"#254B78",brand:"MINI"},
-  {code:"B70",name:"Volcanic Orange",hex:"#D66B25",brand:"MINI"},
-  {code:"B71",name:"Moonwalk Grey",hex:"#92999C",brand:"MINI"},
-  {code:"C19",name:"Rebel Green",hex:"#31513C",brand:"MINI"},
-  {code:"C1B",name:"Solaris Orange",hex:"#D96B28",brand:"MINI"},
-  {code:"C2C",name:"Pure Burgundy",hex:"#592B3C",brand:"MINI"},
-  {code:"C2M",name:"Island Blue",hex:"#4B86A8",brand:"MINI"},
-  {code:"C3B",name:"British Racing Green IV",hex:"#174B35",brand:"MINI"},
-  {code:"C3Y",name:"Enigmatic Black Metallic",hex:"#252A31",brand:"MINI"},
-  {code:"C4L",name:"Sage Green",hex:"#9AA58D",brand:"MINI"},
-  {code:"C54",name:"Melting Silver II",hex:"#B9BEC1",brand:"MINI"},
-  {code:"C5H",name:"Zesty Yellow",hex:"#D8D33C",brand:"MINI"},
-  {code:"C6A",name:"Nanuq White",hex:"#E9E8E0",brand:"MINI"},
-  {code:"C6B",name:"Melting Silver III",hex:"#AEB5B9",brand:"MINI"},
-  {code:"C6D",name:"Resolute Bronze",hex:"#8C7761",brand:"MINI"},
-  {code:"C6F",name:"Indigo Sunset Blue",hex:"#344B79",brand:"MINI"},
-  {code:"C6K",name:"Blazing Blue",hex:"#1767A5",brand:"MINI"},
-  {code:"C6M",name:"Ocean Wave Green",hex:"#347D72",brand:"MINI"},
-  {code:"C6N",name:"Sunny Side Yellow",hex:"#E5D34A",brand:"MINI"},
-  {code:"C6P",name:"Legend Grey",hex:"#737A80",brand:"MINI"},
-  {code:"C70",name:"Slate Blue",hex:"#657F9B",brand:"MINI"},
-  {code:"C71",name:"Smokey Green",hex:"#66796B",brand:"MINI"},
-  {code:"C72",name:"Rebel Red",hex:"#B32A35",brand:"MINI"},
-  {code:"C74",name:"Chili Red II",hex:"#B51F2A",brand:"MINI"},
-  {code:"C77",name:"Copper Grey",hex:"#8C8178",brand:"MINI"}
-];
-
-
-const MOTOR_BY_MODEL: Array<{ test: RegExp; motor: string }> = [
-  { test: /ACEMAN\s+SE/i, motor: "Eléctrico · SE · 160 kW (218 CV)" },
-  { test: /COUNTRYMAN\s+E\b/i, motor: "Eléctrico · E · 150 kW (204 CV)" },
-  { test: /COUNTRYMAN\s+SE\s+ALL4/i, motor: "Eléctrico · SE ALL4 · 230 kW (313 CV)" },
-  { test: /BMW\s+M3\s+COMPETITION\s+M\s+XDRIVE\s+TOURING/i, motor: "Gasolina · 3.0 M TwinPower Turbo · 390 kW (530 CV) · M xDrive" },
-  { test: /BMW\s+M3\s+COMPETITION/i, motor: "Gasolina · 3.0 M TwinPower Turbo · 390 kW (530 CV)" },
-  { test: /X1.*sDRIVE18d/i, motor: "Diésel · 2.0 · 110 kW (150 CV) · sDrive" },
-  { test: /X1.*sDRIVE20d/i, motor: "Diésel · 2.0 · 120 kW (163 CV) · sDrive" },
-  { test: /X1.*xDRIVE20d/i, motor: "Diésel · 2.0 · 120 kW (163 CV) · xDrive" },
-  { test: /iX1.*eDRIVE20/i, motor: "Eléctrico · eDrive20 · 150 kW (204 CV)" },
-  { test: /iX1.*xDRIVE30/i, motor: "Eléctrico · xDrive30 · 230 kW (313 CV)" },
-  { test: /X1.*sDRIVE18i/i, motor: "Gasolina · 1.5 · 100 kW (136 CV) · sDrive" },
-  { test: /X2.*sDRIVE18d/i, motor: "Diésel · 2.0 · 110 kW (150 CV) · sDrive" },
-  { test: /X3.*20d.*xDRIVE/i, motor: "Diésel · 2.0 · 140 kW (190 CV) · xDrive" },
-  { test: /X5.*30d.*xDRIVE/i, motor: "Diésel · 3.0 · 210 kW (286 CV) · xDrive" },
-  { test: /X5.*50e/i, motor: "Híbrido enchufable · 3.0 gasolina + eléctrico · xDrive" },
-  { test: /X5.*40d.*xDRIVE/i, motor: "Diésel · 3.0 · 250 kW (340 CV) · xDrive" },
-  { test: /X5.*30d.*xDRIVE/i, motor: "Diésel · 3.0 · 210 kW (286 CV) · xDrive" },
-  { test: /M5.*TOURING/i, motor: "Híbrido enchufable · 4.4 V8 M TwinPower Turbo · M xDrive" },
-  { test: /X2.*M35i.*xDRIVE/i, motor: "Gasolina · 2.0 M TwinPower Turbo · xDrive" },
-  { test: /X2.*xDRIVE20d/i, motor: "Diésel · 2.0 · 120 kW (163 CV) · xDrive" },
-  { test: /X2.*sDRIVE20d/i, motor: "Diésel · 2.0 · 120 kW (163 CV) · sDrive" },
-  { test: /540d.*xDRIVE.*TOURING/i, motor: "Diésel · 3.0 mild hybrid · 223 kW (303 CV) · xDrive" },
-  { test: /X3.*40d.*xDRIVE/i, motor: "Diésel · 3.0 · 250 kW (340 CV) · xDrive" },
-  { test: /X3.*40d.*xDRIVE/i, motor: "Diésel · 3.0 · xDrive" },
-  { test: /X3.*30d.*xDRIVE/i, motor: "Diésel · 3.0 · xDrive" },
-  { test: /X3.*20d.*xDRIVE/i, motor: "Diésel · 2.0 · 140 kW (190 CV) · xDrive" },
-  { test: /X3.*20i.*xDRIVE/i, motor: "Gasolina · 2.0 · xDrive" },
-  { test: /X1.*xDRIVE23d/i, motor: "Diésel · 2.0 · xDrive" },
-  { test: /X1.*xDRIVE25e/i, motor: "Híbrido enchufable · 1.5 gasolina + eléctrico · xDrive" },
-  { test: /120d/i, motor: "Diésel · 2.0 · 120 kW (163 CV)" },
-  { test: /118d/i, motor: "Diésel · 2.0 · 110 kW (150 CV)" },
-  { test: /320d/i, motor: "Diésel · 2.0 · 140 kW (190 CV)" },
-  { test: /330d/i, motor: "Diésel · 3.0 · 210 kW (286 CV)" },
-  { test: /420d.*GRAN\s+COUPE|420\s+D\s+GC/i, motor: "Diésel · 2.0 · 140 kW (190 CV)" },
-  { test: /330e/i, motor: "Híbrido enchufable · 2.0 gasolina + eléctrico · 215 kW (292 CV)" },
-  { test: /X2.*xDRIVE\s*2\.0\s*D/i, motor: "Diésel · 2.0 · xDrive" },
-  { test: /520d.*xDRIVE/i, motor: "Diésel · 2.0 · xDrive" },
-  { test: /520d/i, motor: "Diésel · 2.0" },
-  { test: /i5.*xDRIVE40/i, motor: "Eléctrico · xDrive · 290 kW (394 CV)" },
-  { test: /i5.*eDRIVE40/i, motor: "Eléctrico · eDrive · 250 kW (340 CV)" },
-];
-export function suggestedMotor(model: string) {
-  return resolveSuggestedMotor(model) || MOTOR_BY_MODEL.find(item => item.test.test(model.trim()))?.motor || "";
-}
+export { BMW_COLORS } from "@/lib/vehicle-constants";
 export function suggestedColor(model: string) {
-  const value = model.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-  return BMW_COLORS.find(c => value.includes(c.name.toLowerCase().replace(" metallic", " metalizado")) || value.includes(c.name.toLowerCase())) || null;
+  const value = model.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+  return BMW_COLORS.find(color => value.includes(color.name.toLowerCase().replace(" metallic", ""))) || null;
 }
 
-
-export function getVehicleColor(vehicle: any) {
+function getVehicleColor(vehicle: any) {
   const raw = String(vehicle?.colorExterior || vehicle?.colorCorreo || "");
   const code = String(vehicle?.colorCodigo || vehicle?.colorBMW || "").trim().toUpperCase();
   const byCode = BMW_COLORS.find(c => c.code === code);
