@@ -1,3 +1,4 @@
+import { findMasterEngine, formatMasterEngine } from "@/lib/bmw-mini-master-catalog";
 // Catálogos compartidos por showroom, stock y escáner VIN.
 export const BMW_COLORS = [
   // BMW: gama habitual y colores BMW Individual/M.
@@ -213,7 +214,6 @@ export function findBmwColorByName(raw: string) {
   }) || null;
 }
 
-import { findMasterEngine, formatMasterEngine } from "@/lib/bmw-mini-master-catalog";
 
 export function suggestedMotor(model: string): string {
   // El catálogo maestro tiene prioridad; las reglas heredadas se mantienen
