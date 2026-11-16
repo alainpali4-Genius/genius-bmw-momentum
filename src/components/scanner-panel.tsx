@@ -275,8 +275,12 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
         B39: ["B39", "B3G"],
         B45: ["B45", "B4S"]
       };
+      // No buscar códigos dentro de una cadena compactada: podría confundir
+      // fragmentos del VIN o del texto de la placa con un código de pintura.
+      const detailTokens = detailRaw.toUpperCase().match(/[A-Z0-9]{3}/g) || [];
       const colorCode = BMW_COLORS.find(color =>
-        (colorAliases[color.code.toUpperCase()] || [color.code.toUpperCase()]).some(alias => detailCompact.includes(alias))
+        (colorAliases[color.code.toUpperCase()] || [color.code.toUpperCase()])
+          .some(alias => detailTokens.includes(alias))
       )?.code || "";
       const detectedDetails = { modelo: modelDetected, colorCode };
             setManualVin(recognized);
