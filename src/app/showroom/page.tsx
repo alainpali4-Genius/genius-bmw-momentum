@@ -26,7 +26,7 @@ export function suggestedColor(model: string) {
   return BMW_COLORS.find(color => value.includes(color.name.toLowerCase().replace(" metallic", ""))) || null;
 }
 
-function getVehicleColor(vehicle: any) {
+export function getVehicleColor(vehicle: any) {
   const raw = String(vehicle?.colorExterior || vehicle?.colorCorreo || "");
   const code = String(vehicle?.colorCodigo || vehicle?.colorBMW || "").trim().toUpperCase();
   const byCode = BMW_COLORS.find(c => c.code === code);
