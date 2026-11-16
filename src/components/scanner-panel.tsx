@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BMW_COLORS, TIPOS_LOGISTICOS, suggestedMotor } from "@/lib/vehicle-constants";
 
-const normalizeVin = (value: unknown) => String(value || "").replace(/\\s+/g, "").toUpperCase();
+const normalizeVin = (value: unknown) => String(value || "").replace(/\s+/g, "").toUpperCase();
 
 const compressImage = (file: File, maxWidth = 1600, quality = 0.82): Promise<string> => {
   return new Promise((resolve, reject) => {
