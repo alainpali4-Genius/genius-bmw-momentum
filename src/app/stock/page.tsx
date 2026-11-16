@@ -11,7 +11,7 @@ import { collection, query, orderBy, writeBatch, doc } from "firebase/firestore"
 import { differenceInDays, parseISO, isValid } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getVehicleColor } from "../showroom/page";
-import { suggestedMotor, findBmwColorByName } from "@/lib/vehicle-constants";
+import { BMW_COLORS, suggestedMotor, findBmwColorByName } from "@/lib/vehicle-constants";
 
 type FilterType = 'all' | 'terraza' | 'entreplanta' | 'entrega' | 'exposicion' | 'demo';
 
@@ -43,12 +43,13 @@ export default function StockManagement() {
         const motor = suggestedMotor(vehicle.modelo || "");
         if (motor) patch.motor = motor;
       }
-      if (!vehicle.colorCodigo || !vehicle.colorBMW) {
-        const color = findBmwColorByName(vehicle.colorExterior || vehicle.colorCorreo || "");
-        if (color) {
-          if (!vehicle.colorCodigo) patch.colorCodigo = color.code;
-          if (!vehicle.colorBMW) patch.colorBMW = color.code;
-        }
+      const currentColorCode = String(vehicle.colorCodigo || vehicle.colorBMW || "").trim().toUpperCase();
+      const knownColorCode = BMW_COLORS.some(color => color.code === currentColorCode);
+      const color = findBmwColorByName(vehicle.colorExterior || vehicle.colorCorreo || "");
+      if (color && (!knownColorCode || currentColorCode !== color.code)) {
+        patch.colorCodigo = color.code;
+        patch.colorBMW = color.code;
+        patch.colorExterior = color.name;
       }
       if (Object.keys(patch).length) {
         batch.update(doc(db, "vehiculos", vehicle.id), { ...patch, updatedAt: new Date().toISOString() });
