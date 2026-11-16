@@ -39,9 +39,14 @@ export default function StockManagement() {
     let changes = 0;
     vehicles.forEach(vehicle => {
       const patch: Record<string, string> = {};
-      if (!String(vehicle.motor || "").trim() || String(vehicle.motor).trim() === "—") {
-        const motor = suggestedMotor(vehicle.modelo || "");
-        if (motor) patch.motor = motor;
+      const currentMotor = String(vehicle.motor || "").trim();
+      const suggested = suggestedMotor(vehicle.modelo || "");
+      // Sustituye también los valores antiguos demasiado genéricos que se guardaron
+      // antes de ampliar el catálogo (p. ej. "Diésel · 2.0").
+      const genericMotor = /^(di[eé]sel|gasolina)\s*[·-]\s*(1[.]\d|2[.]\d|3[.]\d)(\s*(turbo|twinpower turbo))?$/i.test(currentMotor)
+        || /^(di[eé]sel|gasolina)\s*[·-]\s*(motor )?(twinpower turbo)$/i.test(currentMotor);
+      if ((!currentMotor || currentMotor === "—" || genericMotor) && suggested) {
+        if (suggested !== currentMotor) patch.motor = suggested;
       }
       const currentColorCode = String(vehicle.colorCodigo || vehicle.colorBMW || "").trim().toUpperCase();
       const knownColorCode = BMW_COLORS.some(color => color.code === currentColorCode);
