@@ -213,7 +213,14 @@ export function findBmwColorByName(raw: string) {
   }) || null;
 }
 
+import { findMasterEngine, formatMasterEngine } from "@/lib/bmw-mini-master-catalog";
+
 export function suggestedMotor(model: string): string {
+  // El catálogo maestro tiene prioridad; las reglas heredadas se mantienen
+  // como compatibilidad para denominaciones antiguas aún no catalogadas.
+  const master = findMasterEngine(model);
+  if (master) return formatMasterEngine(master.engine);
+
   const normalized = String(model || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/BMW|MINI/g, " ").replace(/[^A-Z0-9]+/g, "");
   if (!normalized) return "";
   return MOTOR_RULES.find(rule => rule.pattern.test(normalized))?.value || "";
