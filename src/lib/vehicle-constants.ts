@@ -95,11 +95,12 @@ const MOTOR_RULES: Array<{ pattern: RegExp; value: string }> = [
   { pattern: /ACEMAN.*SE/i, value: "Eléctrico · MINI Aceman SE · 160 kW (218 CV)" },
   { pattern: /ACEMAN.*E/i, value: "Eléctrico · MINI Aceman E · 135 kW (184 CV)" },
   { pattern: /COUNTRYMAN.*SE.*ALL4/i, value: "Eléctrico · MINI Countryman SE ALL4 · 230 kW (313 CV)" },
-  { pattern: /COUNTRYMAN.*ELECTRICO|COUNTRYMAN.*EDRIVE/i, value: "Eléctrico · MINI Countryman E · 150 kW (204 CV)" },
+  { pattern: /COUNTRYMAN.*ELECTRICO|COUNTRYMAN.*EDRIVE|COUNTRYMANE$/i, value: "Eléctrico · MINI Countryman E · 150 kW (204 CV)" },
   { pattern: /COUNTRYMAN.*JCW/i, value: "Gasolina · 2.0 turbo · 221 kW (300 CV) · ALL4" },
   { pattern: /COUNTRYMAN.*S.*ALL4/i, value: "Gasolina mild hybrid · 2.0 turbo · 150 kW (204 CV) · ALL4" },
   { pattern: /COUNTRYMAN.*D/i, value: "Diésel · 2.0 turbo · 110 kW (150 CV)" },
   { pattern: /COUNTRYMAN.*C/i, value: "Gasolina mild hybrid · 1.5 turbo · 115 kW (156 CV)" },
+  { pattern: /MINI.*COOPER.*(ELECTRICO|ELECTRIC).*SE|COOPER.*ELECTRICO.*SE/i, value: "Eléctrico · MINI Cooper SE · 160 kW (218 CV)" },
   { pattern: /MINI.*COOPER.*JCW|COOPER.*JCW/i, value: "Gasolina · 2.0 turbo · 170 kW (231 CV)" },
   { pattern: /MINI.*COOPER.*S|COOPER.*S/i, value: "Gasolina · 2.0 turbo · 150 kW (204 CV)" },
   { pattern: /MINI.*COOPER.*C|COOPER.*C/i, value: "Gasolina · 1.5 turbo · 115 kW (156 CV)" },
@@ -174,7 +175,7 @@ export function findBmwColorByName(raw: string) {
   if (!value) return null;
 
   const aliases: Array<[string, string]> = [
-    ["black sapphire", "475"], ["brooklyn grey", "C4P"], ["skyscraper grey", "C4W"], ["cape york green", "C5Y"], ["fire red", "C68"], ["vegas red", "C68"], ["space silver", "C67"], ["dune grey", "C7A"], ["night dusk blue", "C7R"], ["utah orange", "C66"], ["blue bay lagoon", "C5L"],
+    ["sophisto grey", "A90"], ["saphisto grey", "A90"], ["black sapphire", "475"], ["brooklyn grey", "C4P"], ["skyscraper grey", "C4W"], ["cape york green", "C5Y"], ["fire red", "C68"], ["vegas red", "C68"], ["space silver", "C67"], ["dune grey", "C7A"], ["night dusk blue", "C7R"], ["utah orange", "C66"], ["blue bay lagoon", "C5L"],
     ["dravit grey", "C36"], ["arctic race blue", "C4F"], ["portimao blue", "C31"],
     ["alpine white", "300"], ["carbon black", "416"], ["mineral white", "A96"],
     ["san remo green", "C4E"], ["isle of man green", "C4G"], ["estoril blue", "B45"],
