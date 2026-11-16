@@ -94,19 +94,25 @@ const MOTOR_RULES: Array<{ pattern: RegExp; value: string }> = [
   { pattern: /M3|M4/i, value: "Gasolina · motor BMW M" },
 ];
 export function findBmwColorByName(raw: string) {
-  const value = String(raw || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\bmetalizado\b/g, "metallic").replace(/\s+/g, " ").trim();
+  const value = String(raw || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().replace(/\\bmetalizado\\b/g, "metallic").replace(/\\s+/g, " ").trim();
   if (!value) return null;
+  const compact = value.toUpperCase().replace(/[^A-Z0-9]/g, "");
+  const byCode = BMW_COLORS.find(color => compact === color.code.toUpperCase() || new RegExp("(^|[^A-Z0-9])" + color.code.toUpperCase() + "([^A-Z0-9]|$)").test(String(raw).toUpperCase()));
+  if (byCode) return byCode;
   const aliases: Array<[RegExp, string]> = [
     [/black sapphire/, "475"], [/brooklyn grey/, "C4P"], [/skyscraper grey/, "C4W"], [/dravit grey/, "C36"],
     [/arctic race blue/, "C4F"], [/portimao blue/, "C31"], [/alpine white/, "300"], [/carbon black/, "416"],
     [/mineral white/, "A96"], [/san remo green/, "C4E"], [/isle of man green/, "C4G"],
     [/estoril blue/, "B45"], [/phytonic blue/, "C1M"], [/tanzanite blue/, "C3Z"],
-    [/jet black/, "668"], [/glacier silver/, "A83"], [/melbourne red/, "A75"]
+    [/jet black/, "668"], [/glacier silver/, "A83"], [/melbourne red/, "A75"],
+    [/mineral grey/, "B39"], [/space grey/, "A52"], [/imperial blue/, "A89"],
+    [/mediterranean blue/, "C10"], [/toronto red/, "C3G"], [/storm bay/, "C3N"],
+    [/sunset orange/, "C1X"], [/blue ridge mountain/, "C35"], [/manhattan/, "C3D"]
   ];
   const alias = aliases.find(([pattern]) => pattern.test(value));
   if (alias) return BMW_COLORS.find(color => color.code === alias[1]) || null;
   return BMW_COLORS.find(color => {
-    const name = color.name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\bmetalizado\b/g, "metallic");
+    const name = color.name.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
     return value === name || value.includes(name) || name.includes(value);
   }) || null;
 }
