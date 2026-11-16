@@ -15,17 +15,17 @@ export function BrandLogo({ className, variant = 'full' }: BrandLogoProps) {
   // Móvil: Altura máx 36px
   const dimensions = {
     full: { width: 220, height: 80 },
-    sidebar: { width: 200, height: 72 },
-    mobile: { width: 100, height: 36 }
+    sidebar: { width: 190, height: 70 },
+    mobile: { width: 64, height: 28 }
   };
 
   const { width, height } = dimensions[variant];
 
   return (
-    <div className={cn("relative flex items-center justify-center", className)}>
+    <div className={cn("relative flex items-center justify-center overflow-hidden rounded-md bg-[#111827] px-3 py-2", className)}>
       <Image 
-        src="/logo-product-genius.png" 
-        alt="Product Genius Logo"
+        src="/bmw-m-logo.svg" 
+        alt="BMW M"
         width={width}
         height={height}
         className="object-contain"
