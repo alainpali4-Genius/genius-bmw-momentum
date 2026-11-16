@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useFirestore, useCollection } from "@/firebase";
-import { collection, doc, updateDoc, deleteDoc, addDoc, query, orderBy } from "firebase/firestore";
+import { collection, doc, updateDoc, deleteDoc, addDoc, query, orderBy, getDocs } from "firebase/firestore";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetClose } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -501,7 +501,20 @@ function ShowroomContent() {
     const vin7 = formData.vin7.trim().toUpperCase();
     if (!formData.modelo.trim() || vin7.length !== 7) return toast({ variant: "destructive", title: "Faltan datos", description: "Indica el modelo y los últimos 7 caracteres del bastidor (VIN7)." });
     if (vin && (vin.length !== 17 || /[IOQ]/.test(vin))) return toast({ variant: "destructive", title: "Bastidor no válido", description: "El VIN completo debe tener 17 caracteres y no contener I, O ni Q." });
-    if (vehiculos.some(v => (v.vin7 || (String(v.vin || "").length===7 ? v.vin : "")).toUpperCase() === vin7 || (vin && (v.vin || "").toUpperCase() === vin))) return toast({ variant: "destructive", title: "Vehículo duplicado", description: "Ya existe un vehículo con ese VIN7 o bastidor." });
+    try {
+      // Consulta Firestore en el momento del alta para no depender de una lista React desactualizada.
+      const latestVehicles = await getDocs(collection(db, "vehiculos"));
+      const duplicate = latestVehicles.docs.map(item => ({ id: item.id, ...item.data() } as any)).find(vehicle => {
+        const savedVin = normalizeVin(vehicle.vin);
+        const savedVin7 = normalizeVin(vehicle.vin7) || (savedVin.length === 7 ? savedVin : savedVin.slice(-7));
+        return (vin && savedVin.length === 17 && savedVin === vin)
+          || ((!vin || savedVin.length !== 17) && savedVin7 === vin7)
+          || (savedVin7 === vin7 && (!savedVin || savedVin.length < 17));
+      });
+      if (duplicate) return toast({ variant: "destructive", title: "Vehículo ya registrado", description: duplicate.modelo || "El bastidor ya existe en stock. No se ha creado un duplicado." });
+    } catch (error) {
+      return toast({ variant: "destructive", title: "No se pudo verificar el bastidor", description: "No se ha guardado el vehículo. Comprueba la conexión e inténtalo de nuevo." });
+    }
     const now = new Date().toISOString();
     const payload = { ...formData, modelo: formData.modelo.trim(), vin, vin7, kilometraje: null, precio: formData.precio === "" ? null : Number(formData.precio), colorCodigo: formData.colorBMW, colorExterior: BMW_COLORS.find(c => c.code === formData.colorBMW)?.name || "Alpine White", fechaEntrada: now.split('T')[0], createdAt: now, updatedAt: now };
     try {
@@ -515,6 +528,7 @@ function ShowroomContent() {
   }
 }
 
+const normalizeVin = (value: unknown) => String(value || "").replace(/\\s+/g, "").toUpperCase();
 export default function ShowroomFinal() {
   return (
     <Suspense fallback={<div className="flex justify-center items-center h-screen"><Loader2 className="animate-spin text-primary w-10 h-10" /></div>}>
