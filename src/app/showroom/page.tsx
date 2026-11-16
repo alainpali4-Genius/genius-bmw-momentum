@@ -142,27 +142,12 @@ export function suggestedColor(model: string) {
 
 
 export function getVehicleColor(vehicle: any) {
-  const code = String(vehicle?.colorCodigo || vehicle?.colorBMW || "").trim().toUpperCase();
-  if (code) {
-    const byCode = BMW_COLORS.find(c => c.code === code);
-    if (byCode) return byCode;
-  }
   const raw = String(vehicle?.colorExterior || vehicle?.colorCorreo || "");
-  const name = raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\bmetalizado\b/g, "metallic");
-  const aliases: Array<[RegExp, string]> = [
-    [/black sapphire/, "475"], [/brooklyn grey/, "C4P"], [/fire red/, "C68"],
-    [/skyscraper grey/, "C4W"], [/dravit grey/, "C36"], [/arctic race blue/, "C4R"],
-    [/portimao blue/, "C31"], [/alpine white/, "300"], [/carbon black/, "416"],
-    [/sophisto grey/, "A90"], [/black uni/, "668"], [/mineral white/, "A96"],
-    [/san remo green/, "C6K"], [/isle of man green/, "C6M"], [/vegas red/, "C77"]
-  ];
-  const match = aliases.find(([pattern]) => pattern.test(name));
-  if (match) return BMW_COLORS.find(c => c.code === match[1]) || null;
-  if (/\bgris\b|grey|gray/.test(name)) return { code: "GEN-GREY", name: raw || "Gris", hex: "#85898d" };
-  if (/\bazul\b|blue/.test(name)) return { code: "GEN-BLUE", name: raw || "Azul", hex: "#2864a0" };
-  if (/\bnegro\b|black/.test(name)) return { code: "GEN-BLACK", name: raw || "Negro", hex: "#202124" };
-  if (/\brojo\b|red/.test(name)) return { code: "GEN-RED", name: raw || "Rojo", hex: "#a5161a" };
-  return null;
+  const code = String(vehicle?.colorCodigo || vehicle?.colorBMW || "").trim().toUpperCase();
+  const byCode = BMW_COLORS.find(c => c.code === code);
+  if (byCode) return byCode;
+  // Si existe un código antiguo/no válido, no bloquear la resolución por nombre.
+  return findBmwColorByName(raw) || null;
 }
 
 export const TIPOS_LOGISTICOS = [
