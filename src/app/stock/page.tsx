@@ -46,7 +46,8 @@ export default function StockManagement() {
       const genericMotor = /^(di[eé]sel|gasolina)\s*[·-]\s*(1[.]\d|2[.]\d|3[.]\d)(\s*(turbo|twinpower turbo))?$/i.test(currentMotor)
         || /^(di[eé]sel|gasolina)\s*[·-]\s*(motor )?(twinpower turbo)$/i.test(currentMotor)
         || /^gasolina\s*[·-]\s*motor BMW M$/i.test(currentMotor)
-        || /^di[eé]sel\s*[·-]\s*2[.]0$/i.test(currentMotor);
+        || /^di[eé]sel\s*[·-]\s*2[.]0$/i.test(currentMotor)
+        || /1[.]5\/2[.]0/.test(currentMotor);
       const normalizedModel = String(vehicle.modelo || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
       // Corrige datos incompatibles importados anteriormente (ej.: 120d etiquetado como sDrive20i).
       const wrongFuelType = (/M3|M4|M2|M35I/.test(normalizedModel) && !/390 kW|375 kW|353 kW|221 kW|300 CV|530 CV|510 CV|480 CV/.test(currentMotor))
