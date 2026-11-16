@@ -528,7 +528,7 @@ function ShowroomContent() {
   }
 }
 
-const normalizeVin = (value: unknown) => String(value || "").replace(/\\s+/g, "").toUpperCase();
+const normalizeVin = (value: unknown) => String(value || "").replace(/\s+/g, "").toUpperCase();
 export default function ShowroomFinal() {
   return (
     <Suspense fallback={<div className="flex justify-center items-center h-screen"><Loader2 className="animate-spin text-primary w-10 h-10" /></div>}>
