@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ClipboardPaste, FileSpreadsheet, Upload, AlertTriangle, History } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";\nimport { suggestedMotor, findBmwColorByName } from "@/lib/vehicle-constants";
+import { useToast } from "@/hooks/use-toast";
+import { suggestedMotor, findBmwColorByName } from "@/lib/vehicle-constants";
 
 type Row = { transporte:string; fecha:string; llegada:string; vin:string; matricula:string; comision:string; vendedor:string; cliente:string; modelo:string; color:string };
 const norm=(s:string)=>s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
