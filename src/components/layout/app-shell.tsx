@@ -28,6 +28,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<AccessProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
   const isLogin = pathname === "/login";
+  const isRegister = pathname === "/register";
 
   useEffect(() => {
     let cancelled = false;
@@ -61,16 +62,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (loading) return;
-    if (!user && !isLogin) router.replace("/login");
+    if (!user && !isLogin && !isRegister) router.replace("/login");
     else if (user && !isAuthorized) {
       signOut(auth).finally(() => router.replace("/login"));
     } else if (user && isLogin && isAuthorized) router.replace("/");
-  }, [user, loading, isLogin, isAuthorized, router, auth]);
+  }, [user, loading, isLogin, isRegister, isAuthorized, router, auth]);
 
-  if (loading || (!user && !isLogin) || (user && !isAuthorized)) {
+  if (isRegister && !user) return <div className="h-screen w-full overflow-hidden bg-white">{children}</div>;
+  if (loading || (!user && !isLogin && !isRegister) || (user && !isAuthorized && !isRegister)) {
     return <div className="flex h-screen items-center justify-center bg-white"><div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-[#0066b3]"/></div>;
   }
-  if (isLogin) return <div className="h-screen w-full overflow-hidden bg-white">{children}</div>;
+  if (isLogin || isRegister) return <div className="h-screen w-full overflow-hidden bg-white">{children}</div>;
 
   return (
     <SidebarProvider defaultOpen={true}>
