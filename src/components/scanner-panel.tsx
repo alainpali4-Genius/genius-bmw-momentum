@@ -94,6 +94,8 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
   const movements = (movementsRaw || []) as any[];
   
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isCreatingVehicle, setIsCreatingVehicle] = useState(false);
+  const creatingVehicleRef = useRef(false);
   const [processStep, setProcessStep] = useState<string | null>(null);
   const [lastAudit, setLastAudit] = useState<any>(null);
   const [manualVin, setManualVin] = useState("");
@@ -293,7 +295,10 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
     } finally { setIsProcessing(false); setProcessStep(null); if (fileInputRef.current) fileInputRef.current.value = ""; }
   };
   const handleCreateNewVehicle = async () => {
-    if (!newVehicleData.modelo || !newVehicleData.vin) return toast({ variant: "destructive", title: "Faltan datos", description: "Introduce o confirma el modelo antes de guardar." });
+    if (creatingVehicleRef.current) return;
+    creatingVehicleRef.current = true;
+    setIsCreatingVehicle(true);
+    if (!newVehicleData.modelo || !newVehicleData.vin) { creatingVehicleRef.current = false; setIsCreatingVehicle(false); return toast({ variant: "destructive", title: "Faltan datos", description: "Introduce o confirma el modelo antes de guardar." }); }
     let duplicate:any = null;
     try {
       const latestVehicles = await getDocs(collection(db, "vehiculos"));
@@ -308,12 +313,14 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       });
     } catch (error) {
       toast({ variant:"destructive", title:"No se pudo verificar el bastidor", description:"No se ha guardado el vehículo. Comprueba la conexión e inténtalo de nuevo." });
+      creatingVehicleRef.current = false; setIsCreatingVehicle(false);
       return;
     }
     if (duplicate) {
       setIsNewVehicleDialogOpen(false);
       setLastAudit({ ...duplicate, status:"success", message:"VEHÍCULO YA REGISTRADO · NO SE HA DUPLICADO" });
       toast({ title:"Vehículo ya registrado", description: duplicate.modelo || "El bastidor ya existe en stock. No se ha creado otro registro." });
+      creatingVehicleRef.current = false; setIsCreatingVehicle(false);
       return;
     }
     const color = BMW_COLORS.find(c => c.code === newVehicleData.colorBMW);
@@ -333,8 +340,10 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       setIsNewVehicleDialogOpen(false);
       setLastAudit({ ...payload, id: docRef.id, status: 'success', message: 'VEHÍCULO REGISTRADO Y AUDITADO' });
       toast({ title: "Vehículo Registrado" });
+      creatingVehicleRef.current = false; setIsCreatingVehicle(false);
     } catch (e) {
       toast({ variant: "destructive", title: "Error al guardar" });
+      creatingVehicleRef.current = false; setIsCreatingVehicle(false);
     }
   };
 
@@ -418,7 +427,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
               <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Color exterior</Label><Select value={newVehicleData.colorBMW} onValueChange={v => setNewVehicleData({...newVehicleData, colorBMW: v})}><SelectTrigger className="h-11 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue placeholder="Seleccionar color"/></SelectTrigger><SelectContent className="max-h-[200px]">{BMW_COLORS.map(c => <SelectItem key={c.code} value={c.code} className="text-[9px]">{c.name}</SelectItem>)}</SelectContent></Select></div>
               <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Ubicación</Label><Select value={newVehicleData.ubicacion} onValueChange={v => setNewVehicleData({...newVehicleData, ubicacion: v})}><SelectTrigger className="h-11 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent>{["Stock", "Terraza", "Entreplanta", "Lavadero"].map(u => <SelectItem key={u} value={u} className="text-[9px] uppercase">{u}</SelectItem>)}</SelectContent></Select></div>
             </div>
-            <Button onClick={handleCreateNewVehicle} className="mt-2 h-12 w-full rounded-lg bg-[#0066b3] text-sm font-semibold text-white hover:bg-[#00549a]">CONFIRMAR ALTA UNIDAD</Button>
+            <Button onClick={handleCreateNewVehicle} disabled={isCreatingVehicle} className="mt-2 h-12 w-full rounded-lg bg-[#0066b3] text-sm font-semibold text-white hover:bg-[#00549a]">{isCreatingVehicle ? "GUARDANDO VEHÍCULO..." : "CONFIRMAR ALTA UNIDAD"}</Button>
           </div>
         </DialogContent>
       </Dialog>
