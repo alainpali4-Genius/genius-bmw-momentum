@@ -58,15 +58,16 @@ export default function ImportLogisticsPage(){
     const fechaEntrada=fechaMatch?`${fechaMatch[3].length===2?"20"+fechaMatch[3]:fechaMatch[3]}-${fechaMatch[2]}-${fechaMatch[1]}`:"";
     const clienteOriginal=r.cliente||"";
     const categoriaComercial=/^STOCK\s*EXPOSICION$/i.test(clienteOriginal.trim())?"Stock Expo":/^DEMO$/i.test(clienteOriginal.trim())?"Demo":/^ENTREGA\s+EXTERNA/i.test(clienteOriginal.trim())?"Entrega Cliente":clienteOriginal?"Asignación cliente/renting":"Sin clasificar";
+     const estadoImportado=categoriaComercial==="Stock Expo"?"Stock":categoriaComercial==="Demo"?"Demo":categoriaComercial==="Sin clasificar"?"Disponible":"Cliente";
     const entidadRenting=/\b(ALPHABET|SANTANDER|BBVA|AYVENS|ARVAL)\b/i.exec(clienteOriginal)?.[1]||"";
     const fields:any={vin7:r.vin.slice(-7),marca,modelo:r.modelo,...(motor?{motor}:{}),matricula:r.matricula||"",colorExterior:r.color||"",colorCorreo:r.color||"",colorCodigo:colorCode||null,colorBMW:colorCode||null,destinoLogistico:clienteOriginal,clienteLogistica:clienteOriginal,categoriaComercial,tipoLogistico:categoriaComercial,entidadRenting,transporte:r.transporte||"",fechaRecepcionCorreo:r.fecha||"",fechaEntrada,llegada:r.llegada||"",comision:r.comision||"",vendedorLogistica:r.vendedor||"",responsable:r.vendedor||"",origenImportacion:"Correo logística BMW",updatedAt:now};
     Object.keys(fields).forEach(k=>{if(fields[k]==="")delete fields[k]});
     if(match){
      if(!match.vin||String(match.vin).length===7)fields.vin=r.vin;
-     batch.update(doc(db,"vehiculos",match.id),fields);updated++;
+     batch.update(doc(db,"vehiculos",match.id),{...fields,estado:estadoImportado,ubicacion:estadoImportado==="Cliente"?"No disponible":"Pendiente de ubicación"});updated++;
     }else{
      const newRef=doc(collection(db,"vehiculos"));
-     batch.set(newRef,{...fields,vin:r.vin,estado:"Disponible",ubicacion:"Pendiente de ubicación",createdAt:now});
+     batch.set(newRef,{...fields,vin:r.vin,estado:estadoImportado,ubicacion:estadoImportado==="Cliente"?"No disponible":"Pendiente de ubicación",createdAt:now});
      // Incluye los vehículos preparados en este mismo lote para que otra fila
      // con el mismo bastidor actualice el registro y no cree un segundo documento.
      existing.push({id:newRef.id,vin:r.vin,vin7:r.vin.slice(-7),...fields});
