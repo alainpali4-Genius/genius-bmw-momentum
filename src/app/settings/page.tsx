@@ -4,12 +4,13 @@ import { useMemo, useState } from "react";
 import {
   Settings, ShieldCheck, Database, Palette, MapPin, ClipboardList,
   Download, Car, Users, SlidersHorizontal, FileJson, AlertTriangle,
-  RefreshCw, CheckCircle2, LockKeyhole, HardDrive, ArrowDownToLine
+  RefreshCw, CheckCircle2, LockKeyhole, HardDrive, ArrowDownToLine, Mail, KeyRound
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useFirestore, useCollection } from "@/firebase";
+import { useFirestore, useCollection, useAuth } from "@/firebase";
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
 import { collection } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
@@ -39,9 +40,16 @@ function downloadJson(filename: string, data: unknown) {
 
 export default function SettingsPage() {
   const db = useFirestore();
+  const auth = useAuth();
+  const currentUser = auth.currentUser;
   const { toast } = useToast();
   const [active, setActive] = useState<Section>("general");
   const [exporting, setExporting] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState("");
 
   const vehiclesQuery = useMemo(() => collection(db, "vehiculos"), [db]);
   const movementsQuery = useMemo(() => collection(db, "movimientos"), [db]);
@@ -150,9 +158,20 @@ export default function SettingsPage() {
             </>}
 
             {active === "users" && <>
-              <div><h2 className="text-xl font-semibold text-slate-900">Usuarios y contraseñas</h2><p className="mt-1 text-sm text-slate-500">Administración de cuentas para el futuro acceso privado a GENIUS.</p></div>
-              <Card className="rounded-2xl border-amber-200 bg-amber-50/70 shadow-sm"><CardContent className="flex items-start gap-3 p-5"><AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-700"/><div><h3 className="font-semibold text-amber-950">Módulo pendiente de autenticación segura</h3><p className="mt-1 text-sm leading-6 text-amber-900/80">La aplicación todavía no tiene un sistema de acceso privado implantado. No sería seguro crear, cambiar o borrar contraseñas desde esta pantalla. Primero hay que activar Firebase Authentication, definir roles (administrador y usuario) y proteger Firestore.</p></div></CardContent></Card>
-              <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardContent className="space-y-3 p-5"><h3 className="font-semibold text-slate-900">Funciones previstas</h3>{["Crear y desactivar usuarios","Restablecer contraseña mediante correo seguro","Asignar roles y permisos","Consultar actividad y último acceso"].map(v=><div key={v} className="flex items-center gap-2 text-sm text-slate-600"><ShieldCheck className="h-4 w-4 text-slate-400"/>{v}<Badge className="ml-auto" variant="outline">Pendiente</Badge></div>)}</CardContent></Card>
+              <div><h2 className="text-xl font-semibold text-slate-900">Mi cuenta y acceso</h2><p className="mt-1 text-sm text-slate-500">Datos de la sesión actual y cambio seguro de contraseña.</p></div>
+              <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardContent className="space-y-4 p-5">
+                <div className="flex items-center gap-3"><div className="rounded-xl bg-blue-50 p-3 text-[#0066b3]"><Mail className="h-5 w-5"/></div><div><p className="text-xs text-slate-500">Cuenta autorizada</p><p className="font-semibold text-slate-900">{currentUser?.email || "Sin sesión"}</p></div><Badge className="ml-auto" variant="outline">Administrador</Badge></div>
+                <div className="rounded-lg bg-slate-50 p-3 text-sm text-slate-600">Concesionario actual: <strong>Momentum Navarra</strong>. La cuenta está preparada para evolucionar a usuarios y concesionarios independientes.</div>
+              </CardContent></Card>
+              <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardContent className="space-y-4 p-5">
+                <div className="flex items-center gap-3"><KeyRound className="h-5 w-5 text-[#0066b3]"/><h3 className="font-semibold text-slate-900">Cambiar contraseña</h3></div>
+                <p className="text-sm text-slate-500">Por seguridad, confirma primero tu contraseña actual. Si la sesión ha caducado, vuelve a iniciar sesión e inténtalo de nuevo.</p>
+                <div><label className="mb-1 block text-xs font-semibold text-slate-600">Contraseña actual</label><input type="password" autoComplete="current-password" value={currentPassword} onChange={e=>setCurrentPassword(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm outline-none focus:border-blue-600"/></div>
+                <div className="grid gap-3 sm:grid-cols-2"><div><label className="mb-1 block text-xs font-semibold text-slate-600">Nueva contraseña</label><input type="password" autoComplete="new-password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm outline-none focus:border-blue-600"/></div><div><label className="mb-1 block text-xs font-semibold text-slate-600">Repetir nueva contraseña</label><input type="password" autoComplete="new-password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm outline-none focus:border-blue-600"/></div></div>
+                {passwordMessage && <p role="status" className="rounded-lg bg-slate-50 p-3 text-sm text-slate-700">{passwordMessage}</p>}
+                <Button disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword} onClick={async()=>{setPasswordMessage("");if(newPassword.length<8){setPasswordMessage("La nueva contraseña debe tener al menos 8 caracteres.");return;}if(newPassword!==confirmPassword){setPasswordMessage("Las nuevas contraseñas no coinciden.");return;}if(!currentUser?.email){setPasswordMessage("No hay una sesión válida.");return;}setSavingPassword(true);try{const credential=EmailAuthProvider.credential(currentUser.email,currentPassword);await reauthenticateWithCredential(currentUser,credential);await updatePassword(currentUser,newPassword);setCurrentPassword("");setNewPassword("");setConfirmPassword("");setPasswordMessage("Contraseña actualizada correctamente.");}catch(e:any){setPasswordMessage(e?.code==="auth/wrong-password"||e?.code==="auth/invalid-credential"?"La contraseña actual no es correcta.":e?.code==="auth/requires-recent-login"?"La sesión ha caducado. Cierra sesión y vuelve a entrar antes de cambiar la contraseña.":"No se ha podido actualizar la contraseña. Inténtalo de nuevo.");}finally{setSavingPassword(false);}}} className="bg-[#0066b3] text-white hover:bg-[#00549a]">{savingPassword?"Actualizando…":"Actualizar contraseña"}</Button>
+              </CardContent></Card>
+              <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardContent className="space-y-2 p-5"><h3 className="font-semibold text-slate-900">Usuarios de otros concesionarios</h3><p className="text-sm leading-6 text-slate-500">La creación de cuentas y la asignación de concesionario quedan reservadas para la siguiente fase. Se habilitarán junto con la separación de datos por empresa y los permisos de administrador.</p><Badge variant="outline">Próxima fase</Badge></CardContent></Card>
             </>}
 
             {active === "security" && <>
