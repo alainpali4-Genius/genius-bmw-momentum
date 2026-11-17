@@ -59,10 +59,10 @@ export default function GeniusDashboard() {
     { label: "Zona de entrega", value: stats.entrega, note: "Preparación / recogida", icon: Truck, href: "/delivery" },
   ];
   const useCards = [
-    { label: "Stock exposición", value: stats.stockExpo, icon: Car },
-    { label: "Demos en uso", value: stats.demos, icon: KeyRound },
-    { label: "Renting", value: stats.renting, icon: Package },
-    { label: "Clientes", value: stats.cliente, icon: CalendarCheck },
+    { label: "Stock exposición", value: stats.stockExpo, icon: Car, href: "/stock?filter=destino-stockexpo" },
+    { label: "Demos en uso", value: stats.demos, icon: KeyRound, href: "/stock?filter=destino-demo" },
+    { label: "Renting", value: stats.renting, icon: Package, href: "/stock?filter=destino-renting" },
+    { label: "Clientes", value: stats.cliente, icon: CalendarCheck, href: "/stock?filter=destino-clientes" },
   ];
 
   return (
@@ -109,7 +109,7 @@ export default function GeniusDashboard() {
         <section className="space-y-3">
           <div><p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#0872bd]">Destino / uso</p><h2 className="text-xl font-semibold text-slate-900">¿Para qué está destinado cada vehículo?</h2></div>
           <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-            {useCards.map(item=><Card key={item.label} className="rounded-xl border-slate-200 bg-white shadow-sm"><CardContent className="flex items-center gap-4 p-4"><div className="rounded-xl bg-slate-100 p-3 text-slate-600"><item.icon className="h-5 w-5"/></div><div><p className="text-xs text-slate-500">{item.label}</p><p className="text-2xl font-semibold text-slate-900">{loading?"—":item.value}</p></div></CardContent></Card>)}
+            {useCards.map(item=><Link key={item.label} href={item.href} className="group"><Card className="h-full cursor-pointer rounded-xl border-slate-200 bg-white shadow-sm transition-all group-hover:-translate-y-0.5 group-hover:border-blue-200 group-hover:shadow-md"><CardContent className="flex items-center gap-4 p-4"><div className="rounded-xl bg-slate-100 p-3 text-slate-600 transition-colors group-hover:bg-blue-50 group-hover:text-[#0066b3]"><item.icon className="h-5 w-5"/></div><div><p className="text-xs text-slate-500">{item.label}</p><p className="text-2xl font-semibold text-slate-900">{loading?"—":item.value}</p><p className="mt-1 text-[10px] text-slate-400 group-hover:text-[#0066b3]">Ver vehículos <ArrowUpRight className="ml-1 inline h-3 w-3"/></p></div></CardContent></Card></Link>)}
           </div>
         </section>
 
