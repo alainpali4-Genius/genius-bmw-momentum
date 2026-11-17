@@ -36,16 +36,20 @@ export default function StockManagement() {
   const isDemoVehicle = (vehicle: any) => String(vehicle.tipoLogistico || "").toLowerCase().includes("demo") || String(vehicle.ubicacion || "").toLowerCase() === "demo en uso" || String(vehicle.estado || "").toLowerCase().includes("demo");
   // Stock Locator solo existe cuando se ha marcado expresamente como tal; "cedido" por sí solo no basta.
 const isCustomerVehicle = (vehicle: any) => {
-  const normalize = (value: any) => String(value || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim().toLowerCase();
-  const knownNonCustomerLabels = /^(stock expo|stock exposicion|demo|demo en uso|sin clasificar|cedido|cedido stock locator|stock locator)$/;
-  const fields = [vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting, vehicle?.propietario, vehicle?.categoriaComercial, vehicle?.tipoLogistico];
-  const values = fields.map(normalize).filter(Boolean);
-  if (normalize(vehicle?.estado) === "cliente") return true;
-  // Los nombres concretos de empresas o particulares recibidos en el correo
-  // (p. ej. SIF DISFAMON o JUAN IGNACIO DELGADO) identifican flota de cliente,
-  // aunque no coincidan con una compañía de renting conocida.
-  const hasCustomerIdentity = values.some(value => !knownNonCustomerLabels.test(value) && !/^(asignacion cliente\/?renting|entrega cliente)$/.test(value));
-  return hasCustomerIdentity || values.some(value => /cliente|renting|camp.?\s*bank|bank-al|bbva|santander|ayvens|arval|alphabet|leaseplan|athlon/.test(value));
+  const normalize = (value: any) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/\\s+/g, " ");
+  const categoryFields = [vehicle?.tipoLogistico, vehicle?.categoriaComercial, vehicle?.categoria, vehicle?.categoriaStock].map(normalize);
+  const explicitNonCustomer = categoryFields.some(value => /^(stock expo|stock exposicion|demo|demo en uso|sin clasificar|cedido|cedido stock locator|stock locator)$/.test(value));
+  // La clasificación explícita de stock propio/demo prevalece sobre campos antiguos
+  // de cliente que puedan haber quedado guardados por importaciones anteriores.
+  if (explicitNonCustomer) return false;
+  const identityFields = [vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting, vehicle?.propietario];
+  const identities = identityFields.map(normalize).filter(Boolean);
+  const knownGeneric = /^(asignacion cliente\/?renting|entrega cliente|cliente|renting|sin clasificar|stock expo|stock exposicion|demo|demo en uso)$/;
+  if (identities.some(value => !knownGeneric.test(value))) return true;
+  // En registros antiguos el nombre del cliente quedó guardado en tipoLogistico.
+  const legacyType = normalize(vehicle?.tipoLogistico);
+  if (legacyType && !knownGeneric.test(legacyType) && !/^(stock locator|cedido)$/.test(legacyType)) return true;
+  return normalize(vehicle?.estado) === "cliente";
 };
   const isStockLocatorVehicle = (vehicle: any) => vehicle.stockLocator === true || normalizeStatus(vehicle.cedidoTipo).includes("stock locator") || [vehicle.tipoLogistico, vehicle.categoria, vehicle.categoriaStock, vehicle.categoriaComercial].some(value => normalizeStatus(value).includes("stock locator"));
   const vehicles = allVehicles.filter(vehicle => {
