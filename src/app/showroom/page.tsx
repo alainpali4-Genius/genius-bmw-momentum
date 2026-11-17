@@ -47,9 +47,16 @@ const ESTADOS = ["Exposicion", "Stock", "Demo", "Cliente", "Reservado", "Prepara
 const normalizeVehicleCategory = (value: unknown) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
 const isCededVehicle = (vehicle: any) => [vehicle?.estado, vehicle?.ubicacion, vehicle?.categoria, vehicle?.categoriaStock, vehicle?.categoriaComercial, vehicle?.cedidoTipo, vehicle?.tipoLogistico, vehicle?.destinoLogistico].some(value => normalizeVehicleCategory(value).includes("cedido"));
 const isCustomerVehicle = (vehicle: any) => {
-  const values = [vehicle?.tipoLogistico, vehicle?.categoriaComercial, vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting].map(v => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase());
-  if (values.some(v => /stock expo|stock exposicion|^demo$|^demo en uso$/.test(v))) return false;
-  return String(vehicle?.estado || "").toLowerCase() === "cliente" || values.some(v => /cliente|renting|camp.?\s*bank|bank-al|bbva|santander|ayvens|arval|alphabet|leaseplan|athlon/.test(v));
+  const normalize = (value: any) => String(value || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim().toLowerCase();
+  const knownNonCustomerLabels = /^(stock expo|stock exposicion|demo|demo en uso|sin clasificar|cedido|cedido stock locator|stock locator)$/;
+  const fields = [vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting, vehicle?.propietario, vehicle?.categoriaComercial, vehicle?.tipoLogistico];
+  const values = fields.map(normalize).filter(Boolean);
+  if (normalize(vehicle?.estado) === "cliente") return true;
+  // Los nombres concretos de empresas o particulares recibidos en el correo
+  // (p. ej. SIF DISFAMON o JUAN IGNACIO DELGADO) identifican flota de cliente,
+  // aunque no coincidan con una compañía de renting conocida.
+  const hasCustomerIdentity = values.some(value => !knownNonCustomerLabels.test(value) && !/^(asignacion cliente\/?renting|entrega cliente)$/.test(value));
+  return hasCustomerIdentity || values.some(value => /cliente|renting|camp.?\s*bank|bank-al|bbva|santander|ayvens|arval|alphabet|leaseplan|athlon/.test(value));
 };
 const PLAZAS_LIST = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12", "P13", "P14", "P15"];
 const OTHER_LOCATIONS = ["Entreplanta", "Terraza", "Zona de entrega", "Demo en uso"];
