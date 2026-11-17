@@ -108,7 +108,7 @@ export default function DeliveryManagement() {
     return { hoyCount, pendientesCount, completadas };
   }, [entregas]);
 
-  const normalizeDeliveryVin = (value: unknown) => String(value || "").replace(/\\s+/g, "").toUpperCase();
+  const normalizeDeliveryVin = (value: unknown) => String(value || "").replace(/\s+/g, "").toUpperCase();
 
   const handleFindDeliveredVehicle = async () => {
     const entered = normalizeDeliveryVin(deliveryVin);
