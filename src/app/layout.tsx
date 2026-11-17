@@ -17,7 +17,7 @@ export const viewport: Viewport = {
 };
 
 // Forzamos la versión del icono para romper la caché del navegador
-const ICON_VERSION = "3.0";
+const ICON_VERSION = "4.0";
 
 export const metadata: Metadata = {
   title: 'GENIUS BMW EXPO | Momentum Navarra',
@@ -30,10 +30,10 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
-      { url: `/icon?v=${ICON_VERSION}`, type: 'image/png' },
+      { url: `/icon.svg?v=${ICON_VERSION}`, type: 'image/png' },
     ],
-    shortcut: `/icon?v=${ICON_VERSION}`,
-    apple: '/logo-product-genius.png',
+    shortcut: `/icon.svg?v=${ICON_VERSION}`,
+    apple: `/icon.svg?v=${ICON_VERSION}`,
   },
 };
 
@@ -50,7 +50,7 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-title" content="Genius BMW" />
-        <link rel="icon" href={`/icon?v=${ICON_VERSION}`} sizes="any" />
+        <link rel="icon" href={`/icon.svg?v=${ICON_VERSION}`} sizes="any" />
       </head>
       <body className="font-body antialiased bg-[#f4f7fa] h-full overflow-hidden">
         <FirebaseClientProvider>
