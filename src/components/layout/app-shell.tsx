@@ -27,6 +27,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useUser();
   const [profile, setProfile] = useState<AccessProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(false);
+  const [profileUid, setProfileUid] = useState<string | null>(null);
   const isLogin = pathname === "/login";
   const isRegister = pathname === "/register";
 
@@ -34,20 +35,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     if (!user) {
       setProfile(null);
+      setProfileUid(null);
       setProfileLoading(false);
       return;
     }
-    if (user.email?.toLowerCase() === LEGACY_ADMIN_EMAIL) {
-      setProfile({ active: true, role: "admin", tenantId: "momentum-navarra" });
-      setProfileLoading(false);
-      return;
-    }
+    // Mark the profile unresolved immediately. This prevents the route guard
+    // from signing out during the render between Firebase auth and profile load.
     setProfileLoading(true);
+    setProfileUid(null);
+    if (user.email?.trim().toLowerCase() === LEGACY_ADMIN_EMAIL) {
+      setProfile({ active: true, role: "admin", tenantId: "momentum-navarra" });
+      setProfileUid(user.uid);
+      setProfileLoading(false);
+      return;
+    }
     getDoc(doc(db, "users", user.uid))
       .then(snapshot => {
         if (cancelled) return;
         const data = snapshot.exists() ? snapshot.data() as AccessProfile : null;
         setProfile(data?.active === true && typeof data.tenantId === "string" ? data : null);
+        setProfileUid(user.uid);
       })
       .catch(error => {
         console.error("No se pudo validar el perfil de acceso", error);
@@ -57,7 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return () => { cancelled = true; };
   }, [user, db]);
 
-  const loading = authLoading || profileLoading;
+  const loading = authLoading || (!!user && (profileLoading || profileUid !== user.uid));
   const isAuthorized = !!user && profile?.active === true;
 
   useEffect(() => {
