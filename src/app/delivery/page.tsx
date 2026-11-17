@@ -442,14 +442,11 @@ export default function DeliveryManagement() {
                   <p className="mt-1 font-mono text-xs text-slate-600">VIN: {normalizeDeliveryVin(selectedDeliveryVehicle.vin) || "No guardado"} · VIN7: {normalizeDeliveryVin(selectedDeliveryVehicle.vin7) || normalizeDeliveryVin(selectedDeliveryVehicle.vin).slice(-7)}</p>
                   <p className="mt-1 text-xs text-slate-500">Matrícula: {selectedDeliveryVehicle.matricula || "No disponible"} · Estado actual: {selectedDeliveryVehicle.estado || "Sin estado"}</p>
                 </div>
-                {String(selectedDeliveryVehicle.estado || "").toLowerCase() === "entregado" || String(selectedDeliveryVehicle.ubicacion || "").toLowerCase() === "entregado" ? (
-                  <Badge className="w-fit bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Ya entregado</Badge>
-                ) : (
-                  <Button onClick={handleConfirmDirectDelivery} disabled={deliveryConfirmBusy} className="h-11 shrink-0 rounded-xl bg-emerald-600 px-5 text-white hover:bg-emerald-700">
-                    {deliveryConfirmBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
-                    Confirmar entrega
-                  </Button>
-                )}
+                {(String(selectedDeliveryVehicle.estado || "").toLowerCase() === "entregado" || String(selectedDeliveryVehicle.ubicacion || "").toLowerCase() === "entregado") ? (
+                  <Badge className="w-fit bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Entregado</Badge>
+                ) : (String(selectedDeliveryVehicle.estado || "").toLowerCase() === "cedido" || String(selectedDeliveryVehicle.ubicacion || "").toLowerCase() === "stock locator") ? (
+                  <Badge className="w-fit bg-violet-100 text-violet-800 hover:bg-violet-100">Stock Locator</Badge>
+                ) : null}
               </div>
               {(selectedDeliveryVehicle.propietario || selectedDeliveryVehicle.clienteFinal) && <p className="mt-2 text-sm text-slate-600"><strong>Propietario:</strong> {selectedDeliveryVehicle.propietario || selectedDeliveryVehicle.clienteFinal}</p>}
               {selectedDeliveryVehicle.stockLocatorConcesionario && <p className="mt-2 text-sm text-slate-600"><strong>Concesionario destinatario:</strong> {selectedDeliveryVehicle.stockLocatorConcesionario}</p>}
