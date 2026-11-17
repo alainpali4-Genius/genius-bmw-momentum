@@ -1,33 +1,73 @@
 'use client';
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "firebase/auth";
-import { useAuth } from "@/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { useAuth, useFirestore } from "@/firebase";
 import { useUser } from "@/firebase/auth/use-user";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { MobileHeader } from "@/components/layout/mobile-header";
 import { BottomNav } from "@/components/layout/bottom-nav";
 
-const ALLOWED_EMAIL = "a.henares@momentummotor.es";
+const LEGACY_ADMIN_EMAIL = "a.henares@momentummotor.es";
+
+type AccessProfile = {
+  active?: boolean;
+  role?: "admin" | "manager" | "operator" | "viewer";
+  tenantId?: string;
+};
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
-  const { user, loading } = useUser();
+  const db = useFirestore();
+  const { user, loading: authLoading } = useUser();
+  const [profile, setProfile] = useState<AccessProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(false);
   const isLogin = pathname === "/login";
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!user) {
+      setProfile(null);
+      setProfileLoading(false);
+      return;
+    }
+    if (user.email?.toLowerCase() === LEGACY_ADMIN_EMAIL) {
+      setProfile({ active: true, role: "admin", tenantId: "momentum-navarra" });
+      setProfileLoading(false);
+      return;
+    }
+    setProfileLoading(true);
+    getDoc(doc(db, "users", user.uid))
+      .then(snapshot => {
+        if (cancelled) return;
+        const data = snapshot.exists() ? snapshot.data() as AccessProfile : null;
+        setProfile(data?.active === true && typeof data.tenantId === "string" ? data : null);
+      })
+      .catch(error => {
+        console.error("No se pudo validar el perfil de acceso", error);
+        if (!cancelled) setProfile(null);
+      })
+      .finally(() => { if (!cancelled) setProfileLoading(false); });
+    return () => { cancelled = true; };
+  }, [user, db]);
+
+  const loading = authLoading || profileLoading;
+  const isAuthorized = !!user && profile?.active === true;
 
   useEffect(() => {
     if (loading) return;
     if (!user && !isLogin) router.replace("/login");
-    else if (user && user.email?.toLowerCase() !== ALLOWED_EMAIL) {
+    else if (user && !isAuthorized) {
       signOut(auth).finally(() => router.replace("/login"));
-    } else if (user && isLogin) router.replace("/");
-  }, [user, loading, isLogin, router, auth]);
+    } else if (user && isLogin && isAuthorized) router.replace("/");
+  }, [user, loading, isLogin, isAuthorized, router, auth]);
 
-  if (loading || (!user && !isLogin) || (user && user.email?.toLowerCase() !== ALLOWED_EMAIL)) {
+  if (loading || (!user && !isLogin) || (user && !isAuthorized)) {
     return <div className="flex h-screen items-center justify-center bg-white"><div className="h-8 w-8 animate-spin rounded-full border-2 border-slate-200 border-t-[#0066b3]"/></div>;
   }
   if (isLogin) return <div className="h-screen w-full overflow-hidden bg-white">{children}</div>;
