@@ -250,7 +250,7 @@ function ShowroomContent() {
     const saved = await handleUpdateVehicle(selectedVehicle.id, updates);
     if (saved) {
       toast({ title: "Cambios guardados", description: "El vehículo se ha actualizado correctamente." });
-      setVehicleDraft(null);
+      handleCloseDetail();
     }
   };
   const handleSwapOrMove = async (sourceId: string, targetPlaza: string) => {
