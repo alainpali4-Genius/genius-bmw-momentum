@@ -54,9 +54,10 @@ export default function ImportLogisticsPage(){
     const motor=suggestedMotor(r.modelo);
     const detectedColor=findBmwColorByName(r.color);
     const colorCode=detectedColor?.code || "";
-    const fechaMatch=r.fecha.match(/(\d{2})\/(\d{2})\/(\d{2,4})/);
-    const fechaEntrada=fechaMatch?`${fechaMatch[3].length===2?"20"+fechaMatch[3]:fechaMatch[3]}-${fechaMatch[2]}-${fechaMatch[1]}`:"";
     const clienteOriginal=r.cliente||"";
+    // Fecha de entrada = día en que GENIUS registra el vehículo.
+    // La fecha del correo se conserva por separado en fechaRecepcionCorreo.
+    const fechaEntrada=String(match?.fechaEntrada || now.slice(0,10));
     const categoriaComercial=/^STOCK\s*EXPOSICION$/i.test(clienteOriginal.trim())?"Stock Expo":/^DEMO$/i.test(clienteOriginal.trim())?"Demo":/^ENTREGA\s+EXTERNA/i.test(clienteOriginal.trim())?"Entrega Cliente":clienteOriginal?"Asignación cliente/renting":"Sin clasificar";
      const estadoImportado=categoriaComercial==="Stock Expo"?"Stock":categoriaComercial==="Demo"?"Demo":categoriaComercial==="Sin clasificar"?"Disponible":"Cliente";
     const entidadRenting=/\b(ALPHABET|SANTANDER|BBVA|AYVENS|ARVAL)\b/i.exec(clienteOriginal)?.[1]||"";
