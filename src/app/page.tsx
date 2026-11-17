@@ -82,11 +82,16 @@ export default function GeniusDashboard() {
             </div>
           </div>
           <div className="relative mt-7 grid grid-cols-2 gap-3 border-t border-white/10 pt-5 md:grid-cols-5">
-            <div><p className="text-xs text-slate-300">Vehículos registrados</p><p className="mt-1 text-3xl font-semibold">{loading ? "—" : stats.total}</p></div>
-            <div><p className="text-xs text-slate-300">En plazas de exposición</p><p className="mt-1 text-3xl font-semibold">{loading ? "—" : stats.expo}</p></div>
-            <div><p className="text-xs text-slate-300">Demos en uso</p><p className="mt-1 text-3xl font-semibold">{loading ? "—" : stats.demos}</p></div>
-            <div><p className="text-xs text-slate-300">Entregados</p><p className="mt-1 text-3xl font-semibold">{loading ? "—" : stats.delivered}</p></div>
-            <div><p className="text-xs text-slate-300">Stock Locator</p><p className="mt-1 text-3xl font-semibold">{loading ? "—" : stats.stockLocator}</p></div>
+            {[
+              { label: "Vehículos registrados", value: stats.total, href: "/stock" },
+              { label: "En plazas de exposición", value: stats.expo, href: "/stock?filter=exposicion" },
+              { label: "Demos en uso", value: stats.demos, href: "/stock?filter=destino-demo" },
+              { label: "Entregados", value: stats.delivered, href: "/stock?filter=entregados" },
+              { label: "Stock Locator", value: stats.stockLocator, href: "/stock?filter=stocklocator" },
+            ].map(item => <Link key={item.label} href={item.href} className="group rounded-lg px-2 py-1 -mx-2 transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300">
+              <p className="text-xs text-slate-300 group-hover:text-white">{item.label}</p>
+              <p className="mt-1 text-3xl font-semibold group-hover:text-sky-200">{loading ? "—" : item.value}</p>
+            </Link>)}
           </div>
         </div>
 
