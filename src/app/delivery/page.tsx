@@ -160,8 +160,9 @@ export default function DeliveryManagement() {
       const vehicle = { id: vehicleDoc.id, ...vehicleDoc.data() } as any;
       const currentState = String(vehicle.estado || "").toLowerCase();
       const currentLocation = String(vehicle.ubicacion || "").toLowerCase();
-      if (currentState === "entregado" || currentLocation === "entregado" || currentState === "cedido" || currentLocation === "stock locator") {
-        toast({ title: currentState === "cedido" || currentLocation === "stock locator" ? "Vehículo cedido por Stock Locator" : "Vehículo ya entregado", description: "Este vehículo ya está fuera del stock activo. Se conserva su ficha y trazabilidad." });
+      const alreadyLocator = vehicle.stockLocator === true || String(vehicle.tipoLogistico || "").trim().toLowerCase() === "stock locator" || String(vehicle.categoria || "").trim().toLowerCase() === "stock locator" || String(vehicle.categoriaStock || "").trim().toLowerCase() === "stock locator";
+      if (currentState === "entregado" || currentLocation === "entregado" || alreadyLocator) {
+        toast({ title: alreadyLocator ? "Vehículo cedido por Stock Locator" : "Vehículo ya entregado", description: "Este vehículo ya está fuera del stock activo. Se conserva su ficha y trazabilidad." });
         setSelectedDeliveryVehicle(vehicle);
         return;
       }
@@ -444,7 +445,7 @@ export default function DeliveryManagement() {
                 </div>
                 {(String(selectedDeliveryVehicle.estado || "").toLowerCase() === "entregado" || String(selectedDeliveryVehicle.ubicacion || "").toLowerCase() === "entregado") ? (
                   <Badge className="w-fit bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Entregado</Badge>
-                ) : (String(selectedDeliveryVehicle.estado || "").toLowerCase() === "cedido" || String(selectedDeliveryVehicle.ubicacion || "").toLowerCase() === "stock locator") ? (
+                ) : (selectedDeliveryVehicle.stockLocator === true || String(selectedDeliveryVehicle.tipoLogistico || "").trim().toLowerCase() === "stock locator" || String(selectedDeliveryVehicle.categoria || "").trim().toLowerCase() === "stock locator" || String(selectedDeliveryVehicle.categoriaStock || "").trim().toLowerCase() === "stock locator") ? (
                   <Badge className="w-fit bg-violet-100 text-violet-800 hover:bg-violet-100">Stock Locator</Badge>
                 ) : null}
               </div>
