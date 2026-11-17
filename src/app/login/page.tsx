@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, FormEvent } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, ImagePlus, Video, X, Settings2, Loader2 } from "lucide-react";
@@ -44,17 +44,39 @@ export default function LoginPage() {
     if (email.trim().toLowerCase() !== "a.henares@momentummotor.es") { setError("Esta cuenta todavía no tiene autorización para acceder."); return; }
     setBusy(true);
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
-      if (rememberEmail) localStorage.setItem("genius-login-email", email.trim());
+      const normalizedEmail = email.trim().toLowerCase();
+      try {
+        await signInWithEmailAndPassword(auth, normalizedEmail, password);
+      } catch (signInError: any) {
+        const signInCode = String(signInError?.code || "");
+        // Alta inicial controlada: solo se permite crear la cuenta administradora autorizada.
+        // Se usa la contraseña introducida en el formulario; nunca se almacena en el código.
+        if (signInCode === "auth/user-not-found") {
+          await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+        } else {
+          throw signInError;
+        }
+      }
+      if (rememberEmail) localStorage.setItem("genius-login-email", normalizedEmail);
       else localStorage.removeItem("genius-login-email");
       router.replace("/");
     } catch (e: any) {
       const code = String(e?.code || "");
-      setError(code.includes("user-not-found") || code.includes("invalid-credential") || code.includes("wrong-password")
-        ? "Correo o contraseña incorrectos."
-        : code.includes("too-many-requests")
-          ? "Demasiados intentos. Espera unos minutos y vuelve a intentarlo."
-          : "No se ha podido iniciar sesión. Comprueba la conexión y la configuración de acceso.");
+      setError(
+        code === "auth/email-already-in-use"
+          ? "La cuenta ya existe. Comprueba la contraseña e inténtalo de nuevo."
+          : code === "auth/operation-not-allowed"
+            ? "Firebase todavía no tiene activado el acceso por correo y contraseña. Hay que habilitar ese método en Authentication."
+            : code === "auth/weak-password"
+              ? "La contraseña debe tener al menos 6 caracteres."
+              : code === "auth/invalid-email"
+                ? "El formato del correo no es válido."
+                : code === "auth/invalid-credential" || code === "auth/wrong-password"
+                  ? "Correo o contraseña incorrectos."
+                  : code === "auth/too-many-requests"
+                    ? "Demasiados intentos. Espera unos minutos y vuelve a intentarlo."
+                    : "No se ha podido completar el acceso. Comprueba la configuración de Firebase y vuelve a intentarlo."
+      );
     } finally { setBusy(false); }
   };
 
