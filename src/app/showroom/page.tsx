@@ -421,6 +421,9 @@ function ShowroomContent() {
                 </section>
                 <div className="flex justify-end pb-4"><Button variant="destructive" className="font-black uppercase text-xs" onClick={() => { if(confirm("¿Eliminar este vehículo del inventario?")) { deleteDoc(doc(db, "vehiculos", selectedVehicle.id)); handleCloseDetail(); } }}><Trash2 className="w-4 h-4 mr-2"/> Eliminar vehículo</Button></div>
               </div>
+              <div className="shrink-0 border-t border-slate-200 bg-white px-5 py-3 shadow-[0_-8px_20px_rgba(15,23,42,0.06)]">
+                <Button onClick={handleSaveVehicleDraft} className="h-11 w-full bg-[#0066b3] font-black uppercase tracking-wide text-white hover:bg-[#00549a]">Guardar cambios</Button>
+              </div>
             </div>
           )}
         </SheetContent>
