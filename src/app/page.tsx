@@ -16,7 +16,7 @@ const norm = (value: unknown) => String(value || "").normalize("NFD").replace(/[
 const isDemo = (v: any) => norm(v.tipoLogistico).includes("demo") || norm(v.ubicacion) === "demo en uso";
 const isDelivered = (v: any) => norm(v.estado) === "entregado" || norm(v.ubicacion) === "entregado";
 const isCeded = (v: any) => [v.estado, v.ubicacion, v.categoria, v.categoriaStock, v.categoriaComercial, v.cedidoTipo].some(value => norm(value).includes("cedido"));
-const isStockLocator = (v: any) => v.stockLocator === true || norm(v.tipoLogistico) === "stock locator" || norm(v.categoria) === "stock locator" || norm(v.categoriaStock) === "stock locator";
+const isStockLocator = (v: any) => v.stockLocator === true || [v.tipoLogistico, v.categoria, v.categoriaStock, v.categoriaComercial, v.cedidoTipo].some(value => norm(value).includes("stock locator"));
 const isExpo = (v: any) => /^P(?:1[0-5]|[1-9])$/i.test(String(v.ubicacion || "").trim());
 const isStockExpo = (v: any) => norm(v.tipoLogistico).includes("stock expo") || norm(v.tipoLogistico).includes("stock exposicion");
 
