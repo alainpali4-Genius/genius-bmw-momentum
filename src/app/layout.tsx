@@ -1,12 +1,9 @@
 import type {Metadata, Viewport} from 'next';
 import './globals.css';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import { AppSidebar } from '@/components/layout/app-sidebar';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
-import { MobileHeader } from '@/components/layout/mobile-header';
-import { BottomNav } from '@/components/layout/bottom-nav';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { AppShell } from '@/components/layout/app-shell';
 
 export const viewport: Viewport = {
   themeColor: '#003399',
@@ -54,20 +51,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-[#f4f7fa] h-full overflow-hidden">
         <FirebaseClientProvider>
-          <SidebarProvider defaultOpen={true}>
-            <div className="flex h-screen w-full overflow-hidden">
-              <div className="hidden md:flex shrink-0 h-full border-r bg-secondary">
-                <AppSidebar />
-              </div>
-              <div className="flex-1 flex flex-col h-full overflow-hidden">
-                <MobileHeader />
-                <main className="flex-1 overflow-hidden relative bg-[#f4f7fa] pb-24 md:pb-0">
-                  {children}
-                </main>
-                <BottomNav />
-              </div>
-            </div>
-          </SidebarProvider>
+          <AppShell>{children}</AppShell>
           <FirebaseErrorListener />
           <Toaster />
         </FirebaseClientProvider>
