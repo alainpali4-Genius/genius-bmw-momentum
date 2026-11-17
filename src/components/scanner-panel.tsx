@@ -171,6 +171,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
         colorBMW: BMW_COLORS.some(c => c.code === aiResult?.colorCode) ? aiResult!.colorCode! : "",
         bodyType: "SUV",
         ubicacion: "Stock",
+        estado: "Stock",
         tipoLogistico: "Stock Expo",
         entidadRenting: ""
       });
@@ -580,7 +581,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
           <div className="bg-[#0066b3] p-5 text-center text-sm font-semibold text-white">VEHÍCULO NO ENCONTRADO · NUEVA ALTA</div>
           <div className="p-6 space-y-4 bg-white max-h-[80vh] overflow-y-auto">
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Bastidor reconocido (VIN)</Label><Input value={newVehicleData.vin} onChange={e => { const vin = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 17); setNewVehicleData({...newVehicleData, vin, vin7: vin.slice(-7)}); }} maxLength={17} className="h-11 bg-slate-50 border border-slate-200 rounded-xl font-mono font-bold text-xs tracking-wide" /></div>
-            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Modelo detectado · editable</Label><Input value={newVehicleData.modelo} placeholder="Modelo no identificado: introdúcelo" onChange={e => { const modelo = e.target.value; setNewVehicleData({...newVehicleData, modelo, motor: suggestedMotor(modelo) || newVehicleData.motor}); }} className="h-11 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
+            <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Modelo detectado · editable</Label><Input value={newVehicleData.modelo} placeholder="Modelo no identificado: introdúcelo" onChange={e => { const modelo = e.target.value; const master = findMasterEngine(modelo); setNewVehicleData({...newVehicleData, modelo, motor: master ? formatMasterEngine(master.engine) : (suggestedMotor(modelo) || newVehicleData.motor)}); }} className="h-11 bg-slate-50 border-none rounded-xl font-bold uppercase text-[10px]" /></div>
             <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Motorización sugerida</Label><Input value={newVehicleData.motor} placeholder="Se completa según el modelo" onChange={e => setNewVehicleData({...newVehicleData, motor: e.target.value})} className="h-11 bg-slate-50 border-none rounded-xl text-[10px]" /></div>
             <div className="space-y-1">
               <Label className="text-[8px] font-black uppercase text-slate-400 px-1">Tipo Logístico</Label>
