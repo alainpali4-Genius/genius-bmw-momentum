@@ -91,7 +91,9 @@ export default function DeliveryManagement() {
       list = list.filter(d => d.fecha === today);
     } else if (activeTab === "upcoming") {
       const today = format(new Date(), "yyyy-MM-dd");
-      list = list.filter(d => d.fecha > today);
+      list = list.filter(d => d.fecha > today && d.estado !== "Entregado");
+    } else if (activeTab === "completed") {
+      list = list.filter(d => String(d.estado || "").toLowerCase() === "entregado");
     }
 
     if (searchTerm) {
@@ -539,6 +541,7 @@ export default function DeliveryManagement() {
                   <TabsTrigger value="all" className="rounded-lg text-[10px] font-black uppercase">Todas</TabsTrigger>
                   <TabsTrigger value="today" className="rounded-lg text-[10px] font-black uppercase">Hoy</TabsTrigger>
                   <TabsTrigger value="upcoming" className="rounded-lg text-[10px] font-black uppercase">Próximas</TabsTrigger>
+                  <TabsTrigger value="completed" className="rounded-lg text-[10px] font-black uppercase">Entregados ({stats.completadas})</TabsTrigger>
                 </TabsList>
                 <div className="relative w-full sm:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-300" />
