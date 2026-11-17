@@ -30,6 +30,8 @@ export default function StockManagement() {
     setActiveFilter(next && validFilters.includes(next) ? next : 'all');
   }, [searchParams]);
   const allVehicles = (rawVehicles || []) as any[];
+  // Unifica la detección de demos: puede identificarse por tipo logístico o por ubicación.
+  const isDemoVehicle = (vehicle: any) => String(vehicle.tipoLogistico || "").toLowerCase().includes("demo") || String(vehicle.ubicacion || "").toLowerCase() === "demo en uso" || String(vehicle.estado || "").toLowerCase().includes("demo");
   const vehicles = allVehicles.filter(vehicle => {
     const state = String(vehicle.estado || "").toLowerCase();
     const location = String(vehicle.ubicacion || "").toLowerCase();
@@ -85,7 +87,7 @@ export default function StockManagement() {
     exposicion: vehicles.filter(v => v.ubicacion?.startsWith('P')).length,
     terraza: vehicles.filter(v => v.ubicacion?.toLowerCase() === 'terraza').length,
     entreplanta: vehicles.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta').length,
-    demo: vehicles.filter(v => v.ubicacion === 'Demo en uso').length,
+    demo: vehicles.filter(isDemoVehicle).length,
     entrega: vehicles.filter(v => v.ubicacion?.toLowerCase().includes('entrega')).length,
   }), [vehicles]);
 
@@ -95,11 +97,10 @@ export default function StockManagement() {
       : vehicles;
     if (activeFilter === 'terraza') result = result.filter(v => v.ubicacion?.toLowerCase() === 'terraza');
     else if (activeFilter === 'entreplanta') result = result.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta');
-    else if (activeFilter === 'demo') result = result.filter(v => v.ubicacion === 'Demo en uso');
+    else if (activeFilter === 'demo' || activeFilter === 'destino-demo') result = result.filter(isDemoVehicle);
     else if (activeFilter === 'entrega') result = result.filter(v => v.ubicacion?.toLowerCase().includes('entrega'));
     else if (activeFilter === 'exposicion') result = result.filter(v => v.ubicacion?.startsWith('P'));
     else if (activeFilter === 'destino-stockexpo') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('stock expo') || String(v.tipoLogistico || '').toLowerCase().includes('stock exposicion'));
-    else if (activeFilter === 'destino-demo') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('demo') || String(v.ubicacion || '').toLowerCase() === 'demo en uso');
     else if (activeFilter === 'destino-renting') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('renting') || !!v.entidadRenting);
     else if (activeFilter === 'destino-clientes') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('cliente') || (!!v.clienteLogistica && !v.entidadRenting));
     const q = searchTerm.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
