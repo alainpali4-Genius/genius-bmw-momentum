@@ -29,7 +29,7 @@ export default function StockManagement() {
     const next = searchParams.get('filter') as FilterType | null;
     setActiveFilter(next && validFilters.includes(next) ? next : 'all');
   }, [searchParams]);
-  const vehicles = (rawVehicles || []) as any[];
+  const vehicles = ((rawVehicles || []) as any[]).filter(vehicle => String(vehicle.estado || "").toLowerCase() !== "entregado" && String(vehicle.ubicacion || "").toLowerCase() !== "entregado");
 
   // Completa de forma conservadora los datos que faltan en unidades ya importadas.
   // Nunca sobrescribe una motorización ni un código de color existente.
