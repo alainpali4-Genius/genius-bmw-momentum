@@ -15,6 +15,7 @@ import { ScannerPanel } from "@/components/scanner-panel";
 const norm = (value: unknown) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 const isDemo = (v: any) => norm(v.tipoLogistico).includes("demo") || norm(v.ubicacion) === "demo en uso";
 const isDelivered = (v: any) => norm(v.estado) === "entregado" || norm(v.ubicacion) === "entregado";
+const isStockLocator = (v: any) => norm(v.estado) === "cedido" || norm(v.ubicacion) === "stock locator";
 const isExpo = (v: any) => /^P(?:1[0-5]|[1-9])$/i.test(String(v.ubicacion || "").trim());
 const isStockExpo = (v: any) => norm(v.tipoLogistico).includes("stock expo") || norm(v.tipoLogistico).includes("stock exposicion");
 
@@ -27,7 +28,7 @@ export default function GeniusDashboard() {
   const vehicles = (rawVehicles || []) as any[];
 
   const stats = useMemo(() => {
-    const active = vehicles.filter(v => !isDelivered(v));
+    const active = vehicles.filter(v => !isDelivered(v) && !isStockLocator(v));
     return {
       total: vehicles.length,
       expo: active.filter(isExpo).length,
@@ -39,6 +40,7 @@ export default function GeniusDashboard() {
       renting: active.filter(v => norm(v.tipoLogistico).includes("renting") || !!v.entidadRenting).length,
       cliente: active.filter(v => norm(v.tipoLogistico).includes("cliente") || (!!v.clienteLogistica && !v.entidadRenting)).length,
       delivered: vehicles.filter(isDelivered).length,
+      stockLocator: vehicles.filter(isStockLocator).length,
       reserved: active.filter(v => norm(v.estado).includes("reserv")).length,
       prep: active.filter(v => norm(v.estado).includes("preparacion entrega")).length,
     };
@@ -79,11 +81,12 @@ export default function GeniusDashboard() {
               <Button className="h-10 bg-[#1682d4] px-4 text-white hover:bg-[#0870bd]" onClick={() => router.push("/showroom?add=true")}><Plus className="mr-2 h-4 w-4"/> Añadir vehículo</Button>
             </div>
           </div>
-          <div className="relative mt-7 grid grid-cols-2 gap-3 border-t border-white/10 pt-5 md:grid-cols-4">
+          <div className="relative mt-7 grid grid-cols-2 gap-3 border-t border-white/10 pt-5 md:grid-cols-5">
             <div><p className="text-xs text-slate-300">Vehículos registrados</p><p className="mt-1 text-3xl font-semibold">{loading ? "—" : stats.total}</p></div>
             <div><p className="text-xs text-slate-300">En plazas de exposición</p><p className="mt-1 text-3xl font-semibold">{loading ? "—" : stats.expo}</p></div>
             <div><p className="text-xs text-slate-300">Demos en uso</p><p className="mt-1 text-3xl font-semibold">{loading ? "—" : stats.demos}</p></div>
             <div><p className="text-xs text-slate-300">Entregados</p><p className="mt-1 text-3xl font-semibold">{loading ? "—" : stats.delivered}</p></div>
+            <div><p className="text-xs text-slate-300">Stock Locator</p><p className="mt-1 text-3xl font-semibold">{loading ? "—" : stats.stockLocator}</p></div>
           </div>
         </div>
 
