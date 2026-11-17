@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useEffect } from "react";
 import { Camera, CheckCircle2, AlertCircle, RefreshCw, Car, ChevronRight, Scan, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -94,6 +94,14 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
   const movements = (movementsRaw || []) as any[];
   
   const [isProcessing, setIsProcessing] = useState(false);
+  const [liveCameraOpen, setLiveCameraOpen] = useState(false);
+  const [liveCameraStatus, setLiveCameraStatus] = useState("Preparando cámara…");
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
+  const liveWorkerRef = useRef<any>(null);
+  const scanBusyRef = useRef(false);
+  const scanTimerRef = useRef<any>(null);
+  const detectedVinRef = useRef<{ vin: string; count: number } | null>(null);
   const [isCreatingVehicle, setIsCreatingVehicle] = useState(false);
   const creatingVehicleRef = useRef(false);
   const [processStep, setProcessStep] = useState<string | null>(null);
@@ -167,6 +175,134 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       setIsNewVehicleDialogOpen(true);
     }
   };
+
+  const stopLiveCamera = () => {
+    if (scanTimerRef.current) clearTimeout(scanTimerRef.current);
+    scanTimerRef.current = null;
+    cameraStreamRef.current?.getTracks().forEach(track => track.stop());
+    cameraStreamRef.current = null;
+    if (videoRef.current) videoRef.current.srcObject = null;
+    setLiveCameraOpen(false);
+    setLiveCameraStatus("Cámara detenida");
+  };
+
+  const startLiveCamera = async () => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      toast({ variant:"destructive", title:"Cámara no disponible", description:"Abre GENIUS mediante HTTPS y permite el acceso a la cámara." });
+      return;
+    }
+    try {
+      detectedVinRef.current = null;
+      setLiveCameraStatus("Solicitando cámara trasera…");
+      setLiveCameraOpen(true);
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio:false,
+        video:{ facingMode:{ ideal:"environment" }, width:{ ideal:1280 }, height:{ ideal:720 }, frameRate:{ ideal:24, max:30 } }
+      });
+      cameraStreamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
+    } catch (error:any) {
+      setLiveCameraOpen(false);
+      toast({ variant:"destructive", title:"No se puede abrir la cámara", description:error?.message || "Comprueba los permisos de cámara del navegador." });
+    }
+  };
+
+  useEffect(() => {
+    if (!liveCameraOpen) return;
+    let cancelled = false;
+    const runLiveRecognition = async () => {
+      try {
+        const engine = await loadLocalOcr();
+        const worker = await engine.createWorker("eng", 1);
+        if (cancelled) { await worker.terminate(); return; }
+        liveWorkerRef.current = worker;
+        await worker.setParameters({
+          tessedit_char_whitelist:"ABCDEFGHJKLMNPRSTUVWXYZ0123456789",
+          tessedit_pageseg_mode:"11",
+          preserve_interword_spaces:"1"
+        });
+        setLiveCameraStatus("Enfoca la placa dentro del recuadro…");
+        const scanFrame = async () => {
+          if (cancelled || !videoRef.current || videoRef.current.readyState < 2 || scanBusyRef.current) {
+            if (!cancelled) scanTimerRef.current = setTimeout(scanFrame, 250);
+            return;
+          }
+          scanBusyRef.current = true;
+          try {
+            const video = videoRef.current;
+            const scale = Math.min(1, 1280 / video.videoWidth);
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.round(video.videoWidth * scale);
+            canvas.height = Math.round(video.videoHeight * scale);
+            const ctx = canvas.getContext("2d", { willReadFrequently:false });
+            if (!ctx) throw new Error("No se pudo procesar la imagen de cámara.");
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const result = await worker.recognize(canvas, { rectangle:{ left:0, top:0, width:canvas.width, height:canvas.height } });
+            const raw = String(result?.data?.text || "").toUpperCase();
+            const compact = raw.replace(/[^A-Z0-9]/g, "").replace(/O/g,"0").replace(/[IQ]/g,"1");
+            const matches = compact.match(/(?:WBA|WBS|WBY|WBX|WMW|3MW|5UX|5YM|4US|4WZ)[A-HJ-NPR-Z0-9]{14}/g) || [];
+            const vin = matches.find(value => value.length === 17 && /^[A-HJ-NPR-Z0-9]{17}$/.test(value));
+            if (vin) {
+              const previous = detectedVinRef.current;
+              const count = previous?.vin === vin ? previous.count + 1 : 1;
+              detectedVinRef.current = { vin, count };
+              setLiveCameraStatus(count >= 2 ? "Bastidor confirmado. Consultando stock…" : "Bastidor detectado. Confirmando lectura…");
+              if (count >= 2) {
+                const modelMatch = compact.match(/(?:118|120|218|220|225|230|318|320|330|420|430|520|530|540|630|640|740|840|850)[DIE]/);
+                const model = modelMatch ? modelMatch[0].slice(0,-1) + modelMatch[0].slice(-1).toLowerCase() : "";
+                const tokens = raw.match(/[A-Z0-9]{3}/g) || [];
+                const colorCode = BMW_COLORS.find(color => tokens.includes(color.code.toUpperCase()))?.code || "";
+                if (scanTimerRef.current) clearTimeout(scanTimerRef.current);
+                cameraStreamRef.current?.getTracks().forEach(track => track.stop());
+                cameraStreamRef.current = null;
+                setLiveCameraOpen(false);
+                setIsProcessing(true);
+                setProcessStep("Bastidor confirmado. Consultando vehículo…");
+                await handleAudit(vin, { modelo:model, colorCode });
+                setIsProcessing(false);
+                setProcessStep(null);
+                toast({ title:"Placa reconocida", description:[vin, model, colorCode ? "Color "+colorCode : ""].filter(Boolean).join(" · ") });
+                return;
+              }
+            } else {
+              detectedVinRef.current = null;
+              setLiveCameraStatus("Buscando bastidor… mantén la placa enfocada y evita reflejos.");
+            }
+          } catch (error) {
+            console.warn("Lectura de cámara en directo:", error);
+            setLiveCameraStatus("Ajustando enfoque… acerca la cámara y mantén la placa quieta.");
+          } finally {
+            scanBusyRef.current = false;
+            if (!cancelled && liveCameraOpen) scanTimerRef.current = setTimeout(scanFrame, 450);
+          }
+        };
+        const waitForVideo = () => {
+          if (cancelled) return;
+          if (videoRef.current && videoRef.current.readyState >= 2) scanFrame();
+          else scanTimerRef.current = setTimeout(waitForVideo, 200);
+        };
+        waitForVideo();
+      } catch (error:any) {
+        setLiveCameraStatus("No se ha podido iniciar el lector OCR.");
+        toast({ variant:"destructive", title:"Error al iniciar el escáner", description:error?.message || "No se pudo cargar el motor de lectura." });
+      }
+    };
+    runLiveRecognition();
+    return () => {
+      cancelled = true;
+      if (scanTimerRef.current) clearTimeout(scanTimerRef.current);
+      scanTimerRef.current = null;
+      cameraStreamRef.current?.getTracks().forEach(track => track.stop());
+      cameraStreamRef.current = null;
+      const worker = liveWorkerRef.current;
+      liveWorkerRef.current = null;
+      if (worker) worker.terminate().catch(() => {});
+      scanBusyRef.current = false;
+    };
+  }, [liveCameraOpen]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -352,7 +488,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       {!compact && <div className="flex flex-col gap-0.5">
         <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#0066b3]">Operaciones · Momentum Navarra</p>
         <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Escáner VIN</h1>
-        <p className="mt-1 text-sm text-slate-500">Lectura local de la placa con OCR. La fotografía se procesa en este dispositivo.</p>
+        <p className="mt-1 text-sm text-slate-500">Escaneo continuo de la placa con la cámara. La lectura se procesa en este dispositivo.</p>
       </div>}
 
       <Card className="overflow-hidden rounded-xl border-slate-200/80 bg-white text-slate-900 shadow-sm">
@@ -365,9 +501,10 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
             <p className="text-sm text-slate-500">{processStep || "Enfoca la placa del bastidor; también puedes introducir el VIN7 manualmente."}</p>
           </div>
           <div className="w-full max-w-sm space-y-3">
-            <Button size="lg" className="h-12 w-full rounded-lg bg-[#0066b3] text-sm font-semibold text-white shadow-none hover:bg-[#00549a]" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}>
-              <Camera className="mr-2 w-5 h-5" /> {isProcessing ? "AUDITANDO..." : "ABRIR CÁMARA"}
+            <Button size="lg" className="h-12 w-full rounded-lg bg-[#0066b3] text-sm font-semibold text-white shadow-none hover:bg-[#00549a]" onClick={startLiveCamera} disabled={isProcessing || liveCameraOpen}>
+              <Camera className="mr-2 w-5 h-5" /> {isProcessing ? "CONSULTANDO…" : "ESCANEAR EN DIRECTO"}
             </Button>
+            <Button variant="outline" className="h-10 w-full rounded-lg border-slate-200 text-xs" onClick={() => fileInputRef.current?.click()} disabled={isProcessing}>O subir fotografía manualmente</Button>
             <div className="flex gap-2">
               <Input placeholder="VIN7 MANUAL..." className="h-11 rounded-lg border-slate-200 text-center text-sm text-slate-900 placeholder:text-slate-400" value={manualVin} onChange={e => setManualVin(e.target.value)} />
               <Button onClick={() => handleAudit(manualVin)} className="h-11 w-11 shrink-0 rounded-lg bg-slate-100 p-0 text-slate-700 hover:bg-slate-200"><ChevronRight className="w-5 h-5" /></Button>
@@ -376,6 +513,26 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
           <input type="file" ref={fileInputRef} className="hidden" accept="image/*" capture="environment" onChange={handleFileChange} />
         </CardContent>
       </Card>
+
+      <Dialog open={liveCameraOpen} onOpenChange={open => { if (!open) stopLiveCamera(); }}>
+        <DialogContent className="max-w-xl overflow-hidden rounded-2xl border-0 p-0">
+          <div className="bg-[#0b1d39] px-5 py-4 text-white">
+            <p className="text-sm font-bold tracking-wide">ESCÁNER VIN · LECTURA EN DIRECTO</p>
+            <p className="mt-1 text-xs text-blue-100">{liveCameraStatus}</p>
+          </div>
+          <div className="relative aspect-[4/3] w-full overflow-hidden bg-black">
+            <video ref={videoRef} autoPlay muted playsInline className="h-full w-full object-cover" />
+            <div className="pointer-events-none absolute inset-[12%] rounded-xl border-2 border-emerald-400 shadow-[0_0_0_999px_rgba(0,0,0,0.22)]">
+              <span className="absolute -top-6 left-0 rounded bg-emerald-500 px-2 py-1 text-[10px] font-bold text-white">ENFOCA LA PLACA COMPLETA</span>
+            </div>
+            <div className="pointer-events-none absolute bottom-3 left-0 right-0 text-center text-[11px] font-medium text-white drop-shadow">Mantén el móvil estable y evita reflejos directos</div>
+          </div>
+          <div className="flex items-center justify-between gap-3 p-4">
+            <p className="text-xs text-slate-500">El lector confirma el VIN en dos lecturas consecutivas.</p>
+            <Button variant="outline" onClick={stopLiveCamera}>Cancelar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {lastAudit && (
         <Card className={cn("premium-card border-l-[6px] rounded-2xl shadow-md bg-white animate-in slide-in-from-bottom-5", lastAudit.status === 'success' ? 'border-l-emerald-500' : 'border-l-red-500')}>
