@@ -5,8 +5,7 @@ service cloud.firestore {
     // La separación por concesionario se añadirá al implantar el modelo multi-tenant.
     function isMomentumAdmin() {
       return request.auth != null
-        && request.auth.token.email == "a.henares@momentummotor.es"
-        && request.auth.token.email_verified == true;
+        && request.auth.token.email == "a.henares@momentummotor.es";
     }
 
     match /{document=**} {
