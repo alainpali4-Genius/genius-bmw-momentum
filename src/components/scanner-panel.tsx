@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BMW_COLORS, TIPOS_LOGISTICOS, suggestedMotor } from "@/lib/vehicle-constants";
+import { findMasterEngine, formatMasterEngine } from "@/lib/bmw-mini-master-catalog";
 
 const normalizeVin = (value: unknown) => String(value || "").replace(/\s+/g, "").toUpperCase();
 
@@ -118,6 +119,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
     colorBMW: "",
     bodyType: "SUV",
     ubicacion: "Stock",
+    estado: "Stock",
     tipoLogistico: "Stock Expo",
     entidadRenting: ""
   });
@@ -163,7 +165,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       setLastAudit({ vin: vinNorm, status: 'error', message: 'BASTIDOR NO ENCONTRADO EN STOCK' });
       setNewVehicleData({
         modelo: aiResult?.modelo || "",
-        motor: aiResult?.modelo ? suggestedMotor(aiResult.modelo) : "",
+        motor: aiResult?.modelo ? (findMasterEngine(aiResult.modelo) ? formatMasterEngine(findMasterEngine(aiResult.modelo)!.engine) : suggestedMotor(aiResult.modelo)) : "",
         vin: vinNorm,
         vin7: vin7,
         colorBMW: BMW_COLORS.some(c => c.code === aiResult?.colorCode) ? aiResult!.colorCode! : "",
@@ -233,13 +235,19 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
           scanBusyRef.current = true;
           try {
             const video = videoRef.current;
-            const scale = Math.min(1, 1280 / video.videoWidth);
+            // Recorta la zona guiada y la amplía: mejora la lectura de los textos pequeños
+            // (modelo y código de pintura) sin procesar toda la imagen del móvil.
+            const sourceWidth = video.videoWidth * 0.76;
+            const sourceHeight = video.videoHeight * 0.76;
+            const sourceX = (video.videoWidth - sourceWidth) / 2;
+            const sourceY = (video.videoHeight - sourceHeight) / 2;
+            const scale = Math.min(1.7, 1800 / Math.max(sourceWidth, sourceHeight));
             const canvas = document.createElement("canvas");
-            canvas.width = Math.round(video.videoWidth * scale);
-            canvas.height = Math.round(video.videoHeight * scale);
+            canvas.width = Math.round(sourceWidth * scale);
+            canvas.height = Math.round(sourceHeight * scale);
             const ctx = canvas.getContext("2d", { willReadFrequently:false });
             if (!ctx) throw new Error("No se pudo procesar la imagen de cámara.");
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(video, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, canvas.width, canvas.height);
             const result = await worker.recognize(canvas, { rectangle:{ left:0, top:0, width:canvas.width, height:canvas.height } });
             const raw = String(result?.data?.text || "").toUpperCase();
             const compact = raw.replace(/[^A-Z0-9]/g, "").replace(/O/g,"0").replace(/[IQ]/g,"1");
@@ -251,20 +259,27 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
               detectedVinRef.current = { vin, count };
               setLiveCameraStatus(count >= 2 ? "Bastidor confirmado. Consultando stock…" : "Bastidor detectado. Confirmando lectura…");
               if (count >= 2) {
+                // Busca primero códigos de pintura exactos en el texto completo de la placa.
+                const colorCode = BMW_COLORS.find(color => new RegExp("(^|[^A-Z0-9])" + color.code.toUpperCase() + "([^A-Z0-9]|$)").test(raw))?.code || "";
+                // El catálogo maestro resuelve la motorización y sus alias conocidos.
+                const modelCandidates = raw.split(/\n+/).map(line => line.replace(/[^A-Z0-9 .-]/g, " ").trim()).filter(Boolean);
+                const modelCandidate = modelCandidates.find(line => /(?:1|2|3|4|5|6|7|8|X[1-7]|Z4|XM|M[234568])\s?\d{2,3}\s?[DIE]/i.test(line));
                 const modelMatch = compact.match(/(?:118|120|218|220|225|230|318|320|330|420|430|520|530|540|630|640|740|840|850)[DIE]/);
-                const model = modelMatch ? modelMatch[0].slice(0,-1) + modelMatch[0].slice(-1).toLowerCase() : "";
-                const tokens = raw.match(/[A-Z0-9]{3}/g) || [];
-                const colorCode = BMW_COLORS.find(color => tokens.includes(color.code.toUpperCase()))?.code || "";
+                const model = modelCandidate || (modelMatch ? modelMatch[0].slice(0,-1) + modelMatch[0].slice(-1).toLowerCase() : "");
+                const master = model ? findMasterEngine(model) : null;
+                const resolvedModel = master ? master.model : model;
+                const resolvedMotor = master ? formatMasterEngine(master.engine) : (resolvedModel ? suggestedMotor(resolvedModel) : "");
                 if (scanTimerRef.current) clearTimeout(scanTimerRef.current);
                 cameraStreamRef.current?.getTracks().forEach(track => track.stop());
                 cameraStreamRef.current = null;
                 setLiveCameraOpen(false);
                 setIsProcessing(true);
                 setProcessStep("Bastidor confirmado. Consultando vehículo…");
-                await handleAudit(vin, { modelo:model, colorCode });
+                await handleAudit(vin, { modelo:resolvedModel, colorCode });
+                if (resolvedMotor) setNewVehicleData(current => ({ ...current, motor: resolvedMotor }));
                 setIsProcessing(false);
                 setProcessStep(null);
-                toast({ title:"Placa reconocida", description:[vin, model, colorCode ? "Color "+colorCode : ""].filter(Boolean).join(" · ") });
+                toast({ title:"Placa reconocida", description:[vin, resolvedModel, resolvedMotor, colorCode ? "Color "+colorCode : ""].filter(Boolean).join(" · ") });
                 return;
               }
             } else {
@@ -460,7 +475,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
       return;
     }
     const color = BMW_COLORS.find(c => c.code === newVehicleData.colorBMW);
-    const payload = { ...newVehicleData, motor: newVehicleData.motor || suggestedMotor(newVehicleData.modelo), vin: newVehicleData.vin.toUpperCase(), vin7: newVehicleData.vin7.toUpperCase(), colorExterior: color?.name || "", colorCodigo: newVehicleData.colorBMW || "", estado: "Stock", fechaEntrada: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+    const payload = { ...newVehicleData, estado: newVehicleData.estado || "Stock", motor: newVehicleData.motor || suggestedMotor(newVehicleData.modelo), vin: newVehicleData.vin.toUpperCase(), vin7: newVehicleData.vin7.toUpperCase(), colorExterior: color?.name || "", colorCodigo: newVehicleData.colorBMW || "", estado: "Stock", fechaEntrada: new Date().toISOString().split('T')[0], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     try {
       const docRef = await addDoc(collection(db, "vehiculos"), payload);
       await addDoc(collection(db, "movimientos"), {
@@ -582,7 +597,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
             )}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Color exterior</Label><Select value={newVehicleData.colorBMW} onValueChange={v => setNewVehicleData({...newVehicleData, colorBMW: v})}><SelectTrigger className="h-11 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue placeholder="Seleccionar color"/></SelectTrigger><SelectContent className="max-h-[200px]">{BMW_COLORS.map(c => <SelectItem key={c.code} value={c.code} className="text-[9px]">{c.name}</SelectItem>)}</SelectContent></Select></div>
-              <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Ubicación</Label><Select value={newVehicleData.ubicacion} onValueChange={v => setNewVehicleData({...newVehicleData, ubicacion: v})}><SelectTrigger className="h-11 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent>{["Stock", "Terraza", "Entreplanta", "Lavadero"].map(u => <SelectItem key={u} value={u} className="text-[9px] uppercase">{u}</SelectItem>)}</SelectContent></Select></div>
+              <div className="space-y-1"><Label className="text-[8px] font-black uppercase text-slate-400 px-1">Ubicación</Label><Select value={newVehicleData.estado === "Exposicion" ? "EXPO:" + newVehicleData.ubicacion : newVehicleData.ubicacion} onValueChange={v => setNewVehicleData({...newVehicleData, estado: v.startsWith("EXPO:") ? "Exposicion" : "Stock", ubicacion: v.startsWith("EXPO:") ? v.replace("EXPO:", "") : v})}><SelectTrigger className="h-11 bg-slate-50 border-none rounded-xl font-bold text-[9px] px-3"><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Stock" className="text-[9px] uppercase">Stock</SelectItem>{Array.from({length:15},(_,i)=>"P"+(i+1)).map(p=><SelectItem key={p} value={"EXPO:"+p} className="text-[9px] uppercase">Exposición · {p}</SelectItem>)}{["Terraza", "Entreplanta", "Lavadero"].map(u => <SelectItem key={u} value={u} className="text-[9px] uppercase">{u}</SelectItem>)}</SelectContent></Select></div>
             </div>
             <Button onClick={handleCreateNewVehicle} disabled={isCreatingVehicle} className="mt-2 h-12 w-full rounded-lg bg-[#0066b3] text-sm font-semibold text-white hover:bg-[#00549a]">{isCreatingVehicle ? "GUARDANDO VEHÍCULO..." : "CONFIRMAR ALTA UNIDAD"}</Button>
           </div>
