@@ -17,7 +17,7 @@ export const viewport: Viewport = {
 };
 
 // Forzamos la versión del icono para romper la caché del navegador
-const ICON_VERSION = "7.0";
+const ICON_VERSION = "9.0";
 
 export const metadata: Metadata = {
   title: 'GENIUS BMW EXPO | Momentum Navarra',
