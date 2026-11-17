@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, FormEvent } from "react";
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { useAuth } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, ImagePlus, Video, X, Settings2, Loader2 } from "lucide-react";
@@ -45,37 +45,33 @@ export default function LoginPage() {
     setBusy(true);
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      try {
-        await signInWithEmailAndPassword(auth, normalizedEmail, password);
-      } catch (signInError: any) {
-        const signInCode = String(signInError?.code || "");
-        // Alta inicial controlada: solo se permite crear la cuenta administradora autorizada.
-        // Se usa la contraseña introducida en el formulario; nunca se almacena en el código.
-        if (signInCode === "auth/user-not-found") {
-          await createUserWithEmailAndPassword(auth, normalizedEmail, password);
-        } else {
-          throw signInError;
-        }
-      }
+      // La cuenta administradora debe crearse previamente en Firebase Authentication.
+      // No se intenta crearla automáticamente desde el formulario de acceso.
+      await signInWithEmailAndPassword(auth, normalizedEmail, password);
       if (rememberEmail) localStorage.setItem("genius-login-email", normalizedEmail);
       else localStorage.removeItem("genius-login-email");
       router.replace("/");
     } catch (e: any) {
       const code = String(e?.code || "");
+      console.error("Error de inicio de sesión Firebase:", code, e?.message || e);
       setError(
-        code === "auth/email-already-in-use"
-          ? "La cuenta ya existe. Comprueba la contraseña e inténtalo de nuevo."
+        code === "auth/unauthorized-domain"
+          ? "Este dominio de Vercel no está autorizado en Firebase. Añade el dominio exacto de esta web en Authentication > Configuración > Dominios autorizados, o accede desde el dominio principal autorizado."
           : code === "auth/operation-not-allowed"
-            ? "Firebase todavía no tiene activado el acceso por correo y contraseña. Hay que habilitar ese método en Authentication."
-            : code === "auth/weak-password"
-              ? "La contraseña debe tener al menos 6 caracteres."
-              : code === "auth/invalid-email"
-                ? "El formato del correo no es válido."
-                : code === "auth/invalid-credential" || code === "auth/wrong-password"
-                  ? "Correo o contraseña incorrectos."
+            ? "El acceso por correo y contraseña no está habilitado en Firebase Authentication."
+            : code === "auth/invalid-api-key" || code === "auth/api-key-not-valid"
+              ? "La clave API de Firebase no es válida. Revisa las variables NEXT_PUBLIC_FIREBASE_* en Vercel."
+              : code === "auth/network-request-failed"
+                ? "No se ha podido conectar con Firebase. Comprueba la conexión y que el dominio de Vercel esté autorizado."
+                : code === "auth/invalid-credential" || code === "auth/wrong-password" || code === "auth/user-not-found"
+                  ? "No se ha podido validar la cuenta. Comprueba que el usuario administrador esté creado en Firebase Authentication y que la contraseña sea correcta."
                   : code === "auth/too-many-requests"
                     ? "Demasiados intentos. Espera unos minutos y vuelve a intentarlo."
-                    : "No se ha podido completar el acceso. Comprueba la configuración de Firebase y vuelve a intentarlo."
+                    : code === "auth/configuration-not-found" || code === "auth/app-not-authorized"
+                      ? "La aplicación web no está correctamente autorizada en el proyecto Firebase. Revisa la configuración del proyecto y sus dominios."
+                      : code === "auth/invalid-email"
+                        ? "El formato del correo no es válido."
+                        : `Error de autenticación (${code || "sin código"}). Revisa Firebase Authentication y los dominios autorizados.`
       );
     } finally { setBusy(false); }
   };
