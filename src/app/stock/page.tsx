@@ -35,11 +35,18 @@ export default function StockManagement() {
   // Unifica la detección de demos: puede identificarse por tipo logístico o por ubicación.
   const isDemoVehicle = (vehicle: any) => String(vehicle.tipoLogistico || "").toLowerCase().includes("demo") || String(vehicle.ubicacion || "").toLowerCase() === "demo en uso" || String(vehicle.estado || "").toLowerCase().includes("demo");
   // Stock Locator solo existe cuando se ha marcado expresamente como tal; "cedido" por sí solo no basta.
-  const isCustomerVehicle = (vehicle: any) => {
-    const values = [vehicle.tipoLogistico, vehicle.categoriaComercial, vehicle.clienteLogistica, vehicle.destinoLogistico, vehicle.entidadRenting].map(v => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase());
-    if (values.some(v => /stock expo|stock exposicion|^demo$|^demo en uso$/.test(v))) return false;
-    return String(vehicle.estado || "").toLowerCase() === "cliente" || values.some(v => /cliente|renting|camp.?\s*bank|bank-al|bbva|santander|ayvens|arval|alphabet|leaseplan|athlon/.test(v));
-  };
+const isCustomerVehicle = (vehicle: any) => {
+  const normalize = (value: any) => String(value || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim().toLowerCase();
+  const knownNonCustomerLabels = /^(stock expo|stock exposicion|demo|demo en uso|sin clasificar|cedido|cedido stock locator|stock locator)$/;
+  const fields = [vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting, vehicle?.propietario, vehicle?.categoriaComercial, vehicle?.tipoLogistico];
+  const values = fields.map(normalize).filter(Boolean);
+  if (normalize(vehicle?.estado) === "cliente") return true;
+  // Los nombres concretos de empresas o particulares recibidos en el correo
+  // (p. ej. SIF DISFAMON o JUAN IGNACIO DELGADO) identifican flota de cliente,
+  // aunque no coincidan con una compañía de renting conocida.
+  const hasCustomerIdentity = values.some(value => !knownNonCustomerLabels.test(value) && !/^(asignacion cliente\/?renting|entrega cliente)$/.test(value));
+  return hasCustomerIdentity || values.some(value => /cliente|renting|camp.?\s*bank|bank-al|bbva|santander|ayvens|arval|alphabet|leaseplan|athlon/.test(value));
+};
   const isStockLocatorVehicle = (vehicle: any) => vehicle.stockLocator === true || normalizeStatus(vehicle.cedidoTipo).includes("stock locator") || [vehicle.tipoLogistico, vehicle.categoria, vehicle.categoriaStock, vehicle.categoriaComercial].some(value => normalizeStatus(value).includes("stock locator"));
   const vehicles = allVehicles.filter(vehicle => {
     const state = String(vehicle.estado || "").toLowerCase();
