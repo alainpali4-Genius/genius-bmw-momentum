@@ -13,7 +13,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getVehicleColor } from "../showroom/page";
 import { BMW_COLORS, suggestedMotor, findBmwColorByName } from "@/lib/vehicle-constants";
 
-type FilterType = 'all' | 'terraza' | 'entreplanta' | 'entrega' | 'exposicion' | 'demo';
+type FilterType = 'all' | 'terraza' | 'entreplanta' | 'entrega' | 'exposicion' | 'demo' | 'destino-stockexpo' | 'destino-demo' | 'destino-renting' | 'destino-clientes';
 
 export default function StockManagement() {
   const db = useFirestore();
@@ -23,7 +23,7 @@ export default function StockManagement() {
   const { data: rawVehicles, loading } = useCollection(vehiclesQuery);
   const [searchTerm, setSearchTerm] = useState("");
   const requestedFilter = searchParams.get('filter') as FilterType | null;
-  const validFilters: FilterType[] = ['all','terraza','entreplanta','entrega','exposicion','demo'];
+  const validFilters: FilterType[] = ['all','terraza','entreplanta','entrega','exposicion','demo','destino-stockexpo','destino-demo','destino-renting','destino-clientes'];
   const [activeFilter, setActiveFilter] = useState<FilterType>(requestedFilter && validFilters.includes(requestedFilter) ? requestedFilter : 'all');
   useEffect(() => {
     const next = searchParams.get('filter') as FilterType | null;
@@ -94,6 +94,10 @@ export default function StockManagement() {
     else if (activeFilter === 'demo') result = result.filter(v => v.ubicacion === 'Demo en uso');
     else if (activeFilter === 'entrega') result = result.filter(v => v.ubicacion?.toLowerCase().includes('entrega'));
     else if (activeFilter === 'exposicion') result = result.filter(v => v.ubicacion?.startsWith('P'));
+    else if (activeFilter === 'destino-stockexpo') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('stock expo') || String(v.tipoLogistico || '').toLowerCase().includes('stock exposicion'));
+    else if (activeFilter === 'destino-demo') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('demo') || String(v.ubicacion || '').toLowerCase() === 'demo en uso');
+    else if (activeFilter === 'destino-renting') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('renting') || !!v.entidadRenting);
+    else if (activeFilter === 'destino-clientes') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('cliente') || (!!v.clienteLogistica && !v.entidadRenting));
     const q = searchTerm.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     if (q) result = result.filter(v => [v.modelo,v.vin,v.vin7,v.matricula,v.entidadRenting,v.motor,v.destinoLogistico,v.clienteLogistica,v.colorExterior].some(x => String(x || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q)));
     return result;
@@ -105,6 +109,9 @@ export default function StockManagement() {
     {key:'entreplanta' as const,label:'Entreplanta',value:stats.entreplanta,icon:LayoutGrid},
     {key:'entrega' as const,label:'Entrega',value:stats.entrega,icon:ArrowUpRight},
     {key:'demo' as const,label:'Demos en uso',value:stats.demo,icon:Car},
+    {key:'destino-stockexpo' as const,label:'Stock exposición',value:vehicles.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('stock expo')).length,icon:Car},
+    {key:'destino-renting' as const,label:'Renting',value:vehicles.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('renting') || !!v.entidadRenting).length,icon:Building2},
+    {key:'destino-clientes' as const,label:'Clientes',value:vehicles.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('cliente') || (!!v.clienteLogistica && !v.entidadRenting)).length,icon:User},
   ];
 
   return (
