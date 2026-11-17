@@ -83,7 +83,7 @@ export default function GeniusDashboard() {
           </div>
           <div className="relative mt-7 grid grid-cols-2 gap-3 border-t border-white/10 pt-5 md:grid-cols-5">
             {[
-              { label: "Vehículos registrados", value: stats.total, href: "/stock" },
+              { label: "Vehículos registrados", value: stats.total, href: "/stock?filter=todos" },
               { label: "En plazas de exposición", value: stats.expo, href: "/stock?filter=exposicion" },
               { label: "Demos en uso", value: stats.demos, href: "/stock?filter=destino-demo" },
               { label: "Entregados", value: stats.delivered, href: "/stock?filter=entregados" },
