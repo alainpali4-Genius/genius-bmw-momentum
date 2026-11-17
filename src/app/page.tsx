@@ -15,6 +15,7 @@ import { ScannerPanel } from "@/components/scanner-panel";
 const norm = (value: unknown) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 const isDemo = (v: any) => norm(v.tipoLogistico).includes("demo") || norm(v.ubicacion) === "demo en uso";
 const isDelivered = (v: any) => norm(v.estado) === "entregado" || norm(v.ubicacion) === "entregado";
+const isCeded = (v: any) => norm(v.estado) === "cedido" || norm(v.ubicacion) === "cedido";
 const isStockLocator = (v: any) => v.stockLocator === true || norm(v.tipoLogistico) === "stock locator" || norm(v.categoria) === "stock locator" || norm(v.categoriaStock) === "stock locator";
 const isExpo = (v: any) => /^P(?:1[0-5]|[1-9])$/i.test(String(v.ubicacion || "").trim());
 const isStockExpo = (v: any) => norm(v.tipoLogistico).includes("stock expo") || norm(v.tipoLogistico).includes("stock exposicion");
@@ -28,7 +29,7 @@ export default function GeniusDashboard() {
   const vehicles = (rawVehicles || []) as any[];
 
   const stats = useMemo(() => {
-    const active = vehicles.filter(v => !isDelivered(v) && !isStockLocator(v));
+    const active = vehicles.filter(v => !isDelivered(v) && !isCeded(v) && !isStockLocator(v));
     return {
       total: vehicles.length,
       expo: active.filter(isExpo).length,
