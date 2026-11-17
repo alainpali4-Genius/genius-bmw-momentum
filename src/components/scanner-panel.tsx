@@ -264,11 +264,12 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
                 const colorCode = BMW_COLORS.find(color => new RegExp("(^|[^A-Z0-9])" + color.code.toUpperCase() + "([^A-Z0-9]|$)").test(raw))?.code || "";
                 // El catálogo maestro resuelve la motorización y sus alias conocidos.
                 const modelCandidates = raw.split(/\n+/).map(line => line.replace(/[^A-Z0-9 .-]/g, " ").trim()).filter(Boolean);
-                // Las placas BMW suelen imprimir el modelo en la columna izquierda:
-                // admite denominaciones como "iX3 50 xDrive", aunque OCR confunda la X con 3/1.
+                // En esta placa concreta el texto impreso es "i3 50 xDrive", no "iX3".
+                // No convertir automáticamente un i3 en iX3: conservar el modelo leído literalmente.
                 const plateText = modelCandidates.join(" ").toUpperCase().replace(/\s+/g, " ");
                 let modelCandidate = "";
-                if (/I?X?3\s*50\s*XDRIVE/.test(plateText) || /I?X?3\s*50\s*XDRIVE/.test(compact)) modelCandidate = "iX3 50 xDrive";
+                if (/I3\s*50\s*XDRIVE/.test(plateText) || /I350XDRIVE/.test(compact)) modelCandidate = "i3 50 xDrive";
+                else if (/IX3\s*50\s*XDRIVE/.test(plateText) || /IX350XDRIVE/.test(compact)) modelCandidate = "iX3 50 xDrive";
                 else if (/I?X?1\s*EDRIVE\s*20/.test(plateText) || /I?X?1EDRIVE20/.test(compact)) modelCandidate = "iX1 eDrive20";
                 else if (/I?X?2\s*EDRIVE\s*20/.test(plateText) || /I?X?2EDRIVE20/.test(compact)) modelCandidate = "iX2 eDrive20";
                 else modelCandidate = modelCandidates.find(line => /(?:1|2|3|4|5|6|7|8|X[1-7]|Z4|XM|M[234568])\s?\d{2,3}\s?[DIE]/i.test(line)) || "";
