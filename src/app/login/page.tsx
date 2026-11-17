@@ -59,7 +59,7 @@ export default function LoginPage() {
 
   const saveMedia = () => {
     const next = { type: mediaType, url: mediaUrl.trim() };
-    if (!next.url || !/^https?:\\/\\//i.test(next.url)) { setError("Introduce una dirección web válida para la imagen o el vídeo."); return; }
+    if (!next.url || !/^https?:\/\//i.test(next.url)) { setError("Introduce una dirección web válida para la imagen o el vídeo."); return; }
     setMedia(next);
     localStorage.setItem(MEDIA_KEY, JSON.stringify(next));
     setEditingMedia(false);
