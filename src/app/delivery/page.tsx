@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
@@ -53,6 +54,11 @@ export default function DeliveryManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   const [vehicleSearch, setVehicleSearch] = useState("");
   const [vehicleSelectOpen, setVehicleSelectOpen] = useState(false);
+  const [deliveryVin, setDeliveryVin] = useState("");
+  const [deliveryMatches, setDeliveryMatches] = useState<any[]>([]);
+  const [deliveryLookupBusy, setDeliveryLookupBusy] = useState(false);
+  const [deliveryConfirmBusy, setDeliveryConfirmBusy] = useState(false);
+  const [selectedDeliveryVehicle, setSelectedDeliveryVehicle] = useState<any | null>(null);
 
   const { data: vehiculosRaw } = useCollection(query(collection(db, "vehiculos"), orderBy("modelo", "asc")));
   const entregasQuery = useMemo(() => query(collection(db, "entregas"), orderBy("fecha", "desc")), [db]);
@@ -102,6 +108,96 @@ export default function DeliveryManagement() {
     const completadas = entregas.filter(d => d.estado === 'Entregado').length;
     return { hoyCount, pendientesCount, completadas };
   }, [entregas]);
+
+  const normalizeDeliveryVin = (value: unknown) => String(value || "").replace(/\\s+/g, "").toUpperCase();
+
+  const handleFindDeliveredVehicle = async () => {
+    const entered = normalizeDeliveryVin(deliveryVin);
+    if (entered.length !== 17 && entered.length !== 7) {
+      toast({ variant: "destructive", title: "Bastidor no válido", description: "Pega el VIN completo de 17 caracteres o únicamente el VIN7 (últimos 7 caracteres)." });
+      return;
+    }
+    if (entered.length === 17 && /[IOQ]/.test(entered)) {
+      toast({ variant: "destructive", title: "Bastidor no válido", description: "El VIN no puede contener las letras I, O ni Q." });
+      return;
+    }
+    setDeliveryLookupBusy(true);
+    setSelectedDeliveryVehicle(null);
+    setDeliveryMatches([]);
+    try {
+      // Consulta Firestore en tiempo real para no depender de una lista desactualizada.
+      const snapshot = await getDocs(collection(db, "vehiculos"));
+      const matches = snapshot.docs.map(item => ({ id: item.id, ...item.data() } as any)).filter(vehicle => {
+        const full = normalizeDeliveryVin(vehicle.vin);
+        const vin7 = normalizeDeliveryVin(vehicle.vin7) || (full.length >= 7 ? full.slice(-7) : "");
+        return entered.length === 17
+          ? (full === entered || vin7 === entered.slice(-7))
+          : (vin7 === entered || (full.length >= 7 && full.slice(-7) === entered));
+      });
+      setDeliveryMatches(matches);
+      if (matches.length === 1) setSelectedDeliveryVehicle(matches[0]);
+      if (!matches.length) toast({ variant: "destructive", title: "Vehículo no encontrado", description: "No hay ningún vehículo en la base de datos que coincida con ese bastidor o VIN7." });
+    } catch (error) {
+      toast({ variant: "destructive", title: "Error de búsqueda", description: "No se ha podido consultar el stock. Inténtalo de nuevo." });
+    } finally {
+      setDeliveryLookupBusy(false);
+    }
+  };
+
+  const handleConfirmDirectDelivery = async () => {
+    if (!selectedDeliveryVehicle) return;
+    setDeliveryConfirmBusy(true);
+    try {
+      // Segunda comprobación justo antes de confirmar: evita marcar un registro que haya cambiado.
+      const snapshot = await getDocs(collection(db, "vehiculos"));
+      const vehicleDoc = snapshot.docs.find(item => item.id === selectedDeliveryVehicle.id);
+      if (!vehicleDoc) {
+        toast({ variant: "destructive", title: "Vehículo no encontrado", description: "El registro ya no está disponible." });
+        return;
+      }
+      const vehicle = { id: vehicleDoc.id, ...vehicleDoc.data() } as any;
+      if (String(vehicle.estado || "").toLowerCase() === "entregado" || String(vehicle.ubicacion || "").toLowerCase() === "entregado") {
+        toast({ title: "Vehículo ya entregado", description: "Este vehículo ya figura como entregado. No se han creado movimientos duplicados." });
+        setSelectedDeliveryVehicle(vehicle);
+        return;
+      }
+      const now = new Date();
+      const vinFull = normalizeDeliveryVin(vehicle.vin);
+      const vin7 = normalizeDeliveryVin(vehicle.vin7) || vinFull.slice(-7);
+      const vehicleInfo = `${vehicle.modelo || "Vehículo"} · ${vinFull || vin7}`;
+      const batch = writeBatch(db);
+      batch.update(doc(db, "vehiculos", vehicle.id), {
+        estado: "Entregado",
+        ubicacion: "Entregado",
+        fechaEntrega: now.toISOString(),
+        updatedAt: now.toISOString(),
+        entregaRegistradaPor: "GENIUS APP",
+        entregaOrigen: "Confirmación manual por bastidor"
+      });
+      const movementRef = doc(collection(db, "movimientos"));
+      batch.set(movementRef, {
+        vehiculoId: vehicle.id,
+        vehiculoInfo,
+        tipoAccion: "Entrega",
+        fecha: now,
+        usuario: "GENIUS APP",
+        detalles: `Entrega confirmada manualmente por bastidor. VIN7: ${vin7 || "No disponible"}.`
+      });
+      // Si existía una entrega programada para este vehículo, también se cierra.
+      entregas.filter(item => item.vehiculoId === vehicle.id && item.estado !== "Entregado").forEach(item => {
+        batch.update(doc(db, "entregas", item.id), { estado: "Entregado", progress: 100, fechaEntrega: now.toISOString() });
+      });
+      await batch.commit();
+      const deliveredVehicle = { ...vehicle, estado: "Entregado", ubicacion: "Entregado", fechaEntrega: now.toISOString() };
+      setSelectedDeliveryVehicle(deliveredVehicle);
+      setDeliveryMatches([deliveredVehicle]);
+      toast({ title: "Entrega confirmada", description: `${vehicle.modelo || "Vehículo"} se ha retirado del stock activo y figura como entregado.` });
+    } catch (error) {
+      toast({ variant: "destructive", title: "No se pudo confirmar la entrega", description: "No se han guardado los cambios. Comprueba la conexión e inténtalo de nuevo." });
+    } finally {
+      setDeliveryConfirmBusy(false);
+    }
+  };
 
   const handleAddDelivery = async () => {
     if (!formData.vehiculoId || !formData.cliente) {
@@ -284,6 +380,67 @@ export default function DeliveryManagement() {
           </Dialog>
         </div>
       </div>
+
+      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+        <CardContent className="space-y-4 p-5 md:p-6">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-primary"><CheckCircle2 className="h-5 w-5" /></div>
+            <div>
+              <h2 className="font-bold text-slate-900">Registrar una entrega realizada</h2>
+              <p className="mt-1 text-sm text-slate-500">Pega el bastidor de 17 caracteres del correo de confirmación. También puedes introducir solo el VIN7.</p>
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              value={deliveryVin}
+              onChange={e => { setDeliveryVin(e.target.value.toUpperCase()); setDeliveryMatches([]); setSelectedDeliveryVehicle(null); }}
+              onKeyDown={e => { if (e.key === "Enter") handleFindDeliveredVehicle(); }}
+              placeholder="Pegar bastidor completo (17 caracteres) o VIN7"
+              className="h-12 rounded-xl border-slate-200 font-mono text-sm uppercase"
+              maxLength={32}
+            />
+            <Button onClick={handleFindDeliveredVehicle} disabled={deliveryLookupBusy || deliveryConfirmBusy} className="h-12 rounded-xl bg-primary px-5 text-white">
+              {deliveryLookupBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Search className="mr-2 h-4 w-4" />}
+              Buscar vehículo
+            </Button>
+          </div>
+          {deliveryMatches.length > 1 && !selectedDeliveryVehicle && (
+            <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
+              <p className="text-sm font-semibold text-amber-900">Hay varios vehículos con ese VIN7. Selecciona el correcto antes de confirmar.</p>
+              {deliveryMatches.map(vehicle => (
+                <button key={vehicle.id} onClick={() => setSelectedDeliveryVehicle(vehicle)} className="flex w-full flex-col rounded-lg border border-amber-100 bg-white p-3 text-left hover:border-primary">
+                  <span className="text-sm font-semibold text-slate-800">{vehicle.modelo || "Modelo sin definir"}</span>
+                  <span className="mt-1 font-mono text-xs text-slate-500">{normalizeDeliveryVin(vehicle.vin) || normalizeDeliveryVin(vehicle.vin7)} · {vehicle.matricula || "Sin matrícula"}</span>
+                  <span className="mt-1 text-xs text-slate-500">Estado: {vehicle.estado || "Sin estado"} · Ubicación: {vehicle.ubicacion || "Sin ubicación"}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {selectedDeliveryVehicle && (
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Vehículo localizado</p>
+                  <p className="mt-1 text-lg font-bold text-slate-900">{selectedDeliveryVehicle.modelo || "Modelo sin definir"}</p>
+                  <p className="mt-1 font-mono text-xs text-slate-600">VIN: {normalizeDeliveryVin(selectedDeliveryVehicle.vin) || "No guardado"} · VIN7: {normalizeDeliveryVin(selectedDeliveryVehicle.vin7) || normalizeDeliveryVin(selectedDeliveryVehicle.vin).slice(-7)}</p>
+                  <p className="mt-1 text-xs text-slate-500">Matrícula: {selectedDeliveryVehicle.matricula || "No disponible"} · Estado actual: {selectedDeliveryVehicle.estado || "Sin estado"}</p>
+                </div>
+                {String(selectedDeliveryVehicle.estado || "").toLowerCase() === "entregado" || String(selectedDeliveryVehicle.ubicacion || "").toLowerCase() === "entregado" ? (
+                  <Badge className="w-fit bg-emerald-100 text-emerald-800 hover:bg-emerald-100">Ya entregado</Badge>
+                ) : (
+                  <Button onClick={handleConfirmDirectDelivery} disabled={deliveryConfirmBusy} className="h-11 shrink-0 rounded-xl bg-emerald-600 px-5 text-white hover:bg-emerald-700">
+                    {deliveryConfirmBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                    Confirmar entrega
+                  </Button>
+                )}
+              </div>
+              {String(selectedDeliveryVehicle.estado || "").toLowerCase() !== "entregado" && String(selectedDeliveryVehicle.ubicacion || "").toLowerCase() !== "entregado" && (
+                <p className="mt-3 text-xs text-slate-500">Al confirmar, dejará de contar como stock activo y se conservará su ficha e historial.</p>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Stats Summary */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 shrink-0">
