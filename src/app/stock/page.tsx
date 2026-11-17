@@ -13,7 +13,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getVehicleColor } from "../showroom/page";
 import { BMW_COLORS, suggestedMotor, findBmwColorByName } from "@/lib/vehicle-constants";
 
-type FilterType = 'all' | 'terraza' | 'entreplanta' | 'entrega' | 'exposicion' | 'demo' | 'destino-stockexpo' | 'destino-demo' | 'destino-renting' | 'destino-clientes' | 'entregados' | 'stocklocator';
+type FilterType = 'all' | 'terraza' | 'entreplanta' | 'entrega' | 'exposicion' | 'demo' | 'destino-stockexpo' | 'destino-demo' | 'destino-renting' | 'destino-clientes' | 'entregados' | 'stocklocator' | 'todos';
 
 export default function StockManagement() {
   const db = useFirestore();
@@ -23,7 +23,7 @@ export default function StockManagement() {
   const { data: rawVehicles, loading } = useCollection(vehiclesQuery);
   const [searchTerm, setSearchTerm] = useState("");
   const requestedFilter = searchParams.get('filter') as FilterType | null;
-  const validFilters: FilterType[] = ['all','terraza','entreplanta','entrega','exposicion','demo','destino-stockexpo','destino-demo','destino-renting','destino-clientes','entregados','stocklocator'];
+  const validFilters: FilterType[] = ['all','terraza','entreplanta','entrega','exposicion','demo','destino-stockexpo','destino-demo','destino-renting','destino-clientes','entregados','stocklocator','todos'];
   const [activeFilter, setActiveFilter] = useState<FilterType>(requestedFilter && validFilters.includes(requestedFilter) ? requestedFilter : 'all');
   useEffect(() => {
     const next = searchParams.get('filter') as FilterType | null;
@@ -89,7 +89,7 @@ export default function StockManagement() {
   }), [vehicles]);
 
   const filtered = useMemo(() => {
-    let result = activeFilter === 'entregados' ? allVehicles.filter(v => String(v.estado || '').toLowerCase() === 'entregado' || String(v.ubicacion || '').toLowerCase() === 'entregado')
+    let result = activeFilter === 'todos' ? allVehicles : activeFilter === 'entregados' ? allVehicles.filter(v => String(v.estado || '').toLowerCase() === 'entregado' || String(v.ubicacion || '').toLowerCase() === 'entregado')
       : activeFilter === 'stocklocator' ? allVehicles.filter(v => String(v.estado || '').toLowerCase() === 'cedido' || String(v.ubicacion || '').toLowerCase() === 'stock locator')
       : vehicles;
     if (activeFilter === 'terraza') result = result.filter(v => v.ubicacion?.toLowerCase() === 'terraza');
