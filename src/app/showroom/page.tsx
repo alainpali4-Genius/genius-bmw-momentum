@@ -43,7 +43,12 @@ export const TIPOS_LOGISTICOS = [
   "Devolucion Renting"
 ];
 
-const ESTADOS = ["Exposicion", "Stock", "Demo", "Reservado", "Preparacion Entrega", "Entregado", "Cedido"];
+const ESTADOS = ["Exposicion", "Stock", "Demo", "Cliente", "Reservado", "Preparacion Entrega", "Entregado", "Cedido"];
+const isCustomerVehicle = (vehicle: any) => {
+  const values = [vehicle?.tipoLogistico, vehicle?.categoriaComercial, vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting].map(v => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase());
+  if (values.some(v => /stock expo|stock exposicion|^demo$|^demo en uso$/.test(v))) return false;
+  return String(vehicle?.estado || "").toLowerCase() === "cliente" || values.some(v => /cliente|renting|camp.?\s*bank|bank-al|bbva|santander|ayvens|arval|alphabet|leaseplan|athlon/.test(v));
+};
 const PLAZAS_LIST = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12", "P13", "P14", "P15"];
 const OTHER_LOCATIONS = ["Entreplanta", "Terraza", "Zona de entrega", "Demo en uso"];
 
@@ -406,7 +411,7 @@ function ShowroomContent() {
                     <div className="space-y-1"><Label>Fecha recepción</Label><Input value={selectedVehicle.fechaRecepcionCorreo || ""} readOnly className="bg-slate-50"/></div>
                     <div className="space-y-1"><Label>Llegada</Label><Input value={selectedVehicle.llegada || ""} readOnly className="bg-slate-50"/></div>
                     <div className="space-y-1"><Label>Comisión</Label><Input value={selectedVehicle.comision || ""} readOnly className="bg-slate-50"/></div>
-                    {(selectedVehicle.tipoLogistico?.includes('Renting') || selectedVehicle.tipoLogistico === 'Entrega Cliente') && <div className="space-y-1 md:col-span-2"><Label>{selectedVehicle.tipoLogistico === 'Entrega Cliente' ? 'Nombre del cliente' : 'Empresa renting'}</Label><Input value={selectedVehicle.entidadRenting || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{entidadRenting:e.target.value})}/></div>}
+                    {isCustomerVehicle(selectedVehicle) && <><div className="md:col-span-2 mt-2 border-t border-slate-100 pt-3"><h4 className="text-xs font-black uppercase tracking-wide text-blue-700">Datos del vehículo de cliente</h4><p className="mt-1 text-[10px] text-slate-400">Las unidades asignadas a renting o empresas cliente quedan clasificadas como Cliente, fuera de exposición.</p></div><div className="space-y-1"><Label>Empresa / entidad cliente</Label><Input value={selectedVehicle.entidadRenting || selectedVehicle.clienteLogistica || selectedVehicle.destinoLogistico || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{entidadRenting:e.target.value})} placeholder="Ej. BBVA, Santander, Ayvens, Arval..."/></div><div className="space-y-1"><Label>Propietario</Label><Input value={selectedVehicle.propietario || ""} onChange={e=>handleUpdateVehicle(selectedVehicle.id,{propietario:e.target.value})} placeholder="Nombre del propietario o titular"/></div></>}
                   </div>
                 </section>
                 <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm space-y-2">
