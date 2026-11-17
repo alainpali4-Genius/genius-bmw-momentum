@@ -58,7 +58,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       })
       .catch(error => {
         console.error("No se pudo validar el perfil de acceso", error);
-        if (!cancelled) setProfile(null);
+        if (!cancelled) {
+          setProfile(null);
+          setProfileUid(user.uid);
+        }
       })
       .finally(() => { if (!cancelled) setProfileLoading(false); });
     return () => { cancelled = true; };
