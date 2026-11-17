@@ -433,8 +433,37 @@ export default function DeliveryManagement() {
                   </Button>
                 )}
               </div>
-              {String(selectedDeliveryVehicle.estado || "").toLowerCase() !== "entregado" && String(selectedDeliveryVehicle.ubicacion || "").toLowerCase() !== "entregado" && (
-                <p className="mt-3 text-xs text-slate-500">Al confirmar, dejará de contar como stock activo y se conservará su ficha e historial.</p>
+              {(selectedDeliveryVehicle.propietario || selectedDeliveryVehicle.clienteFinal) && <p className="mt-2 text-sm text-slate-600"><strong>Propietario:</strong> {selectedDeliveryVehicle.propietario || selectedDeliveryVehicle.clienteFinal}</p>}
+              {selectedDeliveryVehicle.stockLocatorConcesionario && <p className="mt-2 text-sm text-slate-600"><strong>Concesionario destinatario:</strong> {selectedDeliveryVehicle.stockLocatorConcesionario}</p>}
+              {String(selectedDeliveryVehicle.estado || "").toLowerCase() !== "entregado" && String(selectedDeliveryVehicle.ubicacion || "").toLowerCase() !== "entregado" && String(selectedDeliveryVehicle.estado || "").toLowerCase() !== "cedido" && String(selectedDeliveryVehicle.ubicacion || "").toLowerCase() !== "stock locator" && (
+                <div className="mt-4 space-y-3 border-t border-slate-200 pt-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase text-slate-500">Destino del vehículo</Label>
+                    <Select value={directDisposition} onValueChange={(value: "cliente" | "stockLocator") => setDirectDisposition(value)}>
+                      <SelectTrigger className="h-11 rounded-xl bg-white"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="cliente">Entregado a cliente / propietario</SelectItem>
+                        <SelectItem value="stockLocator">Stock Locator · otro concesionario</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {directDisposition === "cliente" ? (
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase text-slate-500">Propietario / cliente final</Label>
+                      <Input value={directOwner} onChange={e => setDirectOwner(e.target.value)} placeholder="Nombre del propietario o empresa" className="h-11 rounded-xl bg-white" />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase text-slate-500">Concesionario que recibe el vehículo</Label>
+                      <Input value={locatorDealer} onChange={e => setLocatorDealer(e.target.value)} placeholder="Nombre del concesionario / ciudad" className="h-11 rounded-xl bg-white" />
+                    </div>
+                  )}
+                  <Button onClick={handleConfirmDirectDelivery} disabled={deliveryConfirmBusy} className="h-11 w-full rounded-xl bg-emerald-600 px-5 text-white hover:bg-emerald-700">
+                    {deliveryConfirmBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                    {directDisposition === "stockLocator" ? "Confirmar cesión Stock Locator" : "Confirmar entrega"}
+                  </Button>
+                  <p className="text-xs text-slate-500">Al confirmar, dejará de contar como stock activo. Su ficha seguirá disponible para búsquedas y control histórico.</p>
+                </div>
               )}
             </div>
           )}
