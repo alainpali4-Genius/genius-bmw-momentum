@@ -114,6 +114,8 @@ const isCustomerVehicle = (vehicle: any) => {
       // Sustituye también los valores antiguos demasiado genéricos que se guardaron
       // antes de ampliar el catálogo (p. ej. "Diésel · 2.0").
       const genericMotor = /^(di[eé]sel|gasolina)\s*[·-]\s*(1[.]\d|2[.]\d|3[.]\d)(\s*(turbo|twinpower turbo))?$/i.test(currentMotor)
+        || /^(di[eé]sel|gasolina)\s*[·-].*(twinpower turbo|1[.]5|2[.]0|3[.]0)$/i.test(currentMotor) && !/\d+\s*kW.*\d+\s*CV/i.test(currentMotor)
+        || /^(h[ií]brido enchufable|el[eé]ctrico)\s*[·-].*$/i.test(currentMotor) && !/\d+\s*kW.*\d+\s*CV/i.test(currentMotor)
         || /^(di[eé]sel|gasolina)\s*[·-]\s*(motor )?(twinpower turbo)$/i.test(currentMotor)
         || /^gasolina\s*[·-]\s*motor BMW M$/i.test(currentMotor)
         || /^di[eé]sel\s*[·-]\s*2[.]0$/i.test(currentMotor)
