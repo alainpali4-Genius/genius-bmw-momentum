@@ -1,15 +1,111 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Primera fase: acceso exclusivo a la cuenta administradora de Momentum.
-    // La separación por concesionario se añadirá al implantar el modelo multi-tenant.
-    function isMomentumAdmin() {
-      return request.auth != null
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isLegacyAdmin() {
+      return signedIn()
         && request.auth.token.email == "a.henares@momentummotor.es";
     }
 
-    match /{document=**} {
-      allow read, write: if isMomentumAdmin();
+    function userProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isActiveMember(tenantId) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && userProfile().active == true
+        && userProfile().tenantId == tenantId;
+    }
+
+    function canReadTenantDocument() {
+      return isLegacyAdmin()
+        || (resource.data.tenantId is string
+          && isActiveMember(resource.data.tenantId));
+    }
+
+    function canCreateTenantDocument() {
+      return isLegacyAdmin()
+        || (request.resource.data.tenantId is string
+          && isActiveMember(request.resource.data.tenantId));
+    }
+
+    function canUpdateTenantDocument() {
+      return isLegacyAdmin()
+        || (resource.data.tenantId is string
+          && request.resource.data.tenantId == resource.data.tenantId
+          && isActiveMember(resource.data.tenantId));
+    }
+
+    // The existing Momentum administrator retains access to legacy records
+    // during migration. New users must have an active profile and every
+    // operational document must carry the matching tenantId.
+    match /{collectionName}/{documentId} {
+      allow read: if collectionName != "users"
+        && collectionName != "tenants"
+        && collectionName != "invitations"
+        && canReadTenantDocument();
+
+      allow create: if collectionName != "users"
+        && collectionName != "tenants"
+        && collectionName != "invitations"
+        && canCreateTenantDocument();
+
+      allow update: if collectionName != "users"
+        && collectionName != "tenants"
+        && collectionName != "invitations"
+        && canUpdateTenantDocument();
+
+      allow delete: if collectionName != "users"
+        && collectionName != "tenants"
+        && collectionName != "invitations"
+        && canReadTenantDocument();
+    }
+
+    match /users/{userId} {
+      allow get: if isLegacyAdmin()
+        || (signedIn() && request.auth.uid == userId)
+        || (signedIn()
+          && resource.data.email == request.auth.token.email);
+      allow list: if isLegacyAdmin();
+      allow create: if isLegacyAdmin()
+        || (signedIn()
+          && request.auth.uid == userId
+          && request.resource.data.email == request.auth.token.email
+          && request.resource.data.active == true
+          && request.resource.data.role in ["admin", "manager", "operator", "viewer"]
+          && exists(/databases/$(database)/documents/invitations/$(request.auth.token.email))
+          && get(/databases/$(database)/documents/invitations/$(request.auth.token.email)).data.status == "pending"
+          && request.resource.data.tenantId == get(/databases/$(database)/documents/invitations/$(request.auth.token.email)).data.tenantId);
+      allow update: if isLegacyAdmin()
+        || (signedIn()
+          && request.auth.uid == userId
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["displayName", "photoURL", "lastSeenAt"]));
+      allow delete: if isLegacyAdmin();
+    }
+
+    match /tenants/{tenantId} {
+      allow read: if isLegacyAdmin() || isActiveMember(tenantId);
+      allow create, update, delete: if isLegacyAdmin();
+    }
+
+    match /invitations/{email} {
+      allow get: if isLegacyAdmin()
+        || (signedIn() && request.auth.token.email == resource.data.email);
+      allow list: if isLegacyAdmin();
+      allow create: if isLegacyAdmin()
+        && request.resource.data.email == email
+        && request.resource.data.status == "pending";
+      allow update: if isLegacyAdmin()
+        || (signedIn()
+          && request.auth.token.email == resource.data.email
+          && resource.data.status == "pending"
+          && request.resource.data.status == "accepted"
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "acceptedAt", "acceptedBy"]));
+      allow delete: if isLegacyAdmin();
     }
   }
 }
