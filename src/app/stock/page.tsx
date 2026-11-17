@@ -13,7 +13,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getVehicleColor } from "../showroom/page";
 import { BMW_COLORS, suggestedMotor, findBmwColorByName } from "@/lib/vehicle-constants";
 
-type FilterType = 'all' | 'terraza' | 'entreplanta' | 'entrega' | 'exposicion' | 'demo' | 'destino-stockexpo' | 'destino-demo' | 'destino-renting' | 'destino-clientes';
+type FilterType = 'all' | 'terraza' | 'entreplanta' | 'entrega' | 'exposicion' | 'demo' | 'destino-stockexpo' | 'destino-demo' | 'destino-renting' | 'destino-clientes' | 'entregados' | 'stocklocator';
 
 export default function StockManagement() {
   const db = useFirestore();
@@ -23,13 +23,14 @@ export default function StockManagement() {
   const { data: rawVehicles, loading } = useCollection(vehiclesQuery);
   const [searchTerm, setSearchTerm] = useState("");
   const requestedFilter = searchParams.get('filter') as FilterType | null;
-  const validFilters: FilterType[] = ['all','terraza','entreplanta','entrega','exposicion','demo','destino-stockexpo','destino-demo','destino-renting','destino-clientes'];
+  const validFilters: FilterType[] = ['all','terraza','entreplanta','entrega','exposicion','demo','destino-stockexpo','destino-demo','destino-renting','destino-clientes','entregados','stocklocator'];
   const [activeFilter, setActiveFilter] = useState<FilterType>(requestedFilter && validFilters.includes(requestedFilter) ? requestedFilter : 'all');
   useEffect(() => {
     const next = searchParams.get('filter') as FilterType | null;
     setActiveFilter(next && validFilters.includes(next) ? next : 'all');
   }, [searchParams]);
-  const vehicles = ((rawVehicles || []) as any[]).filter(vehicle => {
+  const allVehicles = (rawVehicles || []) as any[];
+  const vehicles = allVehicles.filter(vehicle => {
     const state = String(vehicle.estado || "").toLowerCase();
     const location = String(vehicle.ubicacion || "").toLowerCase();
     return state !== "entregado" && location !== "entregado" && state !== "cedido" && location !== "stock locator";
@@ -88,7 +89,9 @@ export default function StockManagement() {
   }), [vehicles]);
 
   const filtered = useMemo(() => {
-    let result = vehicles;
+    let result = activeFilter === 'entregados' ? allVehicles.filter(v => String(v.estado || '').toLowerCase() === 'entregado' || String(v.ubicacion || '').toLowerCase() === 'entregado')
+      : activeFilter === 'stocklocator' ? allVehicles.filter(v => String(v.estado || '').toLowerCase() === 'cedido' || String(v.ubicacion || '').toLowerCase() === 'stock locator')
+      : vehicles;
     if (activeFilter === 'terraza') result = result.filter(v => v.ubicacion?.toLowerCase() === 'terraza');
     else if (activeFilter === 'entreplanta') result = result.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta');
     else if (activeFilter === 'demo') result = result.filter(v => v.ubicacion === 'Demo en uso');
@@ -101,7 +104,7 @@ export default function StockManagement() {
     const q = searchTerm.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     if (q) result = result.filter(v => [v.modelo,v.vin,v.vin7,v.matricula,v.entidadRenting,v.motor,v.destinoLogistico,v.clienteLogistica,v.colorExterior].some(x => String(x || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q)));
     return result;
-  }, [vehicles, activeFilter, searchTerm]);
+  }, [vehicles, allVehicles, activeFilter, searchTerm]);
 
   const filters = [
     {key:'exposicion' as const,label:'Exposición',value:stats.exposicion,icon:Car},
@@ -112,6 +115,8 @@ export default function StockManagement() {
     {key:'destino-stockexpo' as const,label:'Stock exposición',value:vehicles.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('stock expo')).length,icon:Car},
     {key:'destino-renting' as const,label:'Renting',value:vehicles.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('renting') || !!v.entidadRenting).length,icon:Building2},
     {key:'destino-clientes' as const,label:'Clientes',value:vehicles.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('cliente') || (!!v.clienteLogistica && !v.entidadRenting)).length,icon:User},
+    {key:'entregados' as const,label:'Entregados',value:allVehicles.filter(v => String(v.estado || '').toLowerCase() === 'entregado' || String(v.ubicacion || '').toLowerCase() === 'entregado').length,icon:Car},
+    {key:'stocklocator' as const,label:'Stock Locator',value:allVehicles.filter(v => String(v.estado || '').toLowerCase() === 'cedido' || String(v.ubicacion || '').toLowerCase() === 'stock locator').length,icon:Building2},
   ];
 
   return (
