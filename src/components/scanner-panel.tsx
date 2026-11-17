@@ -224,7 +224,7 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
         liveWorkerRef.current = worker;
         await worker.setParameters({
           tessedit_char_whitelist:"ABCDEFGHJKLMNPRSTUVWXYZ0123456789",
-          tessedit_pageseg_mode:"11",
+          tessedit_pageseg_mode:"6",
           preserve_interword_spaces:"1"
         });
         setLiveCameraStatus("Enfoca la placa dentro del recuadro…");
@@ -238,11 +238,11 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
             const video = videoRef.current;
             // Recorta la zona guiada y la amplía: mejora la lectura de los textos pequeños
             // (modelo y código de pintura) sin procesar toda la imagen del móvil.
-            const sourceWidth = video.videoWidth * 0.76;
-            const sourceHeight = video.videoHeight * 0.76;
-            const sourceX = (video.videoWidth - sourceWidth) / 2;
-            const sourceY = (video.videoHeight - sourceHeight) / 2;
-            const scale = Math.min(1.7, 1800 / Math.max(sourceWidth, sourceHeight));
+            const sourceWidth = video.videoWidth;
+            const sourceHeight = video.videoHeight;
+            const sourceX = 0;
+            const sourceY = 0;
+            const scale = Math.min(1.5, 1800 / Math.max(sourceWidth, sourceHeight));
             const canvas = document.createElement("canvas");
             canvas.width = Math.round(sourceWidth * scale);
             canvas.height = Math.round(sourceHeight * scale);
@@ -264,7 +264,14 @@ export function ScannerPanel({ compact = false }: { compact?: boolean }) {
                 const colorCode = BMW_COLORS.find(color => new RegExp("(^|[^A-Z0-9])" + color.code.toUpperCase() + "([^A-Z0-9]|$)").test(raw))?.code || "";
                 // El catálogo maestro resuelve la motorización y sus alias conocidos.
                 const modelCandidates = raw.split(/\n+/).map(line => line.replace(/[^A-Z0-9 .-]/g, " ").trim()).filter(Boolean);
-                const modelCandidate = modelCandidates.find(line => /(?:1|2|3|4|5|6|7|8|X[1-7]|Z4|XM|M[234568])\s?\d{2,3}\s?[DIE]/i.test(line));
+                // Las placas BMW suelen imprimir el modelo en la columna izquierda:
+                // admite denominaciones como "iX3 50 xDrive", aunque OCR confunda la X con 3/1.
+                const plateText = modelCandidates.join(" ").toUpperCase().replace(/\s+/g, " ");
+                let modelCandidate = "";
+                if (/I?X?3\s*50\s*XDRIVE/.test(plateText) || /I?X?3\s*50\s*XDRIVE/.test(compact)) modelCandidate = "iX3 50 xDrive";
+                else if (/I?X?1\s*EDRIVE\s*20/.test(plateText) || /I?X?1EDRIVE20/.test(compact)) modelCandidate = "iX1 eDrive20";
+                else if (/I?X?2\s*EDRIVE\s*20/.test(plateText) || /I?X?2EDRIVE20/.test(compact)) modelCandidate = "iX2 eDrive20";
+                else modelCandidate = modelCandidates.find(line => /(?:1|2|3|4|5|6|7|8|X[1-7]|Z4|XM|M[234568])\s?\d{2,3}\s?[DIE]/i.test(line)) || "";
                 const modelMatch = compact.match(/(?:118|120|218|220|225|230|318|320|330|420|430|520|530|540|630|640|740|840|850)[DIE]/);
                 const model = modelCandidate || (modelMatch ? modelMatch[0].slice(0,-1) + modelMatch[0].slice(-1).toLowerCase() : "");
                 const master = model ? findMasterEngine(model) : null;
