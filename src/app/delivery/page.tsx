@@ -54,6 +54,9 @@ export default function DeliveryManagement() {
   const [vehicleSearch, setVehicleSearch] = useState("");
   const [vehicleSelectOpen, setVehicleSelectOpen] = useState(false);
   const [deliveryVin, setDeliveryVin] = useState("");
+  const [directDisposition, setDirectDisposition] = useState<"cliente" | "stockLocator">("cliente");
+  const [directOwner, setDirectOwner] = useState("");
+  const [locatorDealer, setLocatorDealer] = useState("");
   const [deliveryMatches, setDeliveryMatches] = useState<any[]>([]);
   const [deliveryLookupBusy, setDeliveryLookupBusy] = useState(false);
   const [deliveryConfirmBusy, setDeliveryConfirmBusy] = useState(false);
@@ -155,9 +158,19 @@ export default function DeliveryManagement() {
         return;
       }
       const vehicle = { id: vehicleDoc.id, ...vehicleDoc.data() } as any;
-      if (String(vehicle.estado || "").toLowerCase() === "entregado" || String(vehicle.ubicacion || "").toLowerCase() === "entregado") {
-        toast({ title: "Vehículo ya entregado", description: "Este vehículo ya figura como entregado. No se han creado movimientos duplicados." });
+      const currentState = String(vehicle.estado || "").toLowerCase();
+      const currentLocation = String(vehicle.ubicacion || "").toLowerCase();
+      if (currentState === "entregado" || currentLocation === "entregado" || currentState === "cedido" || currentLocation === "stock locator") {
+        toast({ title: currentState === "cedido" || currentLocation === "stock locator" ? "Vehículo cedido por Stock Locator" : "Vehículo ya entregado", description: "Este vehículo ya está fuera del stock activo. Se conserva su ficha y trazabilidad." });
         setSelectedDeliveryVehicle(vehicle);
+        return;
+      }
+      if (directDisposition === "cliente" && !directOwner.trim()) {
+        toast({ variant: "destructive", title: "Indica el propietario", description: "Escribe el nombre del cliente o propietario antes de confirmar." });
+        return;
+      }
+      if (directDisposition === "stockLocator" && !locatorDealer.trim()) {
+        toast({ variant: "destructive", title: "Indica el concesionario", description: "Escribe el concesionario que recibe el vehículo." });
         return;
       }
       const now = new Date();
@@ -165,32 +178,37 @@ export default function DeliveryManagement() {
       const vin7 = normalizeDeliveryVin(vehicle.vin7) || vinFull.slice(-7);
       const vehicleInfo = `${vehicle.modelo || "Vehículo"} · ${vinFull || vin7}`;
       const batch = writeBatch(db);
+      const isLocator = directDisposition === "stockLocator";
+      const dispositionLabel = isLocator ? "Stock Locator" : "Entregado";
+      const recipient = isLocator ? locatorDealer.trim() : directOwner.trim();
       batch.update(doc(db, "vehiculos", vehicle.id), {
-        estado: "Entregado",
-        ubicacion: "Entregado",
-        fechaEntrega: now.toISOString(),
+        estado: isLocator ? "Cedido" : "Entregado",
+        ubicacion: isLocator ? "Stock Locator" : "Entregado",
+        ...(isLocator ? { stockLocator: true, stockLocatorConcesionario: recipient, fechaCesionStockLocator: now.toISOString() } : { propietario: recipient, clienteFinal: recipient, fechaEntrega: now.toISOString() }),
         updatedAt: now.toISOString(),
         entregaRegistradaPor: "GENIUS APP",
-        entregaOrigen: "Confirmación manual por bastidor"
+        entregaOrigen: isLocator ? "Cesión a concesionario mediante Stock Locator" : "Confirmación manual por bastidor"
       });
       const movementRef = doc(collection(db, "movimientos"));
       batch.set(movementRef, {
         vehiculoId: vehicle.id,
         vehiculoInfo,
-        tipoAccion: "Entrega",
+        tipoAccion: isLocator ? "Stock Locator" : "Entrega",
         fecha: now,
         usuario: "GENIUS APP",
-        detalles: `Entrega confirmada manualmente por bastidor. VIN7: ${vin7 || "No disponible"}.`
+        detalles: `${isLocator ? "Vehículo cedido a otro concesionario mediante Stock Locator" : "Entrega confirmada al propietario"}: ${recipient}. VIN7: ${vin7 || "No disponible"}.`
       });
       // Si existía una entrega programada para este vehículo, también se cierra.
       entregas.filter(item => item.vehiculoId === vehicle.id && item.estado !== "Entregado").forEach(item => {
         batch.update(doc(db, "entregas", item.id), { estado: "Entregado", progress: 100, fechaEntrega: now.toISOString() });
       });
       await batch.commit();
-      const deliveredVehicle = { ...vehicle, estado: "Entregado", ubicacion: "Entregado", fechaEntrega: now.toISOString() };
+      const deliveredVehicle = { ...vehicle, estado: isLocator ? "Cedido" : "Entregado", ubicacion: isLocator ? "Stock Locator" : "Entregado", ...(isLocator ? { stockLocator: true, stockLocatorConcesionario: recipient, fechaCesionStockLocator: now.toISOString() } : { propietario: recipient, clienteFinal: recipient, fechaEntrega: now.toISOString() }) };
       setSelectedDeliveryVehicle(deliveredVehicle);
       setDeliveryMatches([deliveredVehicle]);
-      toast({ title: "Entrega confirmada", description: `${vehicle.modelo || "Vehículo"} se ha retirado del stock activo y figura como entregado.` });
+      setDirectOwner("");
+      setLocatorDealer("");
+      toast({ title: isLocator ? "Stock Locator registrado" : "Entrega confirmada", description: `${vehicle.modelo || "Vehículo"} se ha retirado del stock activo y figura como ${dispositionLabel}. Destino: ${recipient}.` });
     } catch (error) {
       toast({ variant: "destructive", title: "No se pudo confirmar la entrega", description: "No se han guardado los cambios. Comprueba la conexión e inténtalo de nuevo." });
     } finally {
