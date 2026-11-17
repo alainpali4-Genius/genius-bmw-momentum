@@ -164,8 +164,11 @@ function ShowroomContent() {
   const [pendingStockVehicleId, setPendingStockVehicleId] = useState<string | null>(null);
   const [stockDestination, setStockDestination] = useState("Entreplanta");
 
+  // Los cambios del formulario se mantienen en borrador hasta pulsar Guardar cambios.
+  // Así evitamos que una actualización inmediata del estado se sobrescriba después
+  // con el borrador antiguo del vehículo.
   const handleVehicleStatusChange = async (vehicleId: string, status: string) => {
-    const vehicle = vehiculos.find(v => v.id === vehicleId);
+    const vehicle = vehicleDraft?.id === vehicleId ? vehicleDraft : vehiculos.find(v => v.id === vehicleId);
     if (!vehicle) return;
     if (status === "Stock") {
       setStockDestination("Entreplanta");
@@ -180,15 +183,15 @@ function ShowroomContent() {
         toast({ variant: "destructive", title: "No hay plazas libres", description: "Libera una plaza del plano antes de pasar este vehículo a exposición." });
         return;
       }
-      await handleUpdateVehicle(vehicleId, { estado: "Exposicion", ubicacion: targetPlace });
+      handleDraftUpdate(vehicleId, { estado: "Exposicion", ubicacion: targetPlace });
       return;
     }
-    await handleUpdateVehicle(vehicleId, { estado: status, ubicacion: "No disponible" });
+    handleDraftUpdate(vehicleId, { estado: status, ubicacion: "No disponible" });
   };
 
   const confirmStockDestination = async () => {
     if (!pendingStockVehicleId) return;
-    await handleUpdateVehicle(pendingStockVehicleId, { estado: "Stock", ubicacion: stockDestination });
+    handleDraftUpdate(pendingStockVehicleId, { estado: "Stock", ubicacion: stockDestination });
     setPendingStockVehicleId(null);
   };
 
@@ -232,8 +235,11 @@ function ShowroomContent() {
           toast({ variant: "destructive", title: "Datos guardados; historial pendiente", description: "El cambio se ha guardado, pero no se pudo registrar en movimientos." });
         }
       }
+      return true;
     } catch (e) {
-      toast({ variant: "destructive", title: "Error al actualizar", description: "No se han podido guardar los cambios." });
+      console.error("Error al actualizar vehículo", e);
+      toast({ variant: "destructive", title: "Error al actualizar", description: "No se han podido guardar los cambios. Mantengo el formulario abierto para que no pierdas lo editado." });
+      return false;
     }
   };
 
@@ -241,8 +247,11 @@ function ShowroomContent() {
     if (!selectedVehicle?.id || !vehicleDraft) return;
     const updates = { ...vehicleDraft };
     delete updates.id;
-    await handleUpdateVehicle(selectedVehicle.id, updates);
-    setVehicleDraft(null);
+    const saved = await handleUpdateVehicle(selectedVehicle.id, updates);
+    if (saved) {
+      toast({ title: "Cambios guardados", description: "El vehículo se ha actualizado correctamente." });
+      setVehicleDraft(null);
+    }
   };
   const handleSwapOrMove = async (sourceId: string, targetPlaza: string) => {
     const sourceCar = vehiculos.find(v => v.id === sourceId);
