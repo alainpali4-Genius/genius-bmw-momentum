@@ -1,11 +1,13 @@
 "use client"
 
 import { useState } from "react"
-import { Menu, LayoutDashboard, Grid3X3, Car, CalendarDays, Package, ShieldAlert, History, Settings, X } from "lucide-react"
+import { Menu, LayoutDashboard, Grid3X3, Car, CalendarDays, Package, ShieldAlert, History, Settings, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
+import { useAuth } from "@/firebase"
+import { signOut } from "firebase/auth"
 
 const navItems = [
   { title: "Inicio", url: "/", icon: LayoutDashboard },
@@ -21,6 +23,19 @@ const navItems = [
 export function MobileHeader() {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
+  const auth = useAuth()
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth)
+      setOpen(false)
+      router.replace("/login")
+    } catch (error) {
+      console.error("No se pudo cerrar la sesión:", error)
+    }
+  }
+
   return (
     <header className="z-50 flex h-14 shrink-0 items-center border-b border-slate-200 bg-white px-4 md:hidden">
       <Sheet open={open} onOpenChange={setOpen}>
@@ -43,6 +58,17 @@ export function MobileHeader() {
               </Link>
             })}
           </nav>
+          <div className="mt-auto border-t border-slate-100 p-3">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleSignOut}
+              className="h-11 w-full justify-start gap-3 rounded-lg px-3 text-[13px] font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+            >
+              <LogOut className="h-[18px] w-[18px] text-slate-400" />
+              Cerrar sesión
+            </Button>
+          </div>
         </SheetContent>
       </Sheet>
       <div className="ml-3 flex items-center gap-2">
