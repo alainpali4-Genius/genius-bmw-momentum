@@ -56,19 +56,21 @@ function consolidateRows(input:Row[]) {
 
 function resolveRows(rows:Row[], existing:ExistingVehicle[]):Resolution[] {
  return rows.map(row=>{
-  const fullMatches= row.vin.length===17 ? existing.filter(v=>normalizeVin(v.vin)===row.vin) : [];
-  if(fullMatches.length>1)return {row,issue:"Hay varios registros con este VIN completo. Revisión manual necesaria."};
-  if(fullMatches.length===1)return {row,match:fullMatches[0]};
   const suffix=suffix7(row.vin);
+  // VIN7 es la clave operativa principal de identificación en BMW.
   const suffixMatches=existing.filter(v=>{
    const full=normalizeVin(v.vin);
-   const short=normalizeVin(v.vin7)||suffix7(full);
-   return short===suffix || (full.length===7 && full===suffix);
+   const short=normalizeVin(v.vin7)||(full.length===17?suffix7(full):full);
+   return short===suffix;
   });
   if(suffixMatches.length>1)return {row,issue:`VIN7 ${suffix} coincide con ${suffixMatches.length} registros. No se modificará ninguno.`};
   if(suffixMatches.length===1)return {row,match:suffixMatches[0]};
+  // Como respaldo, comprobar el VIN completo si no hay coincidencia por VIN7.
+  const fullMatches=row.vin.length===17?existing.filter(v=>normalizeVin(v.vin)===row.vin):[];
+  if(fullMatches.length>1)return {row,issue:"Hay varios registros con este VIN completo. Revisión manual necesaria."};
+  if(fullMatches.length===1)return {row,match:fullMatches[0]};
   return {row};
- }
+ });
 }
 
 export default function ImportLogisticsPage(){
