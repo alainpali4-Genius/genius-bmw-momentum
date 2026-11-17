@@ -121,12 +121,13 @@ export default function StockManagement() {
     {key:'exposicion' as const,label:'Exposición',value:stats.exposicion,icon:Car},
     {key:'terraza' as const,label:'Terraza',value:stats.terraza,icon:MapPin},
     {key:'entreplanta' as const,label:'Entreplanta',value:stats.entreplanta,icon:LayoutGrid},
-    {key:'entrega' as const,label:'Entrega',value:stats.entrega,icon:ArrowUpRight},
-    {key:'demo' as const,label:'Demos en uso',value:stats.demo,icon:Car},
+    {key:'entrega' as const,label:'Zona de entrega',value:stats.entrega,icon:ArrowUpRight},
     {key:'destino-stockexpo' as const,label:'Stock exposición',value:vehicles.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('stock expo')).length,icon:Car},
     {key:'destino-renting' as const,label:'Renting',value:vehicles.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('renting') || !!v.entidadRenting).length,icon:Building2},
     {key:'destino-clientes' as const,label:'Clientes',value:vehicles.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('cliente') || (!!v.clienteLogistica && !v.entidadRenting)).length,icon:User},
-    {key:'entregados' as const,label:'Entregados',value:allVehicles.filter(v => normalizeStatus(v.estado) === 'entregado' || normalizeStatus(v.ubicacion) === 'entregado').length,icon:Car},
+  ];
+  const subgroupFilters = [
+    {key:'demo' as const,label:'Demos',value:allVehicles.filter(v => !isCededVehicle(v) && isDemoVehicle(v) && normalizeStatus(v.estado) !== 'entregado').length,icon:Car},
     {key:'cedidos' as const,label:'Cedidos',value:allVehicles.filter(isCededVehicle).length,icon:Building2},
     {key:'stocklocator' as const,label:'Stock Locator',value:allVehicles.filter(isStockLocatorVehicle).length,icon:Building2},
   ];
@@ -142,15 +143,24 @@ export default function StockManagement() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-          {filters.map(f => {
-            const active = activeFilter === f.key;
-            return <button key={f.key} onClick={() => setActiveFilter(active ? 'all' : f.key)} className={`rounded-xl border bg-white p-4 text-left shadow-sm transition-colors hover:border-blue-200 ${active ? 'border-[#0066b3] ring-1 ring-[#0066b3]/20' : 'border-slate-200/80'}`}>
-              <div className="flex items-center justify-between"><span className="text-xs font-medium text-slate-500">{f.label}</span><f.icon className={`h-4 w-4 ${active ? 'text-[#0066b3]' : 'text-slate-400'}`}/></div>
+        <section className="space-y-3">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">Stock del concesionario</h2>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            {filters.map(f => <button key={f.key} onClick={() => setActiveFilter(activeFilter === f.key ? 'all' : f.key)} className="rounded-xl border border-slate-200/80 bg-white p-4 text-left shadow-sm hover:border-blue-300">
+              <div className="flex items-center justify-between"><span className="text-xs font-medium text-slate-500">{f.label}</span><f.icon className="h-4 w-4 text-slate-400"/></div>
               <div className="mt-2 text-2xl font-semibold text-slate-900">{f.value}</div>
-            </button>
-          })}
-        </div>
+            </button>)}
+          </div>
+        </section>
+        <section className="space-y-3">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">Subgrupos · gestión independiente</h2>
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+            {subgroupFilters.map(f => <button key={f.key} onClick={() => setActiveFilter(activeFilter === f.key ? 'all' : f.key)} className="rounded-xl border border-slate-200/80 bg-white p-4 text-left shadow-sm hover:border-blue-300">
+              <div className="flex items-center justify-between"><span className="text-xs font-medium text-slate-500">{f.label}</span><f.icon className="h-4 w-4 text-slate-400"/></div>
+              <div className="mt-2 text-2xl font-semibold text-slate-900">{f.value}</div>
+            </button>)}
+          </div>
+        </section>
 
         <Card className="overflow-hidden rounded-xl border-slate-200/80 bg-white shadow-sm">
           <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
