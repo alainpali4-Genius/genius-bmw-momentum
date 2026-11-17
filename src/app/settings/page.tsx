@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useFirestore, useCollection, useAuth } from "@/firebase";
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from "firebase/auth";
-import { collection } from "firebase/firestore";
+import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 type Section = "general" | "stock" | "backup" | "users" | "security";
@@ -50,6 +50,12 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState("");
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState<"manager" | "operator" | "viewer">("operator");
+  const [inviting, setInviting] = useState(false);
+  const [inviteMessage, setInviteMessage] = useState("");
+  const usersQuery = useMemo(() => collection(db, "users"), [db]);
+  const { data: userProfiles } = useCollection(usersQuery);
 
   const vehiclesQuery = useMemo(() => collection(db, "vehiculos"), [db]);
   const movementsQuery = useMemo(() => collection(db, "movimientos"), [db]);
@@ -171,7 +177,16 @@ export default function SettingsPage() {
                 {passwordMessage && <p role="status" className="rounded-lg bg-slate-50 p-3 text-sm text-slate-700">{passwordMessage}</p>}
                 <Button disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword} onClick={async()=>{setPasswordMessage("");if(newPassword.length<8){setPasswordMessage("La nueva contraseña debe tener al menos 8 caracteres.");return;}if(newPassword!==confirmPassword){setPasswordMessage("Las nuevas contraseñas no coinciden.");return;}if(!currentUser?.email){setPasswordMessage("No hay una sesión válida.");return;}setSavingPassword(true);try{const credential=EmailAuthProvider.credential(currentUser.email,currentPassword);await reauthenticateWithCredential(currentUser,credential);await updatePassword(currentUser,newPassword);setCurrentPassword("");setNewPassword("");setConfirmPassword("");setPasswordMessage("Contraseña actualizada correctamente.");}catch(e:any){setPasswordMessage(e?.code==="auth/wrong-password"||e?.code==="auth/invalid-credential"?"La contraseña actual no es correcta.":e?.code==="auth/requires-recent-login"?"La sesión ha caducado. Cierra sesión y vuelve a entrar antes de cambiar la contraseña.":"No se ha podido actualizar la contraseña. Inténtalo de nuevo.");}finally{setSavingPassword(false);}}} className="bg-[#0066b3] text-white hover:bg-[#00549a]">{savingPassword?"Actualizando…":"Actualizar contraseña"}</Button>
               </CardContent></Card>
-              <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardContent className="space-y-2 p-5"><h3 className="font-semibold text-slate-900">Usuarios de otros concesionarios</h3><p className="text-sm leading-6 text-slate-500">La creación de cuentas y la asignación de concesionario quedan reservadas para la siguiente fase. Se habilitarán junto con la separación de datos por empresa y los permisos de administrador.</p><Badge variant="outline">Próxima fase</Badge></CardContent></Card>
+              <Card className="rounded-2xl border-slate-200 bg-white shadow-sm"><CardContent className="space-y-4 p-5">
+                <div><h3 className="font-semibold text-slate-900">Invitar a Momentum Navarra</h3><p className="mt-1 text-sm leading-6 text-slate-500">La invitación se vincula a un correo concreto. El usuario deberá activar su cuenta desde /register.</p></div>
+                <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_170px]">
+                  <div><label className="mb-1 block text-xs font-semibold text-slate-600">Correo electrónico</label><input type="email" value={inviteEmail} onChange={e=>setInviteEmail(e.target.value)} placeholder="usuario@concesionario.es" className="w-full rounded-lg border border-slate-200 px-3 py-3 text-sm outline-none focus:border-blue-600"/></div>
+                  <div><label className="mb-1 block text-xs font-semibold text-slate-600">Rol</label><select value={inviteRole} onChange={e=>setInviteRole(e.target.value as any)} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm"><option value="manager">Responsable</option><option value="operator">Operador</option><option value="viewer">Solo lectura</option></select></div>
+                </div>
+                <Button disabled={inviting || !inviteEmail.trim() || currentUser?.email?.toLowerCase() !== "a.henares@momentummotor.es"} onClick={async()=>{setInviteMessage("");const email=inviteEmail.trim().toLowerCase();if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){setInviteMessage("Introduce un correo válido.");return;}if(email===currentUser?.email?.toLowerCase()){setInviteMessage("Esta cuenta ya es administradora.");return;}setInviting(true);try{await setDoc(doc(db,"invitations",email),{email,tenantId:"momentum-navarra",role:inviteRole,status:"pending",createdAt:serverTimestamp(),createdBy:currentUser?.uid||null});setInviteMessage("Invitación creada. Comparte con el usuario el enlace de la aplicación y la ruta /register.");setInviteEmail("");}catch(error){console.error(error);setInviteMessage("No se pudo crear la invitación. Comprueba que has iniciado sesión como administrador.");}finally{setInviting(false);}}} className="bg-[#0066b3] text-white hover:bg-[#00549a]">{inviting?"Creando invitación…":"Crear invitación"}</Button>
+                {inviteMessage && <p role="status" className="rounded-lg bg-slate-50 p-3 text-sm text-slate-700">{inviteMessage}</p>}
+                <div className="border-t border-slate-100 pt-3"><h4 className="mb-2 text-sm font-semibold text-slate-800">Cuentas activas</h4>{(userProfiles||[]).length ? <div className="space-y-2">{(userProfiles||[]).map((profile:any)=><div key={profile.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-slate-50 px-3 py-2"><div><p className="text-sm font-medium text-slate-800">{profile.displayName||profile.email}</p><p className="text-xs text-slate-500">{profile.email}</p></div><Badge variant="outline">{profile.role||"usuario"}</Badge></div>)}</div>:<p className="text-xs text-slate-500">Todavía no hay perfiles adicionales registrados.</p>}</div>
+              </CardContent></Card>
             </>}
 
             {active === "security" && <>
