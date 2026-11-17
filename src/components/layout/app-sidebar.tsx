@@ -11,9 +11,11 @@ import {
   SidebarGroup, SidebarGroupLabel, useSidebar
 } from "@/components/ui/sidebar"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/firebase"
+import { signOut } from "firebase/auth"
 
 const operations = [
   { title: "Inicio", url: "/", icon: LayoutDashboard },
@@ -31,6 +33,9 @@ const management = [
 
 export function AppSidebar() {
   const pathname = usePathname()
+  const auth = useAuth()
+  const router = useRouter()
+  const handleSignOut = async () => { await signOut(auth); router.replace("/login"); }
   const { isMobile, setOpenMobile, state } = useSidebar()
   const handleLinkClick = () => { if (isMobile) setOpenMobile(false) }
 
@@ -87,7 +92,7 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-slate-100 p-3">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton className="h-10 rounded-lg px-3 text-slate-500 hover:bg-slate-100 hover:text-slate-900">
+            <SidebarMenuButton onClick={handleSignOut} className="h-10 rounded-lg px-3 text-slate-500 hover:bg-slate-100 hover:text-slate-900">
               <LogOut className="h-[18px] w-[18px]" />
               <span className="text-[13px] font-medium">Cerrar sesión</span>
             </SidebarMenuButton>
