@@ -380,7 +380,7 @@ function ShowroomContent() {
             <div className="flex flex-col h-full">
               <div className="bg-secondary px-5 py-4 text-white flex justify-between items-center shrink-0">
                 <div className="min-w-0">
-                  <Badge className="bg-primary text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-md">{selectedVehicle.estado || "Stock"}</Badge>
+                  <Badge className="bg-primary text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-md">{isCustomerVehicle(selectedVehicle) ? "Cliente" : (selectedVehicle.estado || "Stock")}</Badge>
                   <h2 className="text-lg md:text-xl font-black uppercase italic tracking-tight mt-1 truncate">{selectedVehicle.modelo}</h2>
                   <p className="text-white/60 font-mono text-[10px] font-bold">VIN: {selectedVehicle.vin || "No indicado"} · VIN7: {selectedVehicle.vin7 || "—"}</p>
                 </div>
