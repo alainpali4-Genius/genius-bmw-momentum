@@ -22,6 +22,7 @@ export default function StockManagement() {
   const vehiclesQuery = useMemo(() => query(collection(db, "vehiculos"), orderBy("createdAt", "desc")), [db]);
   const { data: rawVehicles, loading } = useCollection(vehiclesQuery);
   const [searchTerm, setSearchTerm] = useState("");
+  const [cleaningDuplicates, setCleaningDuplicates] = useState(false);
   const requestedFilter = searchParams.get('filter') as FilterType | null;
   const validFilters: FilterType[] = ['all','terraza','entreplanta','entrega','exposicion','demo','destino-stockexpo','destino-demo','destino-renting','destino-clientes','entregados','cedidos','stocklocator','todos'];
   const [activeFilter, setActiveFilter] = useState<FilterType>(requestedFilter && validFilters.includes(requestedFilter) ? requestedFilter : 'all');
@@ -30,6 +31,47 @@ export default function StockManagement() {
     setActiveFilter(next && validFilters.includes(next) ? next : 'all');
   }, [searchParams]);
   const allVehicles = (rawVehicles || []) as any[];
+  const normalizeVinKey = (vehicle: any) => {
+    const full = String(vehicle?.vin || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
+    const short = String(vehicle?.vin7 || "").replace(/[^A-Z0-9]/gi, "").toUpperCase();
+    return short.length === 7 ? short : full.length >= 7 ? full.slice(-7) : "";
+  };
+  const duplicateGroups = useMemo(() => {
+    const groups = new Map<string, any[]>();
+    allVehicles.forEach(vehicle => {
+      const key = normalizeVinKey(vehicle);
+      if (!key) return;
+      groups.set(key, [...(groups.get(key) || []), vehicle]);
+    });
+    return [...groups.entries()].filter(([, group]) => group.length > 1);
+  }, [allVehicles]);
+  const completenessScore = (vehicle: any) => ["vin","vin7","modelo","marca","motor","colorExterior","colorCodigo","matricula","estado","ubicacion","tipoLogistico","clienteLogistica","destinoLogistico","entidadRenting","responsable","fechaEntrada","fechaRecepcionCorreo","observaciones"].reduce((score, field) => score + (String(vehicle?.[field] ?? "").trim() ? 1 : 0), 0) + (vehicle?.stockLocator ? 2 : 0);
+  const cleanDuplicateVehicles = async () => {
+    if (cleaningDuplicates || !duplicateGroups.length) return;
+    setCleaningDuplicates(true);
+    let removed = 0;
+    try {
+      for (const [, group] of duplicateGroups) {
+        const ordered = [...group].sort((a, b) => completenessScore(b) - completenessScore(a) || String(a.createdAt || "").localeCompare(String(b.createdAt || "")));
+        const keeper = ordered[0];
+        const merged: Record<string, any> = {};
+        ordered.slice(1).forEach(duplicate => Object.entries(duplicate).forEach(([key, value]) => {
+          if (["id","createdAt","updatedAt"].includes(key)) return;
+          const existing = keeper[key] ?? merged[key];
+          if ((existing === undefined || existing === null || existing === "") && value !== undefined && value !== null && value !== "") merged[key] = value;
+        }));
+        const batch = writeBatch(db);
+        if (Object.keys(merged).length) batch.update(doc(db, "vehiculos", keeper.id), { ...merged, updatedAt: new Date().toISOString(), duplicadosConsolidados: ordered.slice(1).map(v => v.id) });
+        ordered.slice(1).forEach(duplicate => batch.delete(doc(db, "vehiculos", duplicate.id)));
+        await batch.commit();
+        removed += group.length - 1;
+      }
+      window.location.reload();
+    } catch (error) {
+      console.error("Error al depurar vehículos duplicados", error);
+      alert(`Limpieza parcial: se han eliminado ${removed} duplicados. Revisa el stock antes de volver a ejecutar.`);
+    } finally { setCleaningDuplicates(false); }
+  };
   const normalizeStatus = (value: unknown) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
   const isCededVehicle = (vehicle: any) => [vehicle.estado, vehicle.ubicacion, vehicle.categoria, vehicle.categoriaStock, vehicle.categoriaComercial, vehicle.cedidoTipo, vehicle.tipoLogistico, vehicle.destinoLogistico].some(value => normalizeStatus(value).includes("cedido")) || vehicle.stockLocator === true && normalizeStatus(vehicle.cedidoTipo) === "stock locator";
   // Unifica la detección de demos: puede identificarse por tipo logístico o por ubicación.
@@ -155,7 +197,8 @@ const isCustomerVehicle = (vehicle: any) => {
         </div>
 
         <section className="space-y-3">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">Stock del concesionario</h2>
+          {duplicateGroups.length > 0 && <Card className="border-amber-200 bg-amber-50/70 shadow-sm"><CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"><div><p className="text-sm font-semibold text-amber-950">Se han detectado {duplicateGroups.length} bastidores repetidos</p><p className="mt-1 text-xs text-amber-800">Se conservará una ficha por VIN7, priorizando la más completa y completando sus campos vacíos antes de eliminar las demás.</p></div><Button onClick={cleanDuplicateVehicles} disabled={cleaningDuplicates} className="shrink-0 bg-amber-700 text-white hover:bg-amber-800">{cleaningDuplicates ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Depurando…</> : `Eliminar ${duplicateGroups.reduce((sum, [, group]) => sum + group.length - 1, 0)} duplicados`}</Button></CardContent></Card>}
+        <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">Stock del concesionario</h2>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             {filters.map(f => <button key={f.key} onClick={() => setActiveFilter(activeFilter === f.key ? 'all' : f.key)} className="rounded-xl border border-slate-200/80 bg-white p-4 text-left shadow-sm hover:border-blue-300">
               <div className="flex items-center justify-between"><span className="text-xs font-medium text-slate-500">{f.label}</span><f.icon className="h-4 w-4 text-slate-400"/></div>
