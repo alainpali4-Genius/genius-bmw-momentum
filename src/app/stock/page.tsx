@@ -33,6 +33,11 @@ export default function StockManagement() {
   // Unifica la detección de demos: puede identificarse por tipo logístico o por ubicación.
   const isDemoVehicle = (vehicle: any) => String(vehicle.tipoLogistico || "").toLowerCase().includes("demo") || String(vehicle.ubicacion || "").toLowerCase() === "demo en uso" || String(vehicle.estado || "").toLowerCase().includes("demo");
   // Stock Locator solo existe cuando se ha marcado expresamente como tal; "cedido" por sí solo no basta.
+  const isCustomerVehicle = (vehicle: any) => {
+    const values = [vehicle.tipoLogistico, vehicle.categoriaComercial, vehicle.clienteLogistica, vehicle.destinoLogistico, vehicle.entidadRenting].map(v => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase());
+    if (values.some(v => /stock expo|stock exposicion|^demo$|^demo en uso$/.test(v))) return false;
+    return String(vehicle.estado || "").toLowerCase() === "cliente" || values.some(v => /cliente|renting|camp.?\s*bank|bank-al|bbva|santander|ayvens|arval|alphabet|leaseplan|athlon/.test(v));
+  };
   const isStockLocatorVehicle = (vehicle: any) => vehicle.stockLocator === true || String(vehicle.tipoLogistico || "").trim().toLowerCase() === "stock locator" || String(vehicle.categoria || "").trim().toLowerCase() === "stock locator" || String(vehicle.categoriaStock || "").trim().toLowerCase() === "stock locator";
   const vehicles = allVehicles.filter(vehicle => {
     const state = String(vehicle.estado || "").toLowerCase();
@@ -151,9 +156,9 @@ export default function StockManagement() {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left">
-              <thead className="bg-slate-50/80"><tr className="text-[10px] font-semibold uppercase tracking-wider text-slate-400"><th className="px-5 py-3">Vehículo</th><th className="px-4 py-3">Motor</th><th className="px-4 py-3">Color</th><th className="px-4 py-3">Tipo logístico</th><th className="px-4 py-3">Ubicación</th><th className="px-4 py-3 text-right">Días</th><th className="px-5 py-3"></th></tr></thead>
+              <thead className="bg-slate-50/80"><tr className="text-[10px] font-semibold uppercase tracking-wider text-slate-400"><th className="px-5 py-3">Vehículo</th><th className="px-4 py-3">Motor</th><th className="px-4 py-3">Color</th><th className="px-4 py-3">Tipo logístico</th><th className="px-4 py-3">Ubicación física</th><th className="px-4 py-3">Cliente / propietario</th><th className="px-4 py-3 text-right">Días</th><th className="px-5 py-3"></th></tr></thead>
               <tbody className="divide-y divide-slate-100">
-                {loading ? <tr><td colSpan={7} className="px-5 py-14 text-center text-sm text-slate-400"><Loader2 className="mr-2 inline h-4 w-4 animate-spin"/> Cargando vehículos…</td></tr> :
+                {loading ? <tr><td colSpan={8} className="px-5 py-14 text-center text-sm text-slate-400"><Loader2 className="mr-2 inline h-4 w-4 animate-spin"/> Cargando vehículos…</td></tr> :
                 filtered.length===0 ? <tr><td colSpan={7} className="px-5 py-14 text-center text-sm text-slate-400">No hay vehículos que coincidan con la búsqueda.</td></tr> :
                 filtered.map(car=>{
                   const color=getVehicleColor(car);
@@ -164,7 +169,8 @@ export default function StockManagement() {
                     <td className="px-4 py-4 text-sm text-slate-600">{(car.motor && car.motor.trim() !== "—" ? car.motor : suggestedMotor(car.modelo||""))||'—'}</td>
                     <td className="px-4 py-4"><div className="flex items-center gap-2 text-sm text-slate-600"><span className="h-3 w-3 shrink-0 rounded-full border border-slate-300 shadow-sm" style={{backgroundColor:color?.hex||'#e5e7eb'}}/><span>{color ? <><span className="font-medium">{color.name}</span>{!color.code.startsWith("GEN-") && <span className="ml-1.5 text-[10px] text-slate-400">({color.code})</span>}</> : car.colorExterior||'—'}</span></div></td>
                     <td className="px-4 py-4"><Badge variant="outline" className="rounded-full border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-medium text-slate-600">{car.tipoLogistico||'Stock Expo'}</Badge>{car.entidadRenting&&<div className="mt-1 flex items-center gap-1 text-[10px] text-slate-400">{car.tipoLogistico==='Entrega Cliente'?<User className="h-3 w-3"/>:<Building2 className="h-3 w-3"/>}{car.entidadRenting}</div>}</td>
-                    <td className="px-4 py-4"><Badge className={`rounded-full border-0 px-2.5 py-1 text-[10px] font-medium ${car.ubicacion?.startsWith('P')?'bg-blue-50 text-[#00549a]':'bg-slate-100 text-slate-600'}`}>{car.ubicacion?.startsWith('P')?`Exposición · ${car.ubicacion}`:(car.ubicacion||'Sin ubicación')}</Badge>{(String(car.tipoLogistico||'').toLowerCase().includes('demo')||car.ubicacion==='Demo en uso'||String(car.estado||'').toLowerCase().includes('demo'))&&<div className="mt-1 space-y-0.5 text-[10px] text-slate-500"><div>Ubicación actual: {car.demoUbicacionActual||'Sin indicar'}</div><div>Lo conduce: {car.demoAsignadoA||'Sin asignar'}</div></div>}</td>
+                    <td className="px-4 py-4">{isCustomerVehicle(car) ? <span className="text-xs text-slate-400">No aplica · Vehículo de cliente</span> : <Badge className={`rounded-full border-0 px-2.5 py-1 text-[10px] font-medium ${car.ubicacion?.startsWith('P')?'bg-blue-50 text-[#00549a]':'bg-slate-100 text-slate-600'}`}>{car.ubicacion?.startsWith('P')?`Exposición · ${car.ubicacion}`:(car.ubicacion||'Sin ubicación')}</Badge>}{(String(car.tipoLogistico||'').toLowerCase().includes('demo')||car.ubicacion==='Demo en uso'||String(car.estado||'').toLowerCase().includes('demo'))&&<div className="mt-1 space-y-0.5 text-[10px] text-slate-500"><div>Ubicación actual: {car.demoUbicacionActual||'Sin indicar'}</div><div>Lo conduce: {car.demoAsignadoA||'Sin asignar'}</div></div>}</td>
+                    <td className="px-4 py-4 text-xs text-slate-600">{isCustomerVehicle(car) ? <><div className="font-semibold text-slate-800">{car.entidadRenting || car.clienteLogistica || car.destinoLogistico || 'Cliente sin identificar'}</div>{car.propietario && <div className="mt-1 text-[10px] text-slate-400">Propietario: {car.propietario}</div>}</> : '—'}</td>
                     <td className="px-4 py-4 text-right text-sm tabular-nums text-slate-600">{days===null?'—':days}</td>
                     <td className="px-5 py-4 text-right"><ArrowUpRight className="ml-auto h-4 w-4 text-slate-400"/></td>
                   </tr>
