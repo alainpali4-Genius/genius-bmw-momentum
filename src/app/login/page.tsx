@@ -41,12 +41,11 @@ export default function LoginPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
-    if (email.trim().toLowerCase() !== "a.henares@momentummotor.es") { setError("Esta cuenta todavía no tiene autorización para acceder."); return; }
     setBusy(true);
     try {
       const normalizedEmail = email.trim().toLowerCase();
-      // La cuenta administradora debe crearse previamente en Firebase Authentication.
-      // No se intenta crearla automáticamente desde el formulario de acceso.
+      // Las cuentas se autentican en Firebase y su acceso operativo se valida
+      // contra el perfil activo del concesionario en AppShell.
       await signInWithEmailAndPassword(auth, normalizedEmail, password);
       if (rememberEmail) localStorage.setItem("genius-login-email", normalizedEmail);
       else localStorage.removeItem("genius-login-email");
@@ -71,7 +70,9 @@ export default function LoginPage() {
                       ? "La aplicación web no está correctamente autorizada en el proyecto Firebase. Revisa la configuración del proyecto y sus dominios."
                       : code === "auth/invalid-email"
                         ? "El formato del correo no es válido."
-                        : `Error de autenticación (${code || "sin código"}). Revisa Firebase Authentication y los dominios autorizados.`
+                        : code === "auth/user-disabled"
+                          ? "Esta cuenta está deshabilitada. Contacta con el administrador del concesionario."
+                          : `Error de autenticación (${code || "sin código"}). Revisa Firebase Authentication y los dominios autorizados.`
       );
     } finally { setBusy(false); }
   };
