@@ -188,7 +188,7 @@ function ShowroomContent() {
       handleDraftUpdate(vehicleId, { estado: "Exposicion", ubicacion: targetPlace });
       return;
     }
-    handleDraftUpdate(vehicleId, status === "Cedido" ? { estado: "Cedido", ubicacion: "No disponible", cedidoTipo: vehicle.cedidoTipo || (vehicle.stockLocator ? "Stock Locator" : "Cedido"), stockLocator: vehicle.stockLocator === true } : { estado: status, ubicacion: "No disponible" });
+    handleDraftUpdate(vehicleId, status === "Cedido" ? { estado: "Cedido", ubicacion: "No disponible", cedidoTipo: vehicle.cedidoTipo || (vehicle.stockLocator ? "Stock Locator" : "Cedido"), stockLocator: vehicle.stockLocator === true } : { estado: status, ubicacion: "No disponible", cedidoTipo: "", stockLocator: false, ...(normalizeVehicleCategory(vehicle.categoriaComercial).includes("cedido") ? { categoriaComercial: "" } : {}) });
   };
 
   const confirmStockDestination = async () => {
