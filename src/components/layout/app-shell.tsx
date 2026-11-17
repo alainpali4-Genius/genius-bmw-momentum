@@ -63,7 +63,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return;
     if (!user && !isLogin && !isRegister) router.replace("/login");
-    else if (user && !isAuthorized) {
+    else if (user && !isAuthorized && !isRegister) {
       signOut(auth).finally(() => router.replace("/login"));
     } else if (user && isLogin && isAuthorized) router.replace("/");
   }, [user, loading, isLogin, isRegister, isAuthorized, router, auth]);
