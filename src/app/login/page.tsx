@@ -41,6 +41,7 @@ export default function LoginPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
+    if (email.trim().toLowerCase() !== "a.henares@momentummotor.es") { setError("Esta cuenta todavía no tiene autorización para acceder."); return; }
     setBusy(true);
     try {
       await signInWithEmailAndPassword(auth, email.trim(), password);
