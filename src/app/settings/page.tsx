@@ -47,10 +47,16 @@ export default function SettingsPage() {
   const movementsQuery = useMemo(() => collection(db, "movimientos"), [db]);
   const deliveriesQuery = useMemo(() => collection(db, "entregas"), [db]);
   const incidentsQuery = useMemo(() => collection(db, "incidencias"), [db]);
-  const { data: vehicles = [], loading: vehiclesLoading } = useCollection(vehiclesQuery);
-  const { data: movements = [], loading: movementsLoading } = useCollection(movementsQuery);
-  const { data: deliveries = [], loading: deliveriesLoading } = useCollection(deliveriesQuery);
-  const { data: incidents = [], loading: incidentsLoading } = useCollection(incidentsQuery);
+  const { data: vehiclesData, loading: vehiclesLoading } = useCollection(vehiclesQuery);
+  const { data: movementsData, loading: movementsLoading } = useCollection(movementsQuery);
+  const { data: deliveriesData, loading: deliveriesLoading } = useCollection(deliveriesQuery);
+  const { data: incidentsData, loading: incidentsLoading } = useCollection(incidentsQuery);
+  // useCollection devuelve null mientras llega la primera respuesta de Firestore.
+  // Normalizamos a arrays para evitar excepciones al calcular contadores o exportar.
+  const vehicles = vehiclesData ?? [];
+  const movements = movementsData ?? [];
+  const deliveries = deliveriesData ?? [];
+  const incidents = incidentsData ?? [];
 
   const loading = vehiclesLoading || movementsLoading || deliveriesLoading || incidentsLoading;
   const counts = [
