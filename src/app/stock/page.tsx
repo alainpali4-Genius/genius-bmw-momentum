@@ -30,8 +30,8 @@ export default function StockManagement() {
     setActiveFilter(next && validFilters.includes(next) ? next : 'all');
   }, [searchParams]);
   const allVehicles = (rawVehicles || []) as any[];
-  const normalizeStatus = (value: unknown) => String(value || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim().toLowerCase();
-  const isCededVehicle = (vehicle: any) => normalizeStatus(vehicle.estado) === "cedido" || normalizeStatus(vehicle.ubicacion) === "cedido";
+  const normalizeStatus = (value: unknown) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+  const isCededVehicle = (vehicle: any) => [vehicle.estado, vehicle.ubicacion, vehicle.categoria, vehicle.categoriaStock, vehicle.categoriaComercial, vehicle.cedidoTipo].some(value => normalizeStatus(value).includes("cedido")) || vehicle.stockLocator === true && normalizeStatus(vehicle.cedidoTipo) === "stock locator";
   // Unifica la detección de demos: puede identificarse por tipo logístico o por ubicación.
   const isDemoVehicle = (vehicle: any) => String(vehicle.tipoLogistico || "").toLowerCase().includes("demo") || String(vehicle.ubicacion || "").toLowerCase() === "demo en uso" || String(vehicle.estado || "").toLowerCase().includes("demo");
   // Stock Locator solo existe cuando se ha marcado expresamente como tal; "cedido" por sí solo no basta.
@@ -40,12 +40,12 @@ export default function StockManagement() {
     if (values.some(v => /stock expo|stock exposicion|^demo$|^demo en uso$/.test(v))) return false;
     return String(vehicle.estado || "").toLowerCase() === "cliente" || values.some(v => /cliente|renting|camp.?\s*bank|bank-al|bbva|santander|ayvens|arval|alphabet|leaseplan|athlon/.test(v));
   };
-  const isStockLocatorVehicle = (vehicle: any) => vehicle.stockLocator === true || String(vehicle.tipoLogistico || "").trim().toLowerCase() === "stock locator" || String(vehicle.categoria || "").trim().toLowerCase() === "stock locator" || String(vehicle.categoriaStock || "").trim().toLowerCase() === "stock locator";
+  const isStockLocatorVehicle = (vehicle: any) => vehicle.stockLocator === true || normalizeStatus(vehicle.cedidoTipo) === "stock locator" || String(vehicle.tipoLogistico || "").trim().toLowerCase() === "stock locator" || String(vehicle.categoria || "").trim().toLowerCase() === "stock locator" || String(vehicle.categoriaStock || "").trim().toLowerCase() === "stock locator";
   const vehicles = allVehicles.filter(vehicle => {
     const state = String(vehicle.estado || "").toLowerCase();
     const location = String(vehicle.ubicacion || "").toLowerCase();
     const explicitLocator = vehicle.stockLocator === true || String(vehicle.tipoLogistico || "").trim().toLowerCase() === "stock locator" || String(vehicle.categoria || "").trim().toLowerCase() === "stock locator" || String(vehicle.categoriaStock || "").trim().toLowerCase() === "stock locator";
-    return state !== "entregado" && location !== "entregado" && state !== "cedido" && location !== "cedido" && !explicitLocator;
+    return state !== "entregado" && location !== "entregado" && !isCededVehicle(vehicle) && !explicitLocator;
   });
 
   // Completa de forma conservadora los datos que faltan en unidades ya importadas.
