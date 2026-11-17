@@ -9,7 +9,8 @@ import { useFirestore, useCollection } from "@/firebase";
 import { collection, query } from "firebase/firestore";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getVehicleColor, suggestedMotor } from "./showroom/page";
+import { getVehicleColor } from "./showroom/page";
+import { suggestedMotor } from "@/lib/vehicle-constants";
 import { ScannerPanel } from "@/components/scanner-panel";
 
 const norm = (value: unknown) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
