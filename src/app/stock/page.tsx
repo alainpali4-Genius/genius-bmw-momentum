@@ -33,7 +33,8 @@ export default function StockManagement() {
   const vehicles = allVehicles.filter(vehicle => {
     const state = String(vehicle.estado || "").toLowerCase();
     const location = String(vehicle.ubicacion || "").toLowerCase();
-    return state !== "entregado" && location !== "entregado" && state !== "cedido" && location !== "stock locator";
+    const explicitLocator = vehicle.stockLocator === true || String(vehicle.tipoLogistico || "").trim().toLowerCase() === "stock locator" || String(vehicle.categoria || "").trim().toLowerCase() === "stock locator" || String(vehicle.categoriaStock || "").trim().toLowerCase() === "stock locator";
+    return state !== "entregado" && location !== "entregado" && !explicitLocator;
   });
 
   // Completa de forma conservadora los datos que faltan en unidades ya importadas.
@@ -90,7 +91,7 @@ export default function StockManagement() {
 
   const filtered = useMemo(() => {
     let result = activeFilter === 'todos' ? allVehicles : activeFilter === 'entregados' ? allVehicles.filter(v => String(v.estado || '').toLowerCase() === 'entregado' || String(v.ubicacion || '').toLowerCase() === 'entregado')
-      : activeFilter === 'stocklocator' ? allVehicles.filter(v => String(v.estado || '').toLowerCase() === 'cedido' || String(v.ubicacion || '').toLowerCase() === 'stock locator')
+      : activeFilter === 'stocklocator' ? allVehicles.filter(v => v.stockLocator === true || String(v.tipoLogistico || '').trim().toLowerCase() === 'stock locator' || String(v.categoria || '').trim().toLowerCase() === 'stock locator' || String(v.categoriaStock || '').trim().toLowerCase() === 'stock locator')
       : vehicles;
     if (activeFilter === 'terraza') result = result.filter(v => v.ubicacion?.toLowerCase() === 'terraza');
     else if (activeFilter === 'entreplanta') result = result.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta');
