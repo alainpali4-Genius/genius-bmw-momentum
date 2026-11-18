@@ -60,6 +60,7 @@ export default function DeliveryManagement() {
   const [deliveryMatches, setDeliveryMatches] = useState<any[]>([]);
   const [deliveryLookupBusy, setDeliveryLookupBusy] = useState(false);
   const [deliveryConfirmBusy, setDeliveryConfirmBusy] = useState(false);
+  const [deliveryDateTime, setDeliveryDateTime] = useState(format(new Date(), "yyyy-MM-dd'T'HH:mm"));
   const [selectedDeliveryVehicle, setSelectedDeliveryVehicle] = useState<any | null>(null);
 
   const { data: vehiculosRaw } = useCollection(query(collection(db, "vehiculos"), orderBy("modelo", "asc")));
@@ -176,6 +177,11 @@ export default function DeliveryManagement() {
         toast({ variant: "destructive", title: "Indica el concesionario", description: "Escribe el concesionario que recibe el vehículo." });
         return;
       }
+      const deliveredAt = new Date(deliveryDateTime);
+      if (Number.isNaN(deliveredAt.getTime())) {
+        toast({ variant: "destructive", title: "Fecha de entrega no válida", description: "Revisa la fecha y hora de entrega." });
+        return;
+      }
       const now = new Date();
       const vinFull = normalizeDeliveryVin(vehicle.vin);
       const vin7 = normalizeDeliveryVin(vehicle.vin7) || vinFull.slice(-7);
@@ -187,7 +193,7 @@ export default function DeliveryManagement() {
       batch.update(doc(db, "vehiculos", vehicle.id), {
         estado: isLocator ? "Cedido" : "Entregado",
         ubicacion: isLocator ? "Stock Locator" : "Entregado",
-        ...(isLocator ? { stockLocator: true, stockLocatorConcesionario: recipient, fechaCesionStockLocator: now.toISOString() } : { propietario: recipient, clienteFinal: recipient, fechaEntrega: now.toISOString() }),
+        ...(isLocator ? { stockLocator: true, stockLocatorConcesionario: recipient, fechaCesionStockLocator: now.toISOString() } : { propietario: recipient, clienteFinal: recipient, fechaEntrega: deliveredAt.toISOString() }),
         updatedAt: now.toISOString(),
         entregaRegistradaPor: "GENIUS APP",
         entregaOrigen: isLocator ? "Cesión a concesionario mediante Stock Locator" : "Confirmación manual por bastidor"
@@ -197,23 +203,27 @@ export default function DeliveryManagement() {
         vehiculoId: vehicle.id,
         vehiculoInfo,
         tipoAccion: isLocator ? "Stock Locator" : "Entrega",
-        fecha: now,
+        fecha: deliveredAt,
         usuario: "GENIUS APP",
         detalles: `${isLocator ? "Vehículo cedido a otro concesionario mediante Stock Locator" : "Entrega confirmada al propietario"}: ${recipient}. VIN7: ${vin7 || "No disponible"}.`
       });
       // Si existía una entrega programada para este vehículo, también se cierra.
       entregas.filter(item => item.vehiculoId === vehicle.id && item.estado !== "Entregado").forEach(item => {
-        batch.update(doc(db, "entregas", item.id), { estado: "Entregado", progress: 100, fechaEntrega: now.toISOString() });
+        batch.update(doc(db, "entregas", item.id), { estado: "Entregado", progress: 100, fechaEntrega: deliveredAt.toISOString() });
       });
       await batch.commit();
-      const deliveredVehicle = { ...vehicle, estado: isLocator ? "Cedido" : "Entregado", ubicacion: isLocator ? "Stock Locator" : "Entregado", ...(isLocator ? { stockLocator: true, stockLocatorConcesionario: recipient, fechaCesionStockLocator: now.toISOString() } : { propietario: recipient, clienteFinal: recipient, fechaEntrega: now.toISOString() }) };
+      const deliveredVehicle = { ...vehicle, estado: isLocator ? "Cedido" : "Entregado", ubicacion: isLocator ? "Stock Locator" : "Entregado", ...(isLocator ? { stockLocator: true, stockLocatorConcesionario: recipient, fechaCesionStockLocator: deliveredAt.toISOString() } : { propietario: recipient, clienteFinal: recipient, fechaEntrega: deliveredAt.toISOString() }) };
       setSelectedDeliveryVehicle(deliveredVehicle);
       setDeliveryMatches([deliveredVehicle]);
       setDirectOwner("");
       setLocatorDealer("");
       toast({ title: isLocator ? "Stock Locator registrado" : "Entrega confirmada", description: `${vehicle.modelo || "Vehículo"} se ha retirado del stock activo y figura como ${dispositionLabel}. Destino: ${recipient}.` });
-    } catch (error) {
-      toast({ variant: "destructive", title: "No se pudo confirmar la entrega", description: "No se han guardado los cambios. Comprueba la conexión e inténtalo de nuevo." });
+    } catch (error: any) {
+      console.error("Error al confirmar entrega manual:", error);
+      const detail = error?.code === "permission-denied"
+        ? "Firebase ha rechazado alguna escritura por permisos. Revisa las reglas de Firestore."
+        : error?.message || "Error desconocido al guardar en Firestore.";
+      toast({ variant: "destructive", title: "No se pudo confirmar la entrega", description: detail });
     } finally {
       setDeliveryConfirmBusy(false);
     }
@@ -464,6 +474,11 @@ export default function DeliveryManagement() {
                         <SelectItem value="stockLocator">Stock Locator · otro concesionario</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold uppercase text-slate-500">Fecha y hora real de entrega</Label>
+                    <Input type="datetime-local" value={deliveryDateTime} onChange={e => setDeliveryDateTime(e.target.value)} className="h-11 rounded-xl bg-white" />
+                    <p className="text-xs text-slate-500">Puedes introducir una fecha anterior para registrar una entrega histórica del portal BMW.</p>
                   </div>
                   {directDisposition === "cliente" ? (
                     <div className="space-y-2">
