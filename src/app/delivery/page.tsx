@@ -232,7 +232,7 @@ export default function DeliveryManagement() {
           fecha: format(deliveredAt, "yyyy-MM-dd"),
           hora: format(deliveredAt, "HH:mm"),
           matricula: vehicle.matricula || "",
-          vehiculoInfo,
+          vehiculoInfo: vehicleInfo,
           estado: "Entregado",
           progress: 100,
           fechaEntrega: deliveredAt.toISOString(),
