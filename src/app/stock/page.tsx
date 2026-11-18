@@ -95,6 +95,8 @@ const isCustomerVehicle = (vehicle: any) => {
   return normalize(vehicle?.estado) === "cliente";
 };
   const isStockLocatorVehicle = (vehicle: any) => vehicle.stockLocator === true || normalizeStatus(vehicle.cedidoTipo).includes("stock locator") || [vehicle.tipoLogistico, vehicle.categoria, vehicle.categoriaStock, vehicle.categoriaComercial].some(value => normalizeStatus(value).includes("stock locator"));
+  // La zona física de exposición es exclusivamente para unidades de stock propio, nunca vehículos asignados a clientes.
+  const isExhibitionVehicle = (vehicle: any) => String(vehicle.ubicacion || "").trim().toUpperCase().startsWith("P") && !isCustomerVehicle(vehicle);
   const vehicles = allVehicles.filter(vehicle => {
     const state = String(vehicle.estado || "").toLowerCase();
     const location = String(vehicle.ubicacion || "").toLowerCase();
@@ -149,7 +151,7 @@ const isCustomerVehicle = (vehicle: any) => {
 
   const stats = useMemo(() => ({
     total: vehicles.length,
-    exposicion: vehicles.filter(v => v.ubicacion?.startsWith('P')).length,
+    exposicion: vehicles.filter(isExhibitionVehicle).length,
     terraza: vehicles.filter(v => v.ubicacion?.toLowerCase() === 'terraza').length,
     entreplanta: vehicles.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta').length,
     demo: vehicles.filter(isDemoVehicle).length,
@@ -164,7 +166,7 @@ const isCustomerVehicle = (vehicle: any) => {
     else if (activeFilter === 'entreplanta') result = result.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta');
     else if (activeFilter === 'demo' || activeFilter === 'destino-demo') result = result.filter(isDemoVehicle);
     else if (activeFilter === 'entrega') result = result.filter(v => v.ubicacion?.toLowerCase().includes('entrega'));
-    else if (activeFilter === 'exposicion') result = result.filter(v => v.ubicacion?.startsWith('P'));
+    else if (activeFilter === 'exposicion') result = result.filter(isExhibitionVehicle);
     else if (activeFilter === 'destino-stockexpo') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('stock expo') || String(v.tipoLogistico || '').toLowerCase().includes('stock exposicion'));
     else if (activeFilter === 'destino-renting') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('renting') || !!v.entidadRenting);
     else if (activeFilter === 'destino-clientes') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('cliente') || (!!v.clienteLogistica && !v.entidadRenting));
