@@ -53,11 +53,11 @@ import { cn } from "@/lib/utils"
 
 type HistoricalDeliveryRow = { vin: string; model: string; vehicleType: string; client: string; deliveredAt: Date; deliveredBy: string };
 type HistoricalDeliveryResolution = { row: HistoricalDeliveryRow; vehicle?: any; issue?: string };
-const normalizeTableHeader = (value: string) => value.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+const normalizeTableHeader = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRow[]; errors: string[] } {
-  const lines = raw.split(/\\r?\\n/).filter(line => line.trim());
+  const lines = raw.split(/\r?\n/).filter(line => line.trim());
   if (lines.length < 2) return { rows: [], errors: [] };
-  const split = (line: string) => line.includes("\\t") ? line.split("\\t") : line.split(/\\s{2,}/);
+  const split = (line: string) => line.includes("\t") ? line.split("\t") : line.split(/\s{2,}/);
   const headers = split(lines[0]).map(normalizeTableHeader);
   const find = (...names: string[]) => headers.findIndex(header => names.some(name => header === name || header.includes(name)));
   const ix = {
@@ -76,7 +76,7 @@ function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRo
     const get = (key: keyof typeof ix) => ix[key] >= 0 ? String(cells[ix[key]] || "").trim() : "";
     const vin = get("vin").replace(/[^A-Z0-9]/gi, "").toUpperCase();
     const dateText = get("date").replace(/,/g, " ").replace(/\\s+/g, " ").trim();
-    const match = dateText.match(/^(\\d{1,2})[/-](\\d{1,2})[/-](\\d{4})(?:\\s+(\\d{1,2}):(\\d{2}))?/);
+    const match = dateText.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
     if (!vin && !get("client") && !dateText) return;
     if (vin.length !== 17 || /[IOQ]/.test(vin)) { errors.push(`Fila ${index + 2}: VIN no válido (${vin || "vacío"}).`); return; }
     if (!match) { errors.push(`Fila ${index + 2}: fecha no reconocida (${dateText || "vacía"}).`); return; }
@@ -558,7 +558,8 @@ function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRo
           </div>
         </DialogContent>
       </Dialog>
-      {/* Header */}\n      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+      {/* Header */}
+      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
         <CardContent className="space-y-4 p-5 md:p-6">
           <div className="flex items-start gap-3">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-primary"><ClipboardPaste className="h-5 w-5"/></div>
