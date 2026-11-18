@@ -144,6 +144,7 @@ export default function ImportLogisticsPage(){
       if(!match.vin || normalizeVin(match.vin).length===7)patch.vin=r.vin;
       if(isStockExpo || isDemo || clienteOriginal){
        patch.estado=inferredState;
+       if(isStockExpo || isDemo){patch.clienteLogistica="";patch.destinoLogistico="";patch.entidadRenting="";patch.propietario="";}
        if(isStockExpo)patch.ubicacion=stockLocation;
        else if(isDemo)patch.ubicacion=match.ubicacion || "No disponible";
        else if(!match.ubicacion)patch.ubicacion="No disponible";
