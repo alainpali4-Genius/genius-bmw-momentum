@@ -121,33 +121,46 @@ export default function ImportLogisticsPage(){
     const motor=suggestedMotor(r.modelo);
     const detectedColor=findBmwColorByName(r.color);
     const colorCode=detectedColor?.code || "";
-    const clienteOriginal=r.cliente||"";
-    const categoriaComercial=/^STOCK\s*EXPOSICION$/i.test(clienteOriginal.trim())?"Stock Expo":/^DEMO$/i.test(clienteOriginal.trim())?"Demo":/^ENTREGA\s+EXTERNA/i.test(clienteOriginal.trim())?"Entrega Cliente":clienteOriginal?"Asignación cliente/renting":"Sin clasificar";
-    const inferredState=categoriaComercial==="Stock Expo"?"Stock":categoriaComercial==="Demo"?"Demo":categoriaComercial==="Sin clasificar"?"Disponible":"Cliente";
-    const fechaEntrada=String(match?.fechaEntrada || now.slice(0,10));
-    const entidadRenting=/\b(ALPHABET|SANTANDER|BBVA|AYVENS|ARVAL|LEASEPLAN|ATHLON)\b/i.exec(clienteOriginal)?.[1]||"";
-    const fields:any={vin7:suffix7(r.vin),marca,modelo:r.modelo,...(motor?{motor}:{}),matricula:r.matricula||"",colorExterior:r.color||"",colorCorreo:r.color||"",colorCodigo:colorCode||null,colorBMW:colorCode||null,destinoLogistico:clienteOriginal,clienteLogistica:clienteOriginal,categoriaComercial,tipoLogistico:categoriaComercial,entidadRenting,transporte:r.transporte||"",fechaRecepcionCorreo:r.fecha||"",fechaEntrada,llegada:r.llegada||"",comision:r.comision||"",vendedorLogistica:r.vendedor||"",responsable:r.vendedor||"",origenImportacion:"Correo logística BMW",updatedAt:now};
-    Object.keys(fields).forEach(k=>{if(fields[k]==="")delete fields[k]});
-    if(match){
-     // Conserva estados y ubicaciones gestionados manualmente (demo, cliente,
-     // cedido, entregado, entreplanta, etc.). Solo completa un estado vacío.
-     const patch:any={...fields};
-     if(!match.vin || normalizeVin(match.vin).length===7)patch.vin=r.vin;
-     if(!match.estado)patch.estado=inferredState;
-     if(!match.ubicacion)patch.ubicacion=inferredState==="Cliente"?"No disponible":"Pendiente de ubicación";
-     batch.update(doc(db,"vehiculos",match.id),patch);updated++;
-    }else{
-     // ID determinista: repetir la misma importación no crea otro documento.
-     // Si primero llegó solo VIN7 y luego el VIN completo, el buscador por
-     // sufijo encuentra y completa el registro existente.
-     const stableKey=r.vin.length===17?r.vin:`VIN7_${suffix7(r.vin)}`;
-     const newRef=doc(db,"vehiculos",`IMPORT_${stableKey}`);
-     batch.set(newRef,{...fields,vin:r.vin,estado:inferredState,ubicacion:inferredState==="Cliente"?"No disponible":"Pendiente de ubicación",createdAt:now},{merge:true});
-     created++;
+    const clienteOriginal=String(r.cliente||"").trim();
+     const normalizedCliente=clienteOriginal.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim().toUpperCase();
+     const isStockExpo=/^STOCK\s+EXPOSICION$/.test(normalizedCliente);
+     const isDemo=/^DEMO$/.test(normalizedCliente);
+     const isExternalDelivery=/^ENTREGA\s+EXTERNA/.test(normalizedCliente);
+     const rentingMatch=/\b(ALPHABET|BBVA|SANTANDER|CAIXA|ARVAL|AYVENS|LEASEPLAN|ATHLON)\b/i.exec(clienteOriginal);
+     const logisticType=isStockExpo?"Stock exposición":isDemo?"Demo":isExternalDelivery?"Entrega Cliente":rentingMatch?"Cliente renting":clienteOriginal?"Cliente":"Sin clasificar";
+     const inferredState=isStockExpo?"Stock":isDemo?"Demo":clienteOriginal?"Cliente":"Disponible";
+     const fechaEntrada=String(match?.fechaEntrada || now.slice(0,10));
+     const fields:any={vin7:suffix7(r.vin),marca,modelo:r.modelo,...(motor?{motor}:{}),matricula:r.matricula||"",colorExterior:r.color||"",colorCorreo:r.color||"",colorCodigo:colorCode||null,colorBMW:colorCode||null,tipoLogistico:logisticType,categoriaComercial:logisticType,transporte:r.transporte||"",fechaRecepcionCorreo:r.fecha||"",fechaEntrada,llegada:r.llegada||"",comision:r.comision||"",vendedorLogistica:r.vendedor||"",responsable:r.vendedor||"",origenImportacion:"Correo logística BMW",updatedAt:now};
+     if(isStockExpo || isDemo){
+      fields.clienteLogistica=""; fields.destinoLogistico=""; fields.entidadRenting=""; fields.propietario="";
+     }else if(clienteOriginal){
+      fields.clienteLogistica=clienteOriginal; fields.destinoLogistico=clienteOriginal; fields.entidadRenting=rentingMatch?.[1] || "";
+     }
+     Object.keys(fields).forEach(k=>{if(fields[k]==="")delete fields[k]});
+     const currentLocation=String(match?.ubicacion||"");
+     const stockLocation=["Exposicion","Entreplanta","Terraza"].includes(currentLocation) || /^P\d+$/i.test(currentLocation) ? currentLocation : "Pendiente de ubicación";
+     if(match){
+      const patch:any={...fields};
+      if(!match.vin || normalizeVin(match.vin).length===7)patch.vin=r.vin;
+      if(isStockExpo || isDemo || clienteOriginal){
+       patch.estado=inferredState;
+       if(isStockExpo)patch.ubicacion=stockLocation;
+       else if(isDemo)patch.ubicacion=match.ubicacion || "No disponible";
+       else if(!match.ubicacion)patch.ubicacion="No disponible";
+      }else{
+       if(!match.estado)patch.estado=inferredState;
+       if(!match.ubicacion)patch.ubicacion=inferredState==="Cliente"?"No disponible":"Pendiente de ubicación";
+      }
+      batch.update(doc(db,"vehiculos",match.id),patch);updated++;
+     }else{
+      const stableKey=r.vin.length===17?r.vin:`VIN7_${suffix7(r.vin)}`;
+      const newRef=doc(db,"vehiculos",`IMPORT_${stableKey}`);
+      batch.set(newRef,{...fields,vin:r.vin,estado:inferredState,ubicacion:isStockExpo?"Pendiente de ubicación":isDemo?"No disponible":clienteOriginal?"No disponible":"Pendiente de ubicación",createdAt:now},{merge:true});
+      created++;
+     }
+     imported.push(r.vin);
     }
-    imported.push(r.vin);
-   }
-   const historyRef=doc(collection(db,"importacionesLogistica"));
+    const historyRef=doc(collection(db,"importacionesLogistica"));
    batch.set(historyRef,{fecha:now,origen:"Correo logística BMW",total:rows.length,creados:created,actualizados:updated,duplicadosEnCorreo:duplicateRows,bastidores:imported,estado:"Completada",conflictos:0});
    await batch.commit();
    toast({title:"Importación completada",description:`${created} vehículos nuevos y ${updated} actualizados. ${duplicateRows} filas repetidas omitidas.`});
