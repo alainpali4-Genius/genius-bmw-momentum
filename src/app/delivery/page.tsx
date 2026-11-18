@@ -207,10 +207,42 @@ export default function DeliveryManagement() {
         usuario: "GENIUS APP",
         detalles: `${isLocator ? "Vehículo cedido a otro concesionario mediante Stock Locator" : "Entrega confirmada al propietario"}: ${recipient}. VIN7: ${vin7 || "No disponible"}.`
       });
-      // Si existía una entrega programada para este vehículo, también se cierra.
-      entregas.filter(item => item.vehiculoId === vehicle.id && item.estado !== "Entregado").forEach(item => {
-        batch.update(doc(db, "entregas", item.id), { estado: "Entregado", progress: 100, fechaEntrega: deliveredAt.toISOString() });
-      });
+      // Vincula la entrega realizada con el módulo de entregas.
+      // Si ya había una programación para este vehículo, la completa; si no,
+      // crea un registro histórico para que aparezca en "Completadas".
+      const scheduledDeliveries = entregas.filter(item => item.vehiculoId === vehicle.id);
+      const pendingDeliveries = scheduledDeliveries.filter(item => item.estado !== "Entregado");
+      if (pendingDeliveries.length > 0) {
+        pendingDeliveries.forEach(item => {
+          batch.update(doc(db, "entregas", item.id), {
+            estado: "Entregado",
+            progress: 100,
+            fecha: format(deliveredAt, "yyyy-MM-dd"),
+            hora: format(deliveredAt, "HH:mm"),
+            fechaEntrega: deliveredAt.toISOString(),
+            cliente: recipient,
+            updatedAt: now.toISOString()
+          });
+        });
+      } else if (scheduledDeliveries.length === 0) {
+        const completedDeliveryRef = doc(collection(db, "entregas"));
+        batch.set(completedDeliveryRef, {
+          vehiculoId: vehicle.id,
+          cliente: recipient,
+          fecha: format(deliveredAt, "yyyy-MM-dd"),
+          hora: format(deliveredAt, "HH:mm"),
+          matricula: vehicle.matricula || "",
+          vehiculoInfo,
+          estado: "Entregado",
+          progress: 100,
+          fechaEntrega: deliveredAt.toISOString(),
+          createdAt: now.toISOString(),
+          updatedAt: now.toISOString(),
+          actaEnviada: false,
+          recogidaRenting: false,
+          origen: "Registro histórico manual"
+        });
+      }
       await batch.commit();
       const deliveredVehicle = { ...vehicle, estado: isLocator ? "Cedido" : "Entregado", ubicacion: isLocator ? "Stock Locator" : "Entregado", ...(isLocator ? { stockLocator: true, stockLocatorConcesionario: recipient, fechaCesionStockLocator: deliveredAt.toISOString() } : { propietario: recipient, clienteFinal: recipient, fechaEntrega: deliveredAt.toISOString() }) };
       setSelectedDeliveryVehicle(deliveredVehicle);
