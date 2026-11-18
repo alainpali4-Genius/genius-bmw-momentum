@@ -19,6 +19,10 @@ import {
   Mail,
   RefreshCw,
   ArrowDownCircle,
+  ClipboardPaste,
+  FileSpreadsheet,
+  ShieldCheck,
+  AlertTriangle,
   X
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -40,12 +44,50 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 
-export default function DeliveryManagement() {
+
+type HistoricalDeliveryRow = { vin: string; model: string; vehicleType: string; client: string; deliveredAt: Date; deliveredBy: string };
+type HistoricalDeliveryResolution = { row: HistoricalDeliveryRow; vehicle?: any; issue?: string };
+const normalizeTableHeader = (value: string) => value.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRow[]; errors: string[] } {
+  const lines = raw.split(/\\r?\\n/).filter(line => line.trim());
+  if (lines.length < 2) return { rows: [], errors: [] };
+  const split = (line: string) => line.includes("\\t") ? line.split("\\t") : line.split(/\\s{2,}/);
+  const headers = split(lines[0]).map(normalizeTableHeader);
+  const find = (...names: string[]) => headers.findIndex(header => names.some(name => header === name || header.includes(name)));
+  const ix = {
+    model: find("VEHICULO", "MODELO"),
+    vehicleType: find("TIPODEVEHICULO", "TIPOVEHICULO", "TIPO"),
+    vin: find("VIN", "BASTIDOR", "CHASIS"),
+    client: find("CLIENTE"),
+    date: find("FECHADEENTREGA", "FECHAENTREGA"),
+    deliveredBy: find("ENTREGADOPOR", "ASIGNADOA", "USUARIO", "RESPONSABLE")
+  };
+  if (ix.vin < 0 || ix.client < 0 || ix.date < 0) return { rows: [], errors: ["No se reconocen las columnas obligatorias VIN, Cliente y Fecha de entrega. Copia la tabla incluyendo sus encabezados."] };
+  const rows: HistoricalDeliveryRow[] = [];
+  const errors: string[] = [];
+  lines.slice(1).forEach((line, index) => {
+    const cells = split(line);
+    const get = (key: keyof typeof ix) => ix[key] >= 0 ? String(cells[ix[key]] || "").trim() : "";
+    const vin = get("vin").replace(/[^A-Z0-9]/gi, "").toUpperCase();
+    const dateText = get("date").replace(/,/g, " ").replace(/\\s+/g, " ").trim();
+    const match = dateText.match(/^(\\d{1,2})[/-](\\d{1,2})[/-](\\d{4})(?:\\s+(\\d{1,2}):(\\d{2}))?/);
+    if (!vin && !get("client") && !dateText) return;
+    if (vin.length !== 17 || /[IOQ]/.test(vin)) { errors.push(`Fila ${index + 2}: VIN no válido (${vin || "vacío"}).`); return; }
+    if (!match) { errors.push(`Fila ${index + 2}: fecha no reconocida (${dateText || "vacía"}).`); return; }
+    const deliveredAt = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]), Number(match[4] || 12), Number(match[5] || 0));
+    rows.push({ vin, model: get("model"), vehicleType: get("vehicleType"), client: get("client"), deliveredAt, deliveredBy: get("deliveredBy") });
+  });
+  const seen = new Set<string>();
+  const unique = rows.filter(row => { if (seen.has(row.vin)) { errors.push(`VIN repetido en la tabla: ${row.vin}.`); return false; } seen.add(row.vin); return true; });
+  return { rows: unique, errors };
+}
+\nexport default function DeliveryManagement() {
   const db = useFirestore();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("all");
@@ -61,7 +103,7 @@ export default function DeliveryManagement() {
   const [deliveryLookupBusy, setDeliveryLookupBusy] = useState(false);
   const [deliveryConfirmBusy, setDeliveryConfirmBusy] = useState(false);
   const [deliveryDateTime, setDeliveryDateTime] = useState(format(new Date(), "yyyy-MM-dd'T'HH:mm"));
-  const [selectedDeliveryVehicle, setSelectedDeliveryVehicle] = useState<any | null>(null);
+  const [selectedDeliveryVehicle, setSelectedDeliveryVehicle] = useState<any | null>(null);\n  const [historicalRaw, setHistoricalRaw] = useState("");\n  const [historicalPreview, setHistoricalPreview] = useState<HistoricalDeliveryResolution[] | null>(null);\n  const [historicalBusy, setHistoricalBusy] = useState(false);
 
   const { data: vehiculosRaw } = useCollection(query(collection(db, "vehiculos"), orderBy("modelo", "asc")));
   const entregasQuery = useMemo(() => query(collection(db, "entregas"), orderBy("fecha", "desc")), [db]);
@@ -115,6 +157,83 @@ export default function DeliveryManagement() {
   }, [entregas]);
 
   const normalizeDeliveryVin = (value: unknown) => String(value || "").replace(/\s+/g, "").toUpperCase();
+
+
+  const parsedHistorical = useMemo(() => parseHistoricalDeliveryTable(historicalRaw), [historicalRaw]);
+  const inspectHistoricalDeliveries = async () => {
+    if (!parsedHistorical.rows.length || parsedHistorical.errors.length) {
+      toast({ variant: "destructive", title: "Revisa la tabla", description: parsedHistorical.errors[0] || "No se han detectado filas válidas." });
+      return;
+    }
+    setHistoricalBusy(true);
+    try {
+      const snap = await getDocs(collection(db, "vehiculos"));
+      const stock = snap.docs.map(item => ({ id: item.id, ...item.data() } as any));
+      const resolutions = parsedHistorical.rows.map(row => {
+        const matches = stock.filter(vehicle => normalizeDeliveryVin(vehicle.vin) === row.vin || normalizeDeliveryVin(vehicle.vin7) === row.vin.slice(-7));
+        if (matches.length > 1) return { row, issue: "El VIN coincide con varios vehículos del stock." };
+        return { row, vehicle: matches[0] };
+      });
+      setHistoricalPreview(resolutions);
+      const matched = resolutions.filter(item => item.vehicle).length;
+      toast({ title: "Tabla comprobada", description: `${resolutions.length} entregas detectadas; ${matched} vinculadas a vehículos del stock y ${resolutions.length - matched} sin vehículo asociado.` });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "No se pudo comprobar el stock", description: error?.message || "Error de lectura." });
+    } finally { setHistoricalBusy(false); }
+  };
+  const importHistoricalDeliveries = async () => {
+    if (!historicalPreview?.length || historicalPreview.some(item => item.issue)) return;
+    if (historicalPreview.length > 140) {
+      toast({ variant: "destructive", title: "Importación demasiado grande", description: "Importa un máximo de 140 entregas por bloque." });
+      return;
+    }
+    setHistoricalBusy(true);
+    try {
+      const [vehicleSnap, deliverySnap] = await Promise.all([getDocs(collection(db, "vehiculos")), getDocs(collection(db, "entregas"))]);
+      const stock = vehicleSnap.docs.map(item => ({ id: item.id, ...item.data() } as any));
+      const previous = deliverySnap.docs.map(item => ({ id: item.id, ...item.data() } as any));
+      const batch = writeBatch(db);
+      let linked = 0, unlinked = 0, skipped = 0;
+      const now = new Date().toISOString();
+      for (const item of historicalPreview) {
+        const row = item.row;
+        const vehicleMatches = stock.filter(vehicle => normalizeDeliveryVin(vehicle.vin) === row.vin || normalizeDeliveryVin(vehicle.vin7) === row.vin.slice(-7));
+        if (vehicleMatches.length > 1) throw new Error(`El VIN ${row.vin} ahora coincide con varios vehículos. No se ha importado nada.`);
+        const vehicle = vehicleMatches[0];
+        const alreadyExists = previous.some(delivery => normalizeDeliveryVin(delivery.vin) === row.vin || (vehicle && delivery.vehiculoId === vehicle.id && String(delivery.estado || "").toLowerCase() === "entregado"));
+        if (alreadyExists) { skipped++; continue; }
+        const info = `${row.model || vehicle?.modelo || "Vehículo"} · ${row.vin}`;
+        const deliveryRef = doc(collection(db, "entregas"));
+        batch.set(deliveryRef, {
+          ...(vehicle ? { vehiculoId: vehicle.id } : {}),
+          vin: row.vin, cliente: row.client, fecha: format(row.deliveredAt, "yyyy-MM-dd"), hora: format(row.deliveredAt, "HH:mm"),
+          matricula: vehicle?.matricula || "", vehiculoInfo: info, modelo: row.model || vehicle?.modelo || "",
+          tipoVehiculo: row.vehicleType || "", estado: "Entregado", progress: 100, fechaEntrega: row.deliveredAt.toISOString(),
+          createdAt: now, updatedAt: now, actaEnviada: false, recogidaRenting: false,
+          origen: "Importación histórica plataforma BMW", entregadoPor: row.deliveredBy || ""
+        });
+        if (vehicle) {
+          batch.update(doc(db, "vehiculos", vehicle.id), {
+            estado: "Entregado", ubicacion: "Entregado", propietario: row.client, clienteFinal: row.client,
+            fechaEntrega: row.deliveredAt.toISOString(), entregaRegistradaPor: "Importación histórica BMW",
+            entregaOrigen: "Importación masiva plataforma BMW", updatedAt: now
+          });
+          const movementRef = doc(collection(db, "movimientos"));
+          batch.set(movementRef, {
+            vehiculoId: vehicle.id, vehiculoInfo: info, tipoAccion: "Entrega", fecha: row.deliveredAt,
+            usuario: "IMPORTACIÓN BMW", detalles: `Entrega histórica importada de la plataforma BMW a ${row.client}. VIN: ${row.vin}.`
+          });
+          linked++;
+        } else unlinked++;
+      }
+      await batch.commit();
+      toast({ title: "Importación histórica completada", description: `${linked} vehículos actualizados y retirados del stock; ${unlinked} entregas guardadas sin coincidencia en stock; ${skipped} duplicadas omitidas.` });
+      setHistoricalRaw(""); setHistoricalPreview(null);
+    } catch (error: any) {
+      console.error("Error importando entregas históricas:", error);
+      toast({ variant: "destructive", title: "No se pudo completar la importación", description: error?.message || "Comprueba la conexión y los datos." });
+    } finally { setHistoricalBusy(false); }
+  };
 
   const handleFindDeliveredVehicle = async () => {
     const entered = normalizeDeliveryVin(deliveryVin);
@@ -388,7 +507,37 @@ export default function DeliveryManagement() {
 
   return (
     <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-8 pb-24 h-full overflow-y-auto">
-      {/* Header */}
+      {/* Header */}\n      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
+        <CardContent className="space-y-4 p-5 md:p-6">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-primary"><ClipboardPaste className="h-5 w-5"/></div>
+            <div><h2 className="font-bold text-slate-900">Importar entregas históricas BMW</h2><p className="mt-1 text-sm text-slate-500">Copia la tabla completa de la pestaña «Completado» de la plataforma BMW, incluidos los encabezados, y pégala aquí.</p></div>
+          </div>
+          <Textarea value={historicalRaw} onChange={event => { setHistoricalRaw(event.target.value); setHistoricalPreview(null); }} rows={6} className="min-h-[150px] rounded-xl border-slate-200 font-mono text-xs" placeholder={"Vehículo\tTipo de vehículo\tVIN\tCliente\tFecha de entrega\tEntregado por\nPega aquí las filas copiadas de BMW…"} />
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-500">
+            <span className="flex items-center gap-2"><FileSpreadsheet className="h-4 w-4"/>{parsedHistorical.rows.length} entregas detectadas</span>
+            <Badge variant="outline" className={parsedHistorical.rows.length && !parsedHistorical.errors.length ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-amber-200 bg-amber-50 text-amber-700"}>{parsedHistorical.rows.length && !parsedHistorical.errors.length ? "Tabla reconocida" : "Esperando tabla válida"}</Badge>
+          </div>
+          {parsedHistorical.errors.length > 0 && <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-800">{parsedHistorical.errors.slice(0,8).map((error,index)=><p key={index}>{error}</p>)}</div>}
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" disabled={!parsedHistorical.rows.length || !!parsedHistorical.errors.length || historicalBusy} onClick={inspectHistoricalDeliveries}><ShieldCheck className="mr-2 h-4 w-4"/>{historicalBusy ? "Comprobando…" : "Comprobar coincidencias con stock"}</Button>
+          </div>
+          {historicalPreview && <div className="space-y-3">
+            <div className="flex flex-wrap gap-2 text-xs">
+              <Badge className="bg-emerald-50 text-emerald-700 hover:bg-emerald-50">{historicalPreview.filter(item=>item.vehicle&&!item.issue).length} vinculados al stock</Badge>
+              <Badge className="bg-amber-50 text-amber-800 hover:bg-amber-50">{historicalPreview.filter(item=>!item.vehicle&&!item.issue).length} sin vehículo en stock</Badge>
+              <Badge variant="outline" className={historicalPreview.some(item=>item.issue)?"border-red-300 text-red-700":"border-slate-200"}>{historicalPreview.filter(item=>item.issue).length} conflictos</Badge>
+            </div>
+            <div className="max-h-[300px] overflow-auto rounded-xl border border-slate-100">
+              <table className="w-full min-w-[760px] text-left text-xs"><thead className="sticky top-0 bg-slate-50 text-[10px] uppercase text-slate-400"><tr>{["VIN","Modelo","Cliente","Fecha","Resultado"].map(label=><th key={label} className="px-3 py-3">{label}</th>)}</tr></thead>
+              <tbody className="divide-y divide-slate-100">{historicalPreview.map((item,index)=><tr key={item.row.vin}><td className="px-3 py-3 font-mono">{item.row.vin}</td><td className="px-3 py-3">{item.row.model||item.vehicle?.modelo||"—"}</td><td className="px-3 py-3">{item.row.client}</td><td className="px-3 py-3">{format(item.row.deliveredAt,"dd/MM/yyyy HH:mm")}</td><td className="px-3 py-3">{item.issue?<span className="text-red-700">{item.issue}</span>:item.vehicle?<span className="text-emerald-700">Se marcará como entregado y saldrá del stock</span>:<span className="text-amber-700">Se guardará la entrega sin modificar stock</span>}</td></tr>)}</tbody></table>
+            </div>
+            <div className="flex items-start gap-2 rounded-lg bg-amber-50 p-3 text-xs leading-5 text-amber-800"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0"/>Los VIN sin coincidencia se guardan en entregas completadas, pero no crean vehículos. Los existentes se marcan como entregados y se retiran del stock. Las entregas ya registradas se omiten para evitar duplicados. Revisa la vista previa antes de confirmar.</div>
+            <Button disabled={historicalBusy || historicalPreview.some(item=>item.issue)} onClick={importHistoricalDeliveries} className="h-11 rounded-xl bg-primary px-5 text-white"><Upload className="mr-2 h-4 w-4"/>{historicalBusy?"Importando…":"Importar entregas completadas"}</Button>
+          </div>}
+        </CardContent>
+      </Card>
+
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 shrink-0">
         <div>
           <h1 className="text-3xl font-black tracking-tighter text-secondary uppercase italic leading-none">GESTIÓN DE <span className="text-primary not-italic">ENTREGAS</span></h1>
