@@ -56,36 +56,61 @@ type HistoricalDeliveryRow = { vin: string; model: string; vehicleType: string; 
 type HistoricalDeliveryResolution = { row: HistoricalDeliveryRow; vehicle?: any; issue?: string };
 const normalizeTableHeader = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRow[]; errors: string[] } {
-  const lines = raw.split(/\r?\n/).filter(line => line.trim());
-  if (lines.length < 2) return { rows: [], errors: [] };
-  const split = (line: string) => line.includes("\t") ? line.split("\t") : line.split(/\s{2,}/);
-  const headers = split(lines[0]).map(normalizeTableHeader);
-  const find = (...names: string[]) => headers.findIndex(header => names.some(name => header === name || header.includes(name)));
-  const ix = {
-    model: find("VEHICULO", "MODELO"),
-    vehicleType: find("TIPODEVEHICULO", "TIPOVEHICULO", "TIPO"),
-    vin: find("VIN", "BASTIDOR", "CHASIS"),
-    client: find("CLIENTE"),
-    date: find("FECHADEENTREGA", "FECHAENTREGA"),
-    deliveredBy: find("ENTREGADOPOR", "ASIGNADOA", "USUARIO", "RESPONSABLE")
-  };
-  if (ix.vin < 0 || ix.client < 0 || ix.date < 0) return { rows: [], errors: ["No se reconocen las columnas obligatorias VIN, Cliente y Fecha de entrega. Copia la tabla incluyendo sus encabezados."] };
+  // BMW puede copiar la tabla como celdas tabuladas o como bloques de texto multilínea.
+  const tokens = raw.replace(/\r/g, "\n").split("\n").flatMap(line => line.split("\t"))
+    .map(value => value.replace(/\u00a0/g, " ").trim()).filter(Boolean);
+  const vinPattern = /^[A-HJ-NPR-Z0-9]{17}$/i;
+  const datePattern = /^(\d{1,2})[/-](\d{1,2})[/-](\d{4})(?:,?\s+(\d{1,2}):(\d{2}))?$/;
+  const isHeader = (value: string) => ["VEHICULO","TIPODEVEHICULO","VIN","CLIENTE","FECHADEENTREGA","TIPO","PERSON","CHECKMARK"].includes(normalizeTableHeader(value));
+  const clean = (value: string) => value.replace(/\s+/g, " ").trim();
   const rows: HistoricalDeliveryRow[] = [];
   const errors: string[] = [];
-  lines.slice(1).forEach((line, index) => {
-    const cells = split(line);
-    const get = (key: keyof typeof ix) => ix[key] >= 0 ? String(cells[ix[key]] || "").trim() : "";
-    const vin = get("vin").replace(/[^A-Z0-9]/gi, "").toUpperCase();
-    const dateText = get("date").replace(/,/g, " ").replace(/\\s+/g, " ").trim();
-    const match = dateText.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})(?:\s+(\d{1,2}):(\d{2}))?/);
-    if (!vin && !get("client") && !dateText) return;
-    if (vin.length !== 17 || /[IOQ]/.test(vin)) { errors.push(`Fila ${index + 2}: VIN no válido (${vin || "vacío"}).`); return; }
-    if (!match) { errors.push(`Fila ${index + 2}: fecha no reconocida (${dateText || "vacía"}).`); return; }
+
+  for (let i = 0; i < tokens.length; i++) {
+    const vin = tokens[i].replace(/[^A-Z0-9]/gi, "").toUpperCase();
+    if (!vinPattern.test(vin)) continue;
+
+    const before = tokens.slice(Math.max(0, i - 4), i).filter(value => !isHeader(value) && !/^(checkmark|person)$/i.test(value));
+    const typeIndex = before.findIndex(value => /^(nuevo|usado|yuc)$/i.test(value));
+    const vehicleType = typeIndex >= 0 ? before[typeIndex] : "";
+    const modelCandidates = typeIndex >= 0 ? before.slice(0, typeIndex) : before;
+    const model = modelCandidates[modelCandidates.length - 1] || "";
+
+    let cursor = i + 1;
+    while (cursor < tokens.length && (/^(checkmark|person)$/i.test(tokens[cursor]) || isHeader(tokens[cursor]))) cursor++;
+    const client = clean(tokens[cursor] || "");
+    let dateIndex = cursor + 1;
+    while (dateIndex < tokens.length && !datePattern.test(clean(tokens[dateIndex]))) dateIndex++;
+    if (!client || dateIndex >= tokens.length) {
+      errors.push("No se pudieron leer cliente o fecha para el VIN " + vin + ".");
+      continue;
+    }
+
+    const dateText = clean(tokens[dateIndex]);
+    const match = dateText.match(datePattern);
+    if (!match) continue;
     const deliveredAt = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]), Number(match[4] || 12), Number(match[5] || 0));
-    rows.push({ vin, model: get("model"), vehicleType: get("vehicleType"), client: get("client"), deliveredAt, deliveredBy: get("deliveredBy") });
-  });
+    if (Number.isNaN(deliveredAt.getTime())) {
+      errors.push("Fecha no válida para el VIN " + vin + ": " + dateText + ".");
+      continue;
+    }
+
+    let deliveredBy = "";
+    for (let j = dateIndex + 1; j < Math.min(tokens.length, dateIndex + 4); j++) {
+      if (/^person$/i.test(tokens[j])) { deliveredBy = clean(tokens[j + 1] || ""); break; }
+      if (vinPattern.test(tokens[j].replace(/[^A-Z0-9]/gi, ""))) break;
+    }
+    rows.push({ vin, model, vehicleType, client, deliveredAt, deliveredBy });
+    i = dateIndex;
+  }
+
   const seen = new Set<string>();
-  const unique = rows.filter(row => { if (seen.has(row.vin)) { errors.push(`VIN repetido en la tabla: ${row.vin}.`); return false; } seen.add(row.vin); return true; });
+  const unique = rows.filter(row => {
+    if (seen.has(row.vin)) { errors.push("VIN repetido en la tabla: " + row.vin + "."); return false; }
+    seen.add(row.vin);
+    return true;
+  });
+  if (!unique.length && !errors.length) errors.push("No se han encontrado VIN de 17 caracteres. Pega el contenido completo de la pestaña «Completado» de BMW.");
   return { rows: unique, errors };
 }
 
