@@ -203,6 +203,14 @@ function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRo
         const alreadyExists = previous.some(delivery => normalizeDeliveryVin(delivery.vin) === row.vin || (vehicle && delivery.vehiculoId === vehicle.id && String(delivery.estado || "").toLowerCase() === "entregado"));
         if (alreadyExists) { skipped++; continue; }
         const info = `${row.model || vehicle?.modelo || "Vehículo"} · ${row.vin}`;
+        const pendingForVehicle = vehicle ? previous.filter(delivery => delivery.vehiculoId === vehicle.id && String(delivery.estado || "").toLowerCase() !== "entregado") : [];
+        if (pendingForVehicle.length) {
+          pendingForVehicle.forEach(delivery => batch.update(doc(db, "entregas", delivery.id), {
+            vin: row.vin, cliente: row.client, fecha: format(row.deliveredAt, "yyyy-MM-dd"), hora: format(row.deliveredAt, "HH:mm"),
+            vehiculoInfo: info, estado: "Entregado", progress: 100, fechaEntrega: row.deliveredAt.toISOString(), updatedAt: now,
+            origen: "Importación histórica plataforma BMW", entregadoPor: row.deliveredBy || ""
+          }));
+        } else {
         const deliveryRef = doc(collection(db, "entregas"));
         batch.set(deliveryRef, {
           ...(vehicle ? { vehiculoId: vehicle.id } : {}),
@@ -212,6 +220,7 @@ function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRo
           createdAt: now, updatedAt: now, actaEnviada: false, recogidaRenting: false,
           origen: "Importación histórica plataforma BMW", entregadoPor: row.deliveredBy || ""
         });
+        }
         if (vehicle) {
           batch.update(doc(db, "vehiculos", vehicle.id), {
             estado: "Entregado", ubicacion: "Entregado", propietario: row.client, clienteFinal: row.client,
