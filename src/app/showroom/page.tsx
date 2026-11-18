@@ -36,7 +36,7 @@ export function getVehicleColor(vehicle: any) {
 }
 
 export const TIPOS_LOGISTICOS = [
-  "Stock Expo",
+  "Stock exposición",
   "Entrega Renting",
   "Entrega Cliente",
   "Demo",
@@ -67,10 +67,12 @@ const isCustomerVehicle = (vehicle: any) => {
 const getVehicleLogisticType = (vehicle: any) => {
   const normalize = (value: any) => String(value || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim().toLowerCase();
   const legacyStock = [vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting, vehicle?.propietario].some(value => ["stock expo", "stock exposicion"].includes(normalize(value)));
-  if (legacyStock) return "Stock Expo";
+  if (legacyStock) return "Stock exposición";
   if (String(vehicle?.tipoLogistico || "").toLowerCase().includes("demo") || String(vehicle?.estado || "").toLowerCase().includes("demo")) return "Demo";
   if (isCustomerVehicle(vehicle)) return "Cliente";
-  return vehicle?.tipoLogistico || "Stock Expo";
+  const currentType = String(vehicle?.tipoLogistico || "").trim();
+  if (["stock expo", "stock exposicion"].includes(normalize(currentType))) return "Stock exposición";
+  return currentType || "Stock exposición";
 };
 const PLAZAS_LIST = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12", "P13", "P14", "P15"];
 const OTHER_LOCATIONS = ["Entreplanta", "Terraza", "Zona de entrega", "Demo en uso"];
@@ -452,7 +454,7 @@ function ShowroomContent() {
                 <section className="bg-white rounded-2xl p-4 md:p-5 shadow-sm space-y-3">
                   <h3 className="text-sm font-black uppercase text-secondary">Gestión comercial y logística</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1"><Label>Tipo logístico</Label><Select value={getVehicleLogisticType(selectedVehicle)} onValueChange={v=>handleDraftUpdate(selectedVehicle.id,v === "Stock Expo" ? {tipoLogistico:v,estado:"Stock",clienteLogistica:"",destinoLogistico:"",entidadRenting:"",propietario:""} : v === "Demo" ? {tipoLogistico:v,estado:"Demo",clienteLogistica:"",destinoLogistico:"",entidadRenting:"",propietario:""} : {tipoLogistico:v})}><SelectTrigger><SelectValue placeholder="Seleccionar tipo logístico"/></SelectTrigger><SelectContent>{Array.from(new Set([...TIPOS_LOGISTICOS, ...(selectedVehicle.tipoLogistico ? [selectedVehicle.tipoLogistico] : [])])).map(tipo=><SelectItem key={tipo} value={tipo}>{tipo}</SelectItem>)}</SelectContent></Select></div>
+                    <div className="space-y-1"><Label>Tipo logístico</Label><Select value={getVehicleLogisticType(selectedVehicle)} onValueChange={v=>handleDraftUpdate(selectedVehicle.id, normalizeVehicleCategory(v) === "stock expo" || normalizeVehicleCategory(v) === "stock exposicion" ? {tipoLogistico:"Stock exposición",estado:"Stock",clienteLogistica:"",destinoLogistico:"",entidadRenting:"",propietario:"",ubicacion:selectedVehicle.ubicacion === "No disponible" ? "Entreplanta" : selectedVehicle.ubicacion} : v === "Demo" ? {tipoLogistico:v,estado:"Demo",clienteLogistica:"",destinoLogistico:"",entidadRenting:"",propietario:""} : v === "Cliente" ? {tipoLogistico:"Cliente",estado:"Cliente"} : {tipoLogistico:v})}><SelectTrigger><SelectValue placeholder="Seleccionar tipo logístico"/></SelectTrigger><SelectContent>{Array.from(new Set([...TIPOS_LOGISTICOS, ...(selectedVehicle.tipoLogistico ? [selectedVehicle.tipoLogistico] : [])])).map(tipo=><SelectItem key={tipo} value={tipo}>{tipo}</SelectItem>)}</SelectContent></Select></div>
                     <div className="space-y-1"><Label>Cliente / destino del correo</Label><Input value={selectedVehicle.clienteLogistica || selectedVehicle.destinoLogistico || ""} onChange={e=>handleDraftUpdate(selectedVehicle.id,{clienteLogistica:e.target.value,destinoLogistico:e.target.value})} placeholder="Cliente, empresa o destino logístico"/></div>
                     <div className="space-y-1"><Label>Estado</Label><Select value={isCededVehicle(selectedVehicle) ? "Cedido" : isCustomerVehicle(selectedVehicle) ? "Cliente" : (selectedVehicle.estado || "Stock")} onValueChange={v=>handleVehicleStatusChange(selectedVehicle.id,v)}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{ESTADOS.map(e=><SelectItem key={e} value={e}>{e}</SelectItem>)}</SelectContent></Select></div>
                     {isCededVehicle(selectedVehicle) && <div className="space-y-1"><Label>Clasificación del vehículo cedido</Label><Select value={selectedVehicle.cedidoTipo || (selectedVehicle.stockLocator ? "Stock Locator" : "Cedido")} onValueChange={v=>handleDraftUpdate(selectedVehicle.id,{cedidoTipo:v,stockLocator:v === "Stock Locator",categoriaComercial:v === "Stock Locator" ? "Cedido · Stock Locator" : "Cedido"})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="Cedido">Cedido</SelectItem><SelectItem value="Stock Locator">Cedido · Stock Locator</SelectItem></SelectContent></Select><p className="text-xs text-slate-500">Ambas opciones quedan fuera del stock operativo del concesionario.</p></div>}
