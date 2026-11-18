@@ -64,6 +64,14 @@ const isCustomerVehicle = (vehicle: any) => {
   if (legacyType && !knownGeneric.test(legacyType) && !/^(stock locator|cedido)$/.test(legacyType)) return true;
   return normalize(vehicle?.estado) === "cliente";
 };
+const getVehicleLogisticType = (vehicle: any) => {
+  const normalize = (value: any) => String(value || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim().toLowerCase();
+  const legacyStock = [vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting, vehicle?.propietario].some(value => ["stock expo", "stock exposicion"].includes(normalize(value)));
+  if (legacyStock) return "Stock Expo";
+  if (String(vehicle?.tipoLogistico || "").toLowerCase().includes("demo") || String(vehicle?.estado || "").toLowerCase().includes("demo")) return "Demo";
+  if (isCustomerVehicle(vehicle)) return "Cliente";
+  return vehicle?.tipoLogistico || "Stock Expo";
+};
 const PLAZAS_LIST = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12", "P13", "P14", "P15"];
 const OTHER_LOCATIONS = ["Entreplanta", "Terraza", "Zona de entrega", "Demo en uso"];
 
