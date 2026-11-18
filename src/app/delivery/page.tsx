@@ -138,6 +138,7 @@ export default function DeliveryManagement() {
   const [editDeliveredBy, setEditDeliveredBy] = useState("");
   const [editPlate, setEditPlate] = useState("");
   const [editClient, setEditClient] = useState("");
+  const [savingDeliveryEdit, setSavingDeliveryEdit] = useState(false);
 
   const { data: vehiculosRaw } = useCollection(query(collection(db, "vehiculos"), orderBy("modelo", "asc")));
   const entregasQuery = useMemo(() => query(collection(db, "entregas"), orderBy("fecha", "desc")), [db]);
@@ -540,26 +541,41 @@ export default function DeliveryManagement() {
   };
 
   const saveDeliveryDetails = async () => {
-    if (!editingDelivery) return;
+    if (!editingDelivery || savingDeliveryEdit) return;
+    setSavingDeliveryEdit(true);
     try {
+      const deliveryId = editingDelivery.id;
+      const vehicleId = editingDelivery.vehiculoId;
       const patch = {
         entregadoPor: editDeliveredBy.trim(),
         matricula: editPlate.trim().toUpperCase(),
         cliente: editClient.trim(),
         updatedAt: new Date().toISOString()
       };
-      await updateDoc(doc(db, "entregas", editingDelivery.id), patch);
-      if (editingDelivery.vehiculoId) {
-        await updateDoc(doc(db, "vehiculos", editingDelivery.vehiculoId), {
-          ...(patch.matricula ? { matricula: patch.matricula } : {}),
-          ...(patch.cliente ? { propietario: patch.cliente, clienteFinal: patch.cliente } : {}),
-          updatedAt: patch.updatedAt
-        });
-      }
+
+      // La entrega es el registro principal: se guarda y se cierra el editor
+      // antes de sincronizar la ficha de stock para evitar dejar la pantalla bloqueada.
+      await updateDoc(doc(db, "entregas", deliveryId), patch);
       setEditingDelivery(null);
+
+      if (vehicleId) {
+        try {
+          await updateDoc(doc(db, "vehiculos", vehicleId), {
+            ...(patch.matricula ? { matricula: patch.matricula } : {}),
+            ...(patch.cliente ? { propietario: patch.cliente, clienteFinal: patch.cliente } : {}),
+            updatedAt: patch.updatedAt
+          });
+        } catch (vehicleError) {
+          console.warn("La entrega se guardó, pero no se pudo sincronizar la ficha del vehículo:", vehicleError);
+          toast({ title: "Entrega guardada", description: "Los datos de la entrega se han actualizado. No se pudo sincronizar la ficha del vehículo." });
+          return;
+        }
+      }
       toast({ title: "Entrega actualizada", description: "Se han guardado el responsable de entrega, la matrícula y el cliente." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "No se pudo guardar", description: error?.message || "Revisa los permisos y vuelve a intentarlo." });
+    } finally {
+      setSavingDeliveryEdit(false);
     }
   };
 
@@ -588,7 +604,7 @@ export default function DeliveryManagement() {
             <div className="space-y-2"><Label>Persona que realizó la entrega</Label><Input value={editDeliveredBy} onChange={event => setEditDeliveredBy(event.target.value)} placeholder="Nombre y apellidos"/></div>
             <div className="space-y-2"><Label>Matrícula del vehículo</Label><Input value={editPlate} onChange={event => setEditPlate(event.target.value.toUpperCase())} placeholder="1234 ABC"/></div>
             <div className="space-y-2"><Label>Cliente / destinatario</Label><Input value={editClient} onChange={event => setEditClient(event.target.value)} placeholder="Nombre del cliente"/></div>
-            <div className="flex justify-end gap-2"><Button variant="outline" onClick={()=>setEditingDelivery(null)}>Cancelar</Button><Button onClick={saveDeliveryDetails} className="bg-primary text-white">Guardar cambios</Button></div>
+            <div className="flex justify-end gap-2"><Button variant="outline" onClick={()=>setEditingDelivery(null)}>Cancelar</Button><Button onClick={saveDeliveryDetails} disabled={savingDeliveryEdit} className="bg-primary text-white">{savingDeliveryEdit ? "Guardando…" : "Guardar cambios"}</Button></div>
           </div>
         </DialogContent>
       </Dialog>
