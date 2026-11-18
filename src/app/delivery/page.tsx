@@ -19,7 +19,7 @@ import {
   Mail,
   RefreshCw,
   ArrowDownCircle,
-  ClipboardPaste,
+  ClipboardPaste,\n  Upload,
   FileSpreadsheet,
   ShieldCheck,
   AlertTriangle,
