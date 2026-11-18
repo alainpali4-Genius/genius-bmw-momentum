@@ -103,7 +103,7 @@ function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRo
   const [deliveryLookupBusy, setDeliveryLookupBusy] = useState(false);
   const [deliveryConfirmBusy, setDeliveryConfirmBusy] = useState(false);
   const [deliveryDateTime, setDeliveryDateTime] = useState(format(new Date(), "yyyy-MM-dd'T'HH:mm"));
-  const [selectedDeliveryVehicle, setSelectedDeliveryVehicle] = useState<any | null>(null);\n  const [historicalRaw, setHistoricalRaw] = useState("");\n  const [historicalPreview, setHistoricalPreview] = useState<HistoricalDeliveryResolution[] | null>(null);\n  const [historicalBusy, setHistoricalBusy] = useState(false);
+  const [selectedDeliveryVehicle, setSelectedDeliveryVehicle] = useState<any | null>(null);\n  const [historicalRaw, setHistoricalRaw] = useState("");\n  const [historicalPreview, setHistoricalPreview] = useState<HistoricalDeliveryResolution[] | null>(null);\n  const [historicalBusy, setHistoricalBusy] = useState(false);\n  const [editingDelivery, setEditingDelivery] = useState<any | null>(null);\n  const [editDeliveredBy, setEditDeliveredBy] = useState("");\n  const [editPlate, setEditPlate] = useState("");\n  const [editClient, setEditClient] = useState("");
 
   const { data: vehiculosRaw } = useCollection(query(collection(db, "vehiculos"), orderBy("modelo", "asc")));
   const entregasQuery = useMemo(() => query(collection(db, "entregas"), orderBy("fecha", "desc")), [db]);
@@ -498,6 +498,37 @@ function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRo
     }
   };
 
+  const openDeliveryEditor = (delivery: any) => {
+    setEditingDelivery(delivery);
+    setEditDeliveredBy(String(delivery.entregadoPor || delivery.entregaRealizadaPor || delivery.usuarioEntrega || ""));
+    setEditPlate(String(delivery.matricula || ""));
+    setEditClient(String(delivery.cliente || ""));
+  };
+
+  const saveDeliveryDetails = async () => {
+    if (!editingDelivery) return;
+    try {
+      const patch = {
+        entregadoPor: editDeliveredBy.trim(),
+        matricula: editPlate.trim().toUpperCase(),
+        cliente: editClient.trim(),
+        updatedAt: new Date().toISOString()
+      };
+      await updateDoc(doc(db, "entregas", editingDelivery.id), patch);
+      if (editingDelivery.vehiculoId) {
+        await updateDoc(doc(db, "vehiculos", editingDelivery.vehiculoId), {
+          ...(patch.matricula ? { matricula: patch.matricula } : {}),
+          ...(patch.cliente ? { propietario: patch.cliente, clienteFinal: patch.cliente } : {}),
+          updatedAt: patch.updatedAt
+        });
+      }
+      setEditingDelivery(null);
+      toast({ title: "Entrega actualizada", description: "Se han guardado el responsable de entrega, la matrícula y el cliente." });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "No se pudo guardar", description: error?.message || "Revisa los permisos y vuelve a intentarlo." });
+    }
+  };
+
   const toggleActa = async (id: string, current: boolean) => {
     try {
       await updateDoc(doc(db, "entregas", id), { actaEnviada: !current });
@@ -516,6 +547,17 @@ function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRo
 
   return (
     <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-8 pb-24 h-full overflow-y-auto">
+      <Dialog open={!!editingDelivery} onOpenChange={open => { if (!open) setEditingDelivery(null); }}>
+        <DialogContent className="max-w-md rounded-2xl">
+          <DialogHeader><DialogTitle>Editar datos de la entrega</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2"><Label>Persona que realizó la entrega</Label><Input value={editDeliveredBy} onChange={event => setEditDeliveredBy(event.target.value)} placeholder="Nombre y apellidos"/></div>
+            <div className="space-y-2"><Label>Matrícula del vehículo</Label><Input value={editPlate} onChange={event => setEditPlate(event.target.value.toUpperCase())} placeholder="1234 ABC"/></div>
+            <div className="space-y-2"><Label>Cliente / destinatario</Label><Input value={editClient} onChange={event => setEditClient(event.target.value)} placeholder="Nombre del cliente"/></div>
+            <div className="flex justify-end gap-2"><Button variant="outline" onClick={()=>setEditingDelivery(null)}>Cancelar</Button><Button onClick={saveDeliveryDetails} className="bg-primary text-white">Guardar cambios</Button></div>
+          </div>
+        </DialogContent>
+      </Dialog>
       {/* Header */}\n      <Card className="rounded-2xl border-slate-200 bg-white shadow-sm">
         <CardContent className="space-y-4 p-5 md:p-6">
           <div className="flex items-start gap-3">
@@ -850,7 +892,7 @@ function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRo
                             <h3 className="font-black text-lg text-secondary uppercase italic leading-none mb-1">{delivery.cliente}</h3>
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="text-[10px] font-black text-muted-foreground uppercase">{delivery.vehiculoInfo}</span>
-                              {delivery.matricula && <Badge variant="outline" className="text-[9px]">{delivery.matricula}</Badge>}
+                              {delivery.matricula && <Badge variant="outline" className="text-[9px]">{delivery.matricula}</Badge>}\n                              {delivery.entregadoPor && <Badge variant="outline" className="text-[9px]">ENTREGÓ: {delivery.entregadoPor}</Badge>}
                               {delivery.zonaEntrega && <Badge variant="outline" className="text-[9px]">{delivery.zonaEntrega}</Badge>}
                               {delivery.recogidaRenting && (
                                 <Badge className="bg-orange-50 text-orange-600 text-[8px] font-black uppercase border-orange-100">
@@ -892,7 +934,7 @@ function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRo
                                 <Button variant="ghost" size="icon" className="rounded-xl"><MoreVertical className="w-4 h-4" /></Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-56 rounded-2xl border-none shadow-2xl p-2">
-                                <DropdownMenuItem className="gap-3 rounded-xl py-3 text-[10px] font-black uppercase" onClick={() => toggleActa(delivery.id, !!delivery.actaEnviada)}>
+                                <DropdownMenuItem className="gap-3 rounded-xl py-3 text-[10px] font-black uppercase" onClick={() => openDeliveryEditor(delivery)}>\n                                  <FileText className="w-4 h-4 text-primary" /> Editar datos de entrega\n                                </DropdownMenuItem>\n                                <DropdownMenuItem className="gap-3 rounded-xl py-3 text-[10px] font-black uppercase" onClick={() => toggleActa(delivery.id, !!delivery.actaEnviada)}>
                                   <Mail className="w-4 h-4 text-primary" /> {delivery.actaEnviada ? "Marcar Acta Pendiente" : "Marcar Acta Enviada"}
                                 </DropdownMenuItem>
                                 {delivery.estado !== 'Entregado' && (["Pendiente de fecha","Fecha confirmada","En preparación","Preparado"] as const).filter(stage => stage !== delivery.estado).map(stage => (
