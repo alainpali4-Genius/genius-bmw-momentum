@@ -56,8 +56,7 @@ type HistoricalDeliveryRow = { vin: string; model: string; vehicleType: string; 
 type HistoricalDeliveryResolution = { row: HistoricalDeliveryRow; vehicle?: any; issue?: string };
 const normalizeTableHeader = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRow[]; errors: string[] } {
-  const lines = raw.split(/\r?
-/).filter(line => line.trim());
+  const lines = raw.split(/\r?\n/).filter(line => line.trim());
   if (lines.length < 2) return { rows: [], errors: [] };
   const split = (line: string) => line.includes("\t") ? line.split("\t") : line.split(/\s{2,}/);
   const headers = split(lines[0]).map(normalizeTableHeader);
