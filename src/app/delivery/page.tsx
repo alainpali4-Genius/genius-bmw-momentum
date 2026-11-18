@@ -56,7 +56,8 @@ type HistoricalDeliveryRow = { vin: string; model: string; vehicleType: string; 
 type HistoricalDeliveryResolution = { row: HistoricalDeliveryRow; vehicle?: any; issue?: string };
 const normalizeTableHeader = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
 function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRow[]; errors: string[] } {
-  const lines = raw.split(/\r?\n/).filter(line => line.trim());
+  const lines = raw.split(/\r?
+/).filter(line => line.trim());
   if (lines.length < 2) return { rows: [], errors: [] };
   const split = (line: string) => line.includes("\t") ? line.split("\t") : line.split(/\s{2,}/);
   const headers = split(lines[0]).map(normalizeTableHeader);
@@ -88,7 +89,8 @@ function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRo
   const unique = rows.filter(row => { if (seen.has(row.vin)) { errors.push(`VIN repetido en la tabla: ${row.vin}.`); return false; } seen.add(row.vin); return true; });
   return { rows: unique, errors };
 }
-\nexport default function DeliveryManagement() {
+
+export default function DeliveryManagement() {
   const db = useFirestore();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("all");
@@ -104,7 +106,14 @@ function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRo
   const [deliveryLookupBusy, setDeliveryLookupBusy] = useState(false);
   const [deliveryConfirmBusy, setDeliveryConfirmBusy] = useState(false);
   const [deliveryDateTime, setDeliveryDateTime] = useState(format(new Date(), "yyyy-MM-dd'T'HH:mm"));
-  const [selectedDeliveryVehicle, setSelectedDeliveryVehicle] = useState<any | null>(null);\n  const [historicalRaw, setHistoricalRaw] = useState("");\n  const [historicalPreview, setHistoricalPreview] = useState<HistoricalDeliveryResolution[] | null>(null);\n  const [historicalBusy, setHistoricalBusy] = useState(false);\n  const [editingDelivery, setEditingDelivery] = useState<any | null>(null);\n  const [editDeliveredBy, setEditDeliveredBy] = useState("");\n  const [editPlate, setEditPlate] = useState("");\n  const [editClient, setEditClient] = useState("");
+  const [selectedDeliveryVehicle, setSelectedDeliveryVehicle] = useState<any | null>(null);
+  const [historicalRaw, setHistoricalRaw] = useState("");
+  const [historicalPreview, setHistoricalPreview] = useState<HistoricalDeliveryResolution[] | null>(null);
+  const [historicalBusy, setHistoricalBusy] = useState(false);
+  const [editingDelivery, setEditingDelivery] = useState<any | null>(null);
+  const [editDeliveredBy, setEditDeliveredBy] = useState("");
+  const [editPlate, setEditPlate] = useState("");
+  const [editClient, setEditClient] = useState("");
 
   const { data: vehiculosRaw } = useCollection(query(collection(db, "vehiculos"), orderBy("modelo", "asc")));
   const entregasQuery = useMemo(() => query(collection(db, "entregas"), orderBy("fecha", "desc")), [db]);
@@ -894,7 +903,8 @@ function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRo
                             <h3 className="font-black text-lg text-secondary uppercase italic leading-none mb-1">{delivery.cliente}</h3>
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="text-[10px] font-black text-muted-foreground uppercase">{delivery.vehiculoInfo}</span>
-                              {delivery.matricula && <Badge variant="outline" className="text-[9px]">{delivery.matricula}</Badge>}\n                              {delivery.entregadoPor && <Badge variant="outline" className="text-[9px]">ENTREGÓ: {delivery.entregadoPor}</Badge>}
+                              {delivery.matricula && <Badge variant="outline" className="text-[9px]">{delivery.matricula}</Badge>}
+                              {delivery.entregadoPor && <Badge variant="outline" className="text-[9px]">ENTREGÓ: {delivery.entregadoPor}</Badge>}
                               {delivery.zonaEntrega && <Badge variant="outline" className="text-[9px]">{delivery.zonaEntrega}</Badge>}
                               {delivery.recogidaRenting && (
                                 <Badge className="bg-orange-50 text-orange-600 text-[8px] font-black uppercase border-orange-100">
@@ -936,7 +946,10 @@ function parseHistoricalDeliveryTable(raw: string): { rows: HistoricalDeliveryRo
                                 <Button variant="ghost" size="icon" className="rounded-xl"><MoreVertical className="w-4 h-4" /></Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-56 rounded-2xl border-none shadow-2xl p-2">
-                                <DropdownMenuItem className="gap-3 rounded-xl py-3 text-[10px] font-black uppercase" onClick={() => openDeliveryEditor(delivery)}>\n                                  <FileText className="w-4 h-4 text-primary" /> Editar datos de entrega\n                                </DropdownMenuItem>\n                                <DropdownMenuItem className="gap-3 rounded-xl py-3 text-[10px] font-black uppercase" onClick={() => toggleActa(delivery.id, !!delivery.actaEnviada)}>
+                                <DropdownMenuItem className="gap-3 rounded-xl py-3 text-[10px] font-black uppercase" onClick={() => openDeliveryEditor(delivery)}>
+                                  <FileText className="w-4 h-4 text-primary" /> Editar datos de entrega
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="gap-3 rounded-xl py-3 text-[10px] font-black uppercase" onClick={() => toggleActa(delivery.id, !!delivery.actaEnviada)}>
                                   <Mail className="w-4 h-4 text-primary" /> {delivery.actaEnviada ? "Marcar Acta Pendiente" : "Marcar Acta Enviada"}
                                 </DropdownMenuItem>
                                 {delivery.estado !== 'Entregado' && (["Pendiente de fecha","Fecha confirmada","En preparación","Preparado"] as const).filter(stage => stage !== delivery.estado).map(stage => (
