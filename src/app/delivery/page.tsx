@@ -928,7 +928,6 @@ export default function DeliveryManagement() {
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="text-[10px] font-black text-muted-foreground uppercase">{delivery.vehiculoInfo}</span>
                               {delivery.matricula && <Badge variant="outline" className="text-[9px]">{delivery.matricula}</Badge>}
-                              {delivery.entregadoPor && <Badge variant="outline" className="text-[9px]">ENTREGÓ: {delivery.entregadoPor}</Badge>}
                               {delivery.zonaEntrega && <Badge variant="outline" className="text-[9px]">{delivery.zonaEntrega}</Badge>}
                               {delivery.recogidaRenting && (
                                 <Badge className="bg-orange-50 text-orange-600 text-[8px] font-black uppercase border-orange-100">
@@ -952,6 +951,12 @@ export default function DeliveryManagement() {
                             <div className="flex items-center gap-1 text-[10px] text-slate-400 font-bold justify-center md:justify-end mt-0.5">
                               <Clock className="w-3.5 h-3.5" /> {delivery.hora}
                             </div>
+                            {delivery.entregadoPor && (
+                              <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold justify-center md:justify-end mt-1">
+                                <User className="w-3 h-3" />
+                                <span>{delivery.entregadoPor}</span>
+                              </div>
+                            )}
                           </div>
 
                           <div className="hidden sm:block min-w-[120px]">
