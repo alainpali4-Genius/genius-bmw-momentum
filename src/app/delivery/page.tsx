@@ -149,6 +149,61 @@ export default function DeliveryManagement() {
     }
   };
 
+  const handleRecoverCompletedDelivery = async () => {
+    if (!selectedDeliveryVehicle) return;
+    setDeliveryConfirmBusy(true);
+    try {
+      const vehicleSnapshot = await getDocs(collection(db, "vehiculos"));
+      const vehicleDoc = vehicleSnapshot.docs.find(item => item.id === selectedDeliveryVehicle.id);
+      if (!vehicleDoc) throw new Error("No se encuentra el vehículo en el stock.");
+      const vehicle = { id: vehicleDoc.id, ...vehicleDoc.data() } as any;
+      const state = String(vehicle.estado || "").toLowerCase();
+      const location = String(vehicle.ubicacion || "").toLowerCase();
+      if (state !== "entregado" && location !== "entregado") {
+        throw new Error("El vehículo no figura como entregado. No se ha creado ningún registro.");
+      }
+      const existingSnapshot = await getDocs(collection(db, "entregas"));
+      const existing = existingSnapshot.docs.find(item => String(item.data().vehiculoId || "") === vehicle.id && String(item.data().estado || "").toLowerCase() === "entregado");
+      if (existing) {
+        toast({ title: "La entrega ya existe", description: "Este vehículo ya tiene un registro en Entregas completadas. No se ha creado ningún duplicado." });
+        return;
+      }
+      const owner = String(vehicle.propietario || vehicle.clienteFinal || "").trim();
+      if (!owner) throw new Error("La ficha no contiene propietario. Completa el cliente antes de recuperar el registro.");
+      const rawDate = vehicle.fechaEntrega;
+      const deliveredAt = rawDate?.toDate ? rawDate.toDate() : rawDate ? new Date(rawDate) : null;
+      if (!deliveredAt || Number.isNaN(deliveredAt.getTime())) {
+        throw new Error("La ficha no contiene una fecha de entrega válida. No se ha creado ningún registro.");
+      }
+      const vinFull = normalizeDeliveryVin(vehicle.vin);
+      const vin7 = normalizeDeliveryVin(vehicle.vin7) || vinFull.slice(-7);
+      const vehicleInfo = `${vehicle.modelo || "Vehículo"} · ${vinFull || vin7}`;
+      const now = new Date();
+      await addDoc(collection(db, "entregas"), {
+        vehiculoId: vehicle.id,
+        cliente: owner,
+        fecha: format(deliveredAt, "yyyy-MM-dd"),
+        hora: format(deliveredAt, "HH:mm"),
+        matricula: vehicle.matricula || "",
+        vehiculoInfo: vehicleInfo,
+        estado: "Entregado",
+        progress: 100,
+        fechaEntrega: deliveredAt.toISOString(),
+        createdAt: now.toISOString(),
+        updatedAt: now.toISOString(),
+        actaEnviada: false,
+        recogidaRenting: false,
+        origen: "Recuperación de registro histórico"
+      });
+      toast({ title: "Registro recuperado", description: `${vehicle.modelo || "Vehículo"} ya aparece en Entregas completadas. No se ha modificado el stock ni duplicado el movimiento.` });
+    } catch (error: any) {
+      console.error("Error al recuperar entrega histórica:", error);
+      toast({ variant: "destructive", title: "No se pudo recuperar el registro", description: error?.message || "Error desconocido." });
+    } finally {
+      setDeliveryConfirmBusy(false);
+    }
+  };
+
   const handleConfirmDirectDelivery = async () => {
     if (!selectedDeliveryVehicle) return;
     setDeliveryConfirmBusy(true);
@@ -493,6 +548,15 @@ export default function DeliveryManagement() {
                   <Badge className="w-fit bg-violet-100 text-violet-800 hover:bg-violet-100">Stock Locator</Badge>
                 ) : null}
               </div>
+              {(String(selectedDeliveryVehicle.estado || "").toLowerCase() === "entregado" || String(selectedDeliveryVehicle.ubicacion || "").toLowerCase() === "entregado") && (
+                <div className="mt-4 border-t border-slate-200 pt-4">
+                  <p className="mb-2 text-xs text-slate-500">Si esta entrega se registró antes de activar el historial de entregas, puedes recuperar únicamente su ficha en «Completadas».</p>
+                  <Button onClick={handleRecoverCompletedDelivery} disabled={deliveryConfirmBusy} variant="outline" className="h-10 rounded-xl border-emerald-200 bg-white text-emerald-700 hover:bg-emerald-50">
+                    {deliveryConfirmBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                    Recuperar registro en Entregas
+                  </Button>
+                </div>
+              )}
               {(selectedDeliveryVehicle.propietario || selectedDeliveryVehicle.clienteFinal) && <p className="mt-2 text-sm text-slate-600"><strong>Propietario:</strong> {selectedDeliveryVehicle.propietario || selectedDeliveryVehicle.clienteFinal}</p>}
               {selectedDeliveryVehicle.stockLocatorConcesionario && <p className="mt-2 text-sm text-slate-600"><strong>Concesionario destinatario:</strong> {selectedDeliveryVehicle.stockLocatorConcesionario}</p>}
               {String(selectedDeliveryVehicle.estado || "").toLowerCase() !== "entregado" && String(selectedDeliveryVehicle.ubicacion || "").toLowerCase() !== "entregado" && String(selectedDeliveryVehicle.estado || "").toLowerCase() !== "cedido" && String(selectedDeliveryVehicle.ubicacion || "").toLowerCase() !== "stock locator" && (
