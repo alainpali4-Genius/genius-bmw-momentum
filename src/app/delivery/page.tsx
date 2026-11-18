@@ -201,7 +201,7 @@ export default function DeliveryManagement() {
       const movementRef = doc(collection(db, "movimientos"));
       batch.set(movementRef, {
         vehiculoId: vehicle.id,
-        vehiculoInfo,
+        vehiculoInfo: vehicleInfo,
         tipoAccion: isLocator ? "Stock Locator" : "Entrega",
         fecha: deliveredAt,
         usuario: "GENIUS APP",
