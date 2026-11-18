@@ -97,6 +97,12 @@ const isCustomerVehicle = (vehicle: any) => {
   const isStockLocatorVehicle = (vehicle: any) => vehicle.stockLocator === true || normalizeStatus(vehicle.cedidoTipo).includes("stock locator") || [vehicle.tipoLogistico, vehicle.categoria, vehicle.categoriaStock, vehicle.categoriaComercial].some(value => normalizeStatus(value).includes("stock locator"));
   // La zona física de exposición es exclusivamente para unidades de stock propio, nunca vehículos asignados a clientes.
   const isExhibitionVehicle = (vehicle: any) => String(vehicle.ubicacion || "").trim().toUpperCase().startsWith("P") && !isCustomerVehicle(vehicle);
+  // Unidades etiquetadas como Stock Expo, fuera de las plazas físicas de exposición.
+  const isReserveExhibitionStock = (vehicle: any) => {
+    const category = normalizeStatus(vehicle.tipoLogistico);
+    const inExhibitionBay = String(vehicle.ubicacion || "").trim().toUpperCase().startsWith("P");
+    return (category.includes("stock expo") || category.includes("stock exposicion")) && !inExhibitionBay;
+  };
   const vehicles = allVehicles.filter(vehicle => {
     const state = String(vehicle.estado || "").toLowerCase();
     const location = String(vehicle.ubicacion || "").toLowerCase();
@@ -167,7 +173,7 @@ const isCustomerVehicle = (vehicle: any) => {
     else if (activeFilter === 'demo' || activeFilter === 'destino-demo') result = result.filter(isDemoVehicle);
     else if (activeFilter === 'entrega') result = result.filter(v => v.ubicacion?.toLowerCase().includes('entrega'));
     else if (activeFilter === 'exposicion') result = result.filter(isExhibitionVehicle);
-    else if (activeFilter === 'destino-stockexpo') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('stock expo') || String(v.tipoLogistico || '').toLowerCase().includes('stock exposicion'));
+    else if (activeFilter === 'destino-stockexpo') result = result.filter(isReserveExhibitionStock);
     else if (activeFilter === 'destino-renting') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('renting') || !!v.entidadRenting);
     else if (activeFilter === 'destino-clientes') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('cliente') || (!!v.clienteLogistica && !v.entidadRenting));
     const q = searchTerm.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -180,7 +186,7 @@ const isCustomerVehicle = (vehicle: any) => {
     {key:'terraza' as const,label:'Terraza',value:stats.terraza,icon:MapPin},
     {key:'entreplanta' as const,label:'Entreplanta',value:stats.entreplanta,icon:LayoutGrid},
     {key:'entrega' as const,label:'Zona de entrega',value:stats.entrega,icon:ArrowUpRight},
-    {key:'destino-stockexpo' as const,label:'Stock exposición',value:vehicles.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('stock expo')).length,icon:Car},
+    {key:'destino-stockexpo' as const,label:'Stock exposición',value:vehicles.filter(isReserveExhibitionStock).length,icon:Car},
     {key:'destino-renting' as const,label:'Renting',value:vehicles.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('renting') || !!v.entidadRenting).length,icon:Building2},
     {key:'destino-clientes' as const,label:'Clientes',value:vehicles.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('cliente') || (!!v.clienteLogistica && !v.entidadRenting)).length,icon:User},
   ];
