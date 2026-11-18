@@ -16,7 +16,35 @@ import { cn } from "@/lib/utils";
 export default function MovementHistory() {
   const db = useFirestore();
   const movementsQuery = useMemo(() => query(collection(db, "movimientos"), orderBy("fecha", "desc"), limit(200)), [db]);
-  const { data: movements, loading } = useCollection(movementsQuery);
+  const { data: movements, loading: movementsLoading } = useCollection(movementsQuery);
+  const deliveriesQuery = useMemo(() => query(collection(db, "entregas"), orderBy("fecha", "desc"), limit(200)), [db]);
+  const { data: deliveries, loading: deliveriesLoading } = useCollection(deliveriesQuery);
+  const loading = movementsLoading || deliveriesLoading;
+  const historyRows = useMemo(() => {
+    const movementRows = (movements || []).map((mov: any) => ({ ...mov, _source: "movement" as const }));
+    const knownDeliveryIds = new Set(movementRows.filter((mov: any) => mov.tipoAccion === "Entrega").map((mov: any) => String(mov.vehiculoId || "")));
+    const deliveryRows = (deliveries || [])
+      .filter((delivery: any) => String(delivery.estado || "").toLowerCase() === "entregado")
+      .filter((delivery: any) => !knownDeliveryIds.has(String(delivery.vehiculoId || "")) || delivery.origen === "Registro histórico manual")
+      .map((delivery: any) => {
+        const dateValue = delivery.fechaEntrega || (delivery.fecha && delivery.hora ? `${delivery.fecha}T${delivery.hora}:00` : delivery.fecha);
+        const parsedDate = dateValue?.toDate ? dateValue.toDate() : dateValue ? new Date(dateValue) : null;
+        return {
+          id: `delivery-${delivery.id}`,
+          fecha: parsedDate && !Number.isNaN(parsedDate.getTime()) ? parsedDate : null,
+          tipoAccion: "Entrega",
+          vehiculoInfo: delivery.vehiculoInfo || "Vehículo sin descripción",
+          detalles: `Entrega registrada a ${delivery.cliente || "cliente no indicado"}${delivery.origen ? ` · ${delivery.origen}` : ""}`,
+          usuario: delivery.entregaRegistradaPor || "GENIUS",
+          _source: "delivery" as const
+        };
+      });
+    return [...movementRows, ...deliveryRows].sort((a: any, b: any) => {
+      const dateA = a.fecha?.toDate ? a.fecha.toDate().getTime() : a.fecha instanceof Date ? a.fecha.getTime() : 0;
+      const dateB = b.fecha?.toDate ? b.fecha.toDate().getTime() : b.fecha instanceof Date ? b.fecha.getTime() : 0;
+      return dateB - dateA;
+    }).slice(0, 300);
+  }, [movements, deliveries]);
 
   const getActionIcon = (type: string) => {
     switch (type) {
@@ -95,10 +123,10 @@ export default function MovementHistory() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {movements?.map((mov: any) => (
+                {historyRows.map((mov: any) => (
                   <TableRow key={mov.id} className="hover:bg-slate-50 transition-colors">
                     <TableCell className="font-bold text-[10px] text-slate-500 uppercase">
-                      {mov.fecha?.toDate ? format(mov.fecha.toDate(), "dd/MM/yyyy HH:mm:ss", { locale: es }) : '-'}
+                      {mov.fecha?.toDate ? format(mov.fecha.toDate(), "dd/MM/yyyy HH:mm:ss", { locale: es }) : mov.fecha instanceof Date ? format(mov.fecha, "dd/MM/yyyy HH:mm:ss", { locale: es }) : '-'}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
