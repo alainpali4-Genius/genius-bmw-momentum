@@ -236,6 +236,18 @@ const isCustomerVehicle = (vehicle: any) => {
           </div>
         </section>
 
+        <section className="space-y-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Subgrupos · gestión independiente</h2>
+            <span className="text-[10px] text-slate-400">Filtros secundarios</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {subgroupFilters.map(f => <button key={f.key} onClick={() => setActiveFilter(activeFilter === f.key ? 'all' : f.key)} className={`rounded-lg border p-3 text-left transition-colors ${activeFilter===f.key?'border-blue-300 bg-blue-50':'border-slate-200 bg-white hover:border-slate-300'}`}>
+              <div className="flex items-center justify-between gap-1"><span className="text-[11px] font-medium text-slate-500">{f.label}</span><f.icon className="h-3.5 w-3.5 text-slate-400"/></div>
+              <div className="mt-1 text-lg font-semibold text-slate-700">{f.value}</div>
+            </button>)}
+          </div>
+        </section>
 
         <Card className="overflow-hidden rounded-xl border-slate-200/80 bg-white shadow-sm">
           <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
