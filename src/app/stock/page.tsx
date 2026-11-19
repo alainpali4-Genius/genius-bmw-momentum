@@ -214,6 +214,15 @@ const isCustomerVehicle = (vehicle: any) => {
     {key:'destino-stockexpo' as const,label:'Stock exposición',value:vehicles.filter(v => normalizeStatus(v.tipoLogistico).includes('stock expo') || normalizeStatus(v.tipoLogistico).includes('stock exposicion') || isLegacyStockExhibition(v)).length,icon:Car},
   ];
 
+  const subgroupFilters = [
+    { key: 'destino-demo' as const, label: 'Demo', value: allVehicles.filter(isDemoVehicle).length, icon: Car },
+    { key: 'destino-renting' as const, label: 'Renting', value: allVehicles.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('renting') || !!v.entidadRenting).length, icon: Building2 },
+    { key: 'destino-clientes' as const, label: 'Clientes', value: allVehicles.filter(isCustomerVehicle).length, icon: User },
+    { key: 'entregados' as const, label: 'Entregados', value: allVehicles.filter(v => normalizeStatus(v.estado) === 'entregado' || normalizeStatus(v.ubicacion) === 'entregado').length, icon: ArrowUpRight },
+    { key: 'cedidos' as const, label: 'Cedidos', value: allVehicles.filter(isCededVehicle).length, icon: Building2 },
+    { key: 'stocklocator' as const, label: 'Stock Locator', value: allVehicles.filter(isStockLocatorVehicle).length, icon: MapPin },
+  ];
+
   return (
     <div className="h-full overflow-y-auto bg-slate-50">
       <div className="mx-auto max-w-[1600px] space-y-6 px-5 py-7 md:px-8 md:py-9">
