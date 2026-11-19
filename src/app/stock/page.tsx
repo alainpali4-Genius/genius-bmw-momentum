@@ -165,7 +165,7 @@ const isCustomerVehicle = (vehicle: any) => {
 
   const stats = useMemo(() => ({
     total: vehicles.length,
-    exposicion: vehicles.filter(isExhibitionVehicle).length,
+    exposicion: allVehicles.filter(isExhibitionVehicle).length,
     terraza: vehicles.filter(v => v.ubicacion?.toLowerCase() === 'terraza').length,
     entreplanta: vehicles.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta').length,
     demo: vehicles.filter(isDemoVehicle).length,
