@@ -104,6 +104,7 @@ const isCustomerVehicle = (vehicle: any) => {
   // La zona física de exposición es exclusivamente para unidades de stock propio, nunca vehículos asignados a clientes.
   const isExhibitionVehicle = (vehicle: any) => String(vehicle.ubicacion || "").trim().toUpperCase().startsWith("P") && !isCustomerVehicle(vehicle);
   // Unidades etiquetadas como Stock Expo, fuera de las plazas físicas de exposición.
+  const isStockExhibitionType = (vehicle: any) => normalizeStatus(vehicle.tipoLogistico).includes("stock expo") || normalizeStatus(vehicle.tipoLogistico).includes("stock exposicion") || isLegacyStockExhibition(vehicle);
   const isReserveExhibitionStock = (vehicle: any) => {
     const category = normalizeStatus(vehicle.tipoLogistico);
     const inExhibitionBay = String(vehicle.ubicacion || "").trim().toUpperCase().startsWith("P");
@@ -206,10 +207,10 @@ const isCustomerVehicle = (vehicle: any) => {
   }, [filtered, sortKey, sortDirection]);
 
   const filters = [
-    {key:'exposicion' as const,label:'Exposición',value:vehicles.filter(v => String(v.ubicacion || '').trim().toUpperCase().startsWith('P') && !isCustomerVehicle(v)).length,icon:Car},
-    {key:'entreplanta' as const,label:'Entreplanta',value:vehicles.filter(v => normalizeStatus(v.ubicacion) === 'entreplanta').length,icon:LayoutGrid},
-    {key:'terraza' as const,label:'Terraza',value:vehicles.filter(v => normalizeStatus(v.ubicacion) === 'terraza').length,icon:MapPin},
-    {key:'entrega' as const,label:'Zona de entrega',value:vehicles.filter(v => normalizeStatus(v.ubicacion).includes('entrega')).length,icon:ArrowUpRight},
+    {key:'exposicion' as const,label:'Exposición',value:vehicles.filter(v => String(v.ubicacion || '').trim().toUpperCase().startsWith('P') && !isCustomerVehicle(v) && !isStockExhibitionType(v)).length,icon:Car},
+    {key:'entreplanta' as const,label:'Entreplanta',value:vehicles.filter(v => normalizeStatus(v.ubicacion) === 'entreplanta' && !isStockExhibitionType(v)).length,icon:LayoutGrid},
+    {key:'terraza' as const,label:'Terraza',value:vehicles.filter(v => normalizeStatus(v.ubicacion) === 'terraza' && !isStockExhibitionType(v)).length,icon:MapPin},
+    {key:'entrega' as const,label:'Zona de entrega',value:vehicles.filter(v => normalizeStatus(v.ubicacion).includes('entrega') && !isStockExhibitionType(v)).length,icon:ArrowUpRight},
     {key:'destino-stockexpo' as const,label:'Stock exposición',value:vehicles.filter(v => normalizeStatus(v.tipoLogistico).includes('stock expo') || normalizeStatus(v.tipoLogistico).includes('stock exposicion') || isLegacyStockExhibition(v)).length,icon:Car},
   ];
 
