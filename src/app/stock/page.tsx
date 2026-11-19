@@ -102,9 +102,23 @@ const isCustomerVehicle = (vehicle: any) => {
 };
   const isStockLocatorVehicle = (vehicle: any) => vehicle.stockLocator === true || normalizeStatus(vehicle.cedidoTipo).includes("stock locator") || [vehicle.tipoLogistico, vehicle.categoria, vehicle.categoriaStock, vehicle.categoriaComercial].some(value => normalizeStatus(value).includes("stock locator"));
   // La categoría logística identifica stock propio de exposición; la ubicación solo indica dónde está.
-  const isPhysicalExhibitionLocation = (location: unknown) => /^P(?:[1-9]|1[0-5])$/i.test(String(location || "").trim());
+  const normalizeExhibitionLocation = (location: unknown) => {
+    const raw = normalizeStatus(location);
+    const plaza = raw.replace(/^(exposicion|exposicion plaza|plaza)\s*/,"").replace(/\s+/g,"").match(/^p?([1-9]|1[0-5])$/);
+    if (plaza) return `P${plaza[1]}`;
+    if (["","stock","no disponible","pendiente de ubicacion","sin ubicacion","sin asignar"].includes(raw)) return "Sin ubicación";
+    if (raw === "entreplanta") return "Entreplanta";
+    if (raw === "terraza") return "Terraza";
+    if (raw.includes("entrega")) return "Zona de entrega";
+    return String(location || "").trim();
+  };
+  const isPhysicalExhibitionLocation = (location: unknown) => /^P(?:[1-9]|1[0-5])$/i.test(normalizeExhibitionLocation(location));
   const isStockExhibitionType = (vehicle: any) => ["tipoLogistico","categoriaComercial","categoria","categoriaStock"].some(field => ["stock expo","stock exposicion"].includes(normalizeStatus(vehicle?.[field]))) || isLegacyStockExhibition(vehicle);
   const isExhibitionVehicle = (vehicle: any) => isStockExhibitionType(vehicle) && isPhysicalExhibitionLocation(vehicle.ubicacion);
+  const getStockExhibitionDisplayLocation = (vehicle: any) => {
+    const location = normalizeExhibitionLocation(vehicle?.ubicacion);
+    return isPhysicalExhibitionLocation(location) ? `Exposición ${location}` : `Stock exposición · ${location}`;
+  };
   const isReserveExhibitionStock = (vehicle: any) => isStockExhibitionType(vehicle) && !isPhysicalExhibitionLocation(vehicle.ubicacion);
   const vehicles = allVehicles.filter(vehicle => {
     const state = String(vehicle.estado || "").toLowerCase();
@@ -274,7 +288,7 @@ const isCustomerVehicle = (vehicle: any) => {
                     <td className="px-4 py-4 text-sm text-slate-600">{(car.motor && car.motor.trim() !== "—" ? car.motor : suggestedMotor(car.modelo||""))||'—'}</td>
                     <td className="px-4 py-4"><div className="flex items-center gap-2 text-sm text-slate-600"><span className="h-3 w-3 shrink-0 rounded-full border border-slate-300 shadow-sm" style={{backgroundColor:color?.hex||'#e5e7eb'}}/><span>{color ? <><span className="font-medium">{color.name}</span>{!color.code.startsWith("GEN-") && <span className="ml-1.5 text-[10px] text-slate-400">({color.code})</span>}</> : car.colorExterior||'—'}</span></div></td>
                     <td className="px-4 py-4"><Badge variant="outline" className="rounded-full border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-medium text-slate-600">{isCededVehicle(car) ? (isStockLocatorVehicle(car) ? "Cedido · Stock Locator" : "Cedido") : getLogisticCategory(car)}</Badge></td>
-                    <td className="px-4 py-4">{isStockExhibitionType(car) ? <Badge className="rounded-full border-0 bg-blue-50 px-2.5 py-1 text-[10px] font-medium text-[#00549a]">{isPhysicalExhibitionLocation(car.ubicacion) ? `Exposición ${car.ubicacion}` : `Stock exposición · ${["Stock","No disponible","Pendiente de ubicación",""].includes(String(car.ubicacion || "")) ? "Sin ubicación" : car.ubicacion}`}</Badge> : isCededVehicle(car) ? <Badge className="rounded-full border-0 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-700">{isStockLocatorVehicle(car) ? "Cedido · Stock Locator" : "Cedido"}</Badge> : <Badge className="rounded-full border-0 bg-slate-100 px-2.5 py-1 text-[10px] font-medium text-slate-600">{getLogisticCategory(car)} · {["Stock","No disponible","Pendiente de ubicación",""].includes(String(car.ubicacion || "")) ? "Sin ubicación" : car.ubicacion}</Badge>}{(String(car.tipoLogistico||'').toLowerCase().includes('demo')||car.ubicacion==='Demo en uso'||String(car.estado||'').toLowerCase().includes('demo'))&&<div className="mt-1 space-y-0.5 text-[10px] text-slate-500"><div>Ubicación actual: {car.demoUbicacionActual||'Sin indicar'}</div><div>Lo conduce: {car.demoAsignadoA||'Sin asignar'}</div></div>}</td>
+                    <td className="px-4 py-4">{isStockExhibitionType(car) ? <Badge className="rounded-full border-0 bg-blue-50 px-2.5 py-1 text-[10px] font-medium text-[#00549a]">{getStockExhibitionDisplayLocation(car)}</Badge> : isCededVehicle(car) ? <Badge className="rounded-full border-0 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-700">{isStockLocatorVehicle(car) ? "Cedido · Stock Locator" : "Cedido"}</Badge> : <Badge className="rounded-full border-0 bg-slate-100 px-2.5 py-1 text-[10px] font-medium text-slate-600">{getLogisticCategory(car)} · {normalizeExhibitionLocation(car.ubicacion)}</Badge>}{(String(car.tipoLogistico||'').toLowerCase().includes('demo')||car.ubicacion==='Demo en uso'||String(car.estado||'').toLowerCase().includes('demo'))&&<div className="mt-1 space-y-0.5 text-[10px] text-slate-500"><div>Ubicación actual: {car.demoUbicacionActual||'Sin indicar'}</div><div>Lo conduce: {car.demoAsignadoA||'Sin asignar'}</div></div>}</td>
                     <td className="px-4 py-4 text-xs text-slate-600">{isDemoVehicle(car) ? (car.demoAsignadoA || '—') : isCustomerVehicle(car) && !isLegacyStockExhibition(car) ? <><div className="font-semibold text-slate-800">{car.entidadRenting || car.clienteLogistica || car.destinoLogistico || car.propietario || 'Cliente sin identificar'}</div>{car.propietario && <div className="mt-1 text-[10px] text-slate-400">Propietario: {car.propietario}</div>}</> : '—'}</td>
                     <td className="px-4 py-4 text-right text-sm tabular-nums text-slate-600">{days===null?'—':days}</td>
                     <td className="px-5 py-4 text-right"><ArrowUpRight className="ml-auto h-4 w-4 text-slate-400"/></td>
