@@ -28,21 +28,26 @@ export default function VehicleAuditPage() {
   const deliveries = (deliveriesRaw || []) as any[]
   const audit = useMemo(() => {
     const deliveryByVin = new Map<string, any[]>()
+    const deliveryByVin7 = new Map<string, any[]>()
     const deliveryByVehicle = new Map<string, any[]>()
     deliveries.forEach(d => {
       const key = norm(d.vin)
+      const key7 = key.length >= 7 ? key.slice(-7) : key
       if (key) deliveryByVin.set(key, [...(deliveryByVin.get(key) || []), d])
+      if (key7) deliveryByVin7.set(key7, [...(deliveryByVin7.get(key7) || []), d])
       if (d.vehiculoId) deliveryByVehicle.set(String(d.vehiculoId), [...(deliveryByVehicle.get(String(d.vehiculoId)) || []), d])
     })
     const duplicateMap = new Map<string, any[]>()
     vehicles.forEach(v => { const key = vinKey(v); if (key) duplicateMap.set(key, [...(duplicateMap.get(key) || []), v]) })
     const duplicates = [...duplicateMap.entries()].filter(([, group]) => group.length > 1)
     const deliveredActive = vehicles.map(v => {
-      const linked = [...(deliveryByVehicle.get(String(v.id)) || []), ...(deliveryByVin.get(norm(v.vin)) || [])]
+      const fullVin = norm(v.vin)
+      const shortVin = vinKey(v)
+      const linked = [...(deliveryByVehicle.get(String(v.id)) || []), ...(deliveryByVin.get(fullVin) || []), ...(deliveryByVin7.get(shortVin) || [])]
       const completed = linked.filter(d => norm(d.estado) === "ENTREGADO" || d.fechaEntrega || String(d.origen || "").toLowerCase().includes("históric"))
       return { vehicle: v, deliveries: [...new Map(completed.map(d => [d.id, d])).values()] }
     }).filter(x => x.deliveries.length && !isDelivered(x.vehicle))
-    const unmatched = deliveries.filter(d => (norm(d.vin) || d.vehiculoId) && !vehicles.some(v => (d.vehiculoId && String(v.id) === String(d.vehiculoId)) || (norm(d.vin) && norm(v.vin) === norm(d.vin))) && (norm(d.estado) === "ENTREGADO" || d.fechaEntrega || String(d.origen || "").toLowerCase().includes("históric")))
+    const unmatched = deliveries.filter(d => (norm(d.vin) || d.vehiculoId) && !vehicles.some(v => (d.vehiculoId && String(v.id) === String(d.vehiculoId)) || (norm(d.vin) && (norm(v.vin) === norm(d.vin) || vinKey(v) === (norm(d.vin).length >= 7 ? norm(d.vin).slice(-7) : norm(d.vin))))) && (norm(d.estado) === "ENTREGADO" || d.fechaEntrega || String(d.origen || "").toLowerCase().includes("históric")))
     const already = vehicles.filter(isDelivered)
     return { deliveredActive, unmatched, duplicates, already }
   }, [vehicles, deliveries])
