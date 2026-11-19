@@ -101,16 +101,13 @@ const isCustomerVehicle = (vehicle: any) => {
   return normalize(vehicle?.estado) === "cliente";
 };
   const isStockLocatorVehicle = (vehicle: any) => vehicle.stockLocator === true || normalizeStatus(vehicle.cedidoTipo).includes("stock locator") || [vehicle.tipoLogistico, vehicle.categoria, vehicle.categoriaStock, vehicle.categoriaComercial].some(value => normalizeStatus(value).includes("stock locator"));
-  // La ubicación física del plano es la fuente de verdad: cualquier vehículo en P1-P15 ocupa una plaza, independientemente de su clasificación comercial.
+  // La categoría logística identifica stock propio de exposición; la ubicación solo indica dónde está.
   const isPhysicalExhibitionLocation = (location: unknown) => /^P(?:[1-9]|1[0-5])$/i.test(String(location || "").trim());
-  const isExhibitionVehicle = (vehicle: any) => isPhysicalExhibitionLocation(vehicle.ubicacion);
+  const isStockExhibitionType = (vehicle: any) => ["tipoLogistico","categoriaComercial","categoria","categoriaStock"].some(field => ["stock expo","stock exposicion"].includes(normalizeStatus(vehicle?.[field]))) || isLegacyStockExhibition(vehicle);
+  const isExhibitionVehicle = (vehicle: any) => isStockExhibitionType(vehicle) && isPhysicalExhibitionLocation(vehicle.ubicacion);
   // Unidades etiquetadas como Stock Expo, fuera de las plazas físicas de exposición.
   const isStockExhibitionType = (vehicle: any) => normalizeStatus(vehicle.tipoLogistico).includes("stock expo") || normalizeStatus(vehicle.tipoLogistico).includes("stock exposicion") || isLegacyStockExhibition(vehicle);
-  const isReserveExhibitionStock = (vehicle: any) => {
-    const category = normalizeStatus(vehicle.tipoLogistico);
-    const inExhibitionBay = String(vehicle.ubicacion || "").trim().toUpperCase().startsWith("P");
-    return (category.includes("stock expo") || category.includes("stock exposicion")) && !inExhibitionBay;
-  };
+  const isReserveExhibitionStock = (vehicle: any) => isStockExhibitionType(vehicle) && !isPhysicalExhibitionLocation(vehicle.ubicacion);
   const vehicles = allVehicles.filter(vehicle => {
     const state = String(vehicle.estado || "").toLowerCase();
     const location = String(vehicle.ubicacion || "").toLowerCase();
@@ -165,7 +162,7 @@ const isCustomerVehicle = (vehicle: any) => {
 
   const stats = useMemo(() => ({
     total: vehicles.length,
-    exposicion: allVehicles.filter(isExhibitionVehicle).length,
+    exposicion: vehicles.filter(isExhibitionVehicle).length,
     terraza: vehicles.filter(v => v.ubicacion?.toLowerCase() === 'terraza').length,
     entreplanta: vehicles.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta').length,
     demo: vehicles.filter(isDemoVehicle).length,
@@ -180,8 +177,8 @@ const isCustomerVehicle = (vehicle: any) => {
     else if (activeFilter === 'entreplanta') result = result.filter(v => v.ubicacion?.toLowerCase() === 'entreplanta');
     else if (activeFilter === 'demo' || activeFilter === 'destino-demo') result = result.filter(isDemoVehicle);
     else if (activeFilter === 'entrega') result = result.filter(v => v.ubicacion?.toLowerCase().includes('entrega'));
-    else if (activeFilter === 'exposicion') result = allVehicles.filter(isExhibitionVehicle);
-    else if (activeFilter === 'destino-stockexpo') result = result.filter(v => normalizeStatus(v.tipoLogistico).includes('stock expo') || normalizeStatus(v.tipoLogistico).includes('stock exposicion') || isLegacyStockExhibition(v));
+    else if (activeFilter === 'exposicion') result = vehicles.filter(isExhibitionVehicle);
+    else if (activeFilter === 'destino-stockexpo') result = vehicles.filter(isStockExhibitionType);
     else if (activeFilter === 'destino-renting') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('renting') || !!v.entidadRenting);
     else if (activeFilter === 'destino-clientes') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('cliente') || (!!v.clienteLogistica && !v.entidadRenting));
     const q = searchTerm.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -208,11 +205,11 @@ const isCustomerVehicle = (vehicle: any) => {
   }, [filtered, sortKey, sortDirection]);
 
   const filters = [
-    {key:'exposicion' as const,label:'Exposición',value:allVehicles.filter(v => isPhysicalExhibitionLocation(v.ubicacion)).length,icon:Car},
+    {key:'exposicion' as const,label:'Exposición',value:vehicles.filter(isExhibitionVehicle).length,icon:Car},
     {key:'entreplanta' as const,label:'Entreplanta',value:vehicles.filter(v => normalizeStatus(v.ubicacion) === 'entreplanta' && !isStockExhibitionType(v)).length,icon:LayoutGrid},
     {key:'terraza' as const,label:'Terraza',value:vehicles.filter(v => normalizeStatus(v.ubicacion) === 'terraza' && !isStockExhibitionType(v)).length,icon:MapPin},
     {key:'entrega' as const,label:'Zona de entrega',value:vehicles.filter(v => normalizeStatus(v.ubicacion).includes('entrega') && !isStockExhibitionType(v)).length,icon:ArrowUpRight},
-    {key:'destino-stockexpo' as const,label:'Stock exposición',value:vehicles.filter(v => normalizeStatus(v.tipoLogistico).includes('stock expo') || normalizeStatus(v.tipoLogistico).includes('stock exposicion') || isLegacyStockExhibition(v)).length,icon:Car},
+    {key:'destino-stockexpo' as const,label:'Stock exposición',value:vehicles.filter(isStockExhibitionType).length,icon:Car},
   ];
 
   const subgroupFilters = [
@@ -279,7 +276,7 @@ const isCustomerVehicle = (vehicle: any) => {
                     <td className="px-4 py-4 text-sm text-slate-600">{(car.motor && car.motor.trim() !== "—" ? car.motor : suggestedMotor(car.modelo||""))||'—'}</td>
                     <td className="px-4 py-4"><div className="flex items-center gap-2 text-sm text-slate-600"><span className="h-3 w-3 shrink-0 rounded-full border border-slate-300 shadow-sm" style={{backgroundColor:color?.hex||'#e5e7eb'}}/><span>{color ? <><span className="font-medium">{color.name}</span>{!color.code.startsWith("GEN-") && <span className="ml-1.5 text-[10px] text-slate-400">({color.code})</span>}</> : car.colorExterior||'—'}</span></div></td>
                     <td className="px-4 py-4"><Badge variant="outline" className="rounded-full border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-medium text-slate-600">{isCededVehicle(car) ? (isStockLocatorVehicle(car) ? "Cedido · Stock Locator" : "Cedido") : getLogisticCategory(car)}</Badge></td>
-                    <td className="px-4 py-4">{isPhysicalExhibitionLocation(car.ubicacion) ? <Badge className="rounded-full border-0 bg-blue-50 px-2.5 py-1 text-[10px] font-medium text-[#00549a]">Exposición · {car.ubicacion}</Badge> : isCededVehicle(car) ? <Badge className="rounded-full border-0 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-700">{isStockLocatorVehicle(car) ? "Cedido · Stock Locator" : "Cedido"}</Badge> : isCustomerVehicle(car) ? <Badge className="rounded-full border-0 bg-violet-50 px-2.5 py-1 text-[10px] font-medium text-violet-700">{["Entreplanta","Terraza","Zona de entrega"].includes(String(car.ubicacion || "")) ? car.ubicacion : "Ubicación pendiente"}</Badge> : <Badge className={`rounded-full border-0 px-2.5 py-1 text-[10px] font-medium ${car.ubicacion?.startsWith('P')?'bg-blue-50 text-[#00549a]':'bg-slate-100 text-slate-600'}`}>{car.ubicacion?.startsWith('P')?`Exposición · ${car.ubicacion}`:(car.ubicacion||'Sin ubicación')}</Badge>}{(String(car.tipoLogistico||'').toLowerCase().includes('demo')||car.ubicacion==='Demo en uso'||String(car.estado||'').toLowerCase().includes('demo'))&&<div className="mt-1 space-y-0.5 text-[10px] text-slate-500"><div>Ubicación actual: {car.demoUbicacionActual||'Sin indicar'}</div><div>Lo conduce: {car.demoAsignadoA||'Sin asignar'}</div></div>}</td>
+                    <td className="px-4 py-4">{isStockExhibitionType(car) ? <Badge className="rounded-full border-0 bg-blue-50 px-2.5 py-1 text-[10px] font-medium text-[#00549a]">{isPhysicalExhibitionLocation(car.ubicacion) ? `Exposición ${car.ubicacion}` : `Stock exposición · ${["Stock","No disponible","Pendiente de ubicación",""].includes(String(car.ubicacion || "")) ? "Sin ubicación" : car.ubicacion}`}</Badge> : isCededVehicle(car) ? <Badge className="rounded-full border-0 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-700">{isStockLocatorVehicle(car) ? "Cedido · Stock Locator" : "Cedido"}</Badge> : <Badge className="rounded-full border-0 bg-slate-100 px-2.5 py-1 text-[10px] font-medium text-slate-600">{getLogisticCategory(car)} · {["Stock","No disponible","Pendiente de ubicación",""].includes(String(car.ubicacion || "")) ? "Sin ubicación" : car.ubicacion}</Badge>}{(String(car.tipoLogistico||'').toLowerCase().includes('demo')||car.ubicacion==='Demo en uso'||String(car.estado||'').toLowerCase().includes('demo'))&&<div className="mt-1 space-y-0.5 text-[10px] text-slate-500"><div>Ubicación actual: {car.demoUbicacionActual||'Sin indicar'}</div><div>Lo conduce: {car.demoAsignadoA||'Sin asignar'}</div></div>}</td>
                     <td className="px-4 py-4 text-xs text-slate-600">{isDemoVehicle(car) ? (car.demoAsignadoA || '—') : isCustomerVehicle(car) && !isLegacyStockExhibition(car) ? <><div className="font-semibold text-slate-800">{car.entidadRenting || car.clienteLogistica || car.destinoLogistico || car.propietario || 'Cliente sin identificar'}</div>{car.propietario && <div className="mt-1 text-[10px] text-slate-400">Propietario: {car.propietario}</div>}</> : '—'}</td>
                     <td className="px-4 py-4 text-right text-sm tabular-nums text-slate-600">{days===null?'—':days}</td>
                     <td className="px-5 py-4 text-right"><ArrowUpRight className="ml-auto h-4 w-4 text-slate-400"/></td>
