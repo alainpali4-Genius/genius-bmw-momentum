@@ -150,7 +150,7 @@ function ShowroomContent() {
   const [formData, setFormData] = useState({
     marca: "BMW", modelo: "", vin: "", vin7: "", matricula: "", kilometraje: "", motor: "",
     colorBMW: "300", tapiceria: "", llantas: "", equipamiento: "", bodyType: "SUV",
-    ubicacion: "Stock", estado: "Stock", tipoLogistico: "Stock Expo", entidadRenting: "",
+    ubicacion: "Stock", estado: "Stock", tipoLogistico: "Stock exposición", entidadRenting: "",
     precio: "", responsable: "", observaciones: ""
   });
 
@@ -541,9 +541,9 @@ function ShowroomContent() {
             <section className="space-y-3">
               <h3 className="text-xs font-black uppercase text-secondary border-b pb-2">3. Gestión comercial y logística</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <div className="space-y-1"><Label>Tipo logístico</Label><Select value={formData.tipoLogistico} onValueChange={v=>setFormData({...formData,tipoLogistico:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{TIPOS_LOGISTICOS.map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1"><Label>Tipo logístico</Label><Select value={formData.tipoLogistico} onValueChange={v=>{const isStockExpo=["stock expo","stock exposicion"].includes(normalizeVehicleCategory(v));const onPlaza=/^P(?:[1-9]|1[0-5])$/i.test(String(formData.ubicacion||""));setFormData({...formData,tipoLogistico:isStockExpo?"Stock exposición":v,estado:isStockExpo?(onPlaza?"Exposicion":"Stock"):formData.estado,entidadRenting:isStockExpo?"":formData.entidadRenting})}}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{TIPOS_LOGISTICOS.map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
                 <div className="space-y-1"><Label>Estado</Label><Select value={formData.estado} onValueChange={v=>setFormData({...formData,estado:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{ESTADOS.map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
-                <div className="space-y-1"><Label>Ubicación inicial</Label><Select value={formData.ubicacion} onValueChange={v=>setFormData({...formData,ubicacion:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{["Stock",...PLAZAS_LIST,...OTHER_LOCATIONS.filter(v=>v!=="Stock")].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
+                <div className="space-y-1"><Label>Ubicación inicial</Label><Select value={formData.ubicacion} onValueChange={v=>{const isStockExpo=["stock expo","stock exposicion"].includes(normalizeVehicleCategory(formData.tipoLogistico));const onPlaza=/^P(?:[1-9]|1[0-5])$/i.test(String(v||""));setFormData({...formData,ubicacion:v,estado:isStockExpo?(onPlaza?"Exposicion":"Stock"):formData.estado,tipoLogistico:isStockExpo?"Stock exposición":formData.tipoLogistico})}}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{["Stock",...PLAZAS_LIST,...OTHER_LOCATIONS.filter(v=>v!=="Stock")].map(v=><SelectItem key={v} value={v}>{v}</SelectItem>)}</SelectContent></Select></div>
                 <div className="space-y-1"><Label>Precio (€)</Label><Input type="number" min="0" value={formData.precio} onChange={e=>setFormData({...formData,precio:e.target.value})}/></div>
                 <div className="space-y-1"><Label>Responsable</Label><Input value={formData.responsable} onChange={e=>setFormData({...formData,responsable:e.target.value})}/></div>
                 {(formData.tipoLogistico.includes("Renting") || formData.tipoLogistico==="Entrega Cliente") && <div className="space-y-1"><Label>{formData.tipoLogistico==="Entrega Cliente"?"Nombre del cliente":"Empresa renting"}</Label><Input value={formData.entidadRenting} onChange={e=>setFormData({...formData,entidadRenting:e.target.value})}/></div>}
@@ -581,12 +581,15 @@ function ShowroomContent() {
       return toast({ variant: "destructive", title: "No se pudo verificar el bastidor", description: "No se ha guardado el vehículo. Comprueba la conexión e inténtalo de nuevo." });
     }
     const now = new Date().toISOString();
-    const payload = { ...formData, modelo: formData.modelo.trim(), vin, vin7, kilometraje: null, precio: formData.precio === "" ? null : Number(formData.precio), colorCodigo: formData.colorBMW, colorExterior: BMW_COLORS.find(c => c.code === formData.colorBMW)?.name || "Alpine White", fechaEntrada: now.split('T')[0], createdAt: now, updatedAt: now };
+    const normalizedType = normalizeVehicleCategory(formData.tipoLogistico);
+    const isStockExpo = ["stock expo","stock exposicion"].includes(normalizedType);
+    const isShowroomPlaza = /^P(?:[1-9]|1[0-5])$/i.test(String(formData.ubicacion || ""));
+    const payload = { ...formData, tipoLogistico: isStockExpo ? "Stock exposición" : formData.tipoLogistico, estado: isStockExpo ? (isShowroomPlaza ? "Exposicion" : "Stock") : formData.estado, modelo: formData.modelo.trim(), vin, vin7, kilometraje: null, precio: formData.precio === "" ? null : Number(formData.precio), colorCodigo: formData.colorBMW, colorExterior: BMW_COLORS.find(c => c.code === formData.colorBMW)?.name || "Alpine White", fechaEntrada: now.split('T')[0], createdAt: now, updatedAt: now };
     try {
       await addDoc(collection(db, "vehiculos"), payload);
       toast({ title: "Vehículo Registrado" });
       setIsAddingNew(false);
-      setFormData({ marca: "BMW", modelo: "", vin: "", vin7: "", matricula: "", kilometraje: "", motor: "", colorBMW: "300", tapiceria: "", llantas: "", equipamiento: "", bodyType: "SUV", ubicacion: "Stock", estado: "Stock", tipoLogistico: "Stock Expo", entidadRenting: "", precio: "", responsable: "", observaciones: "" });
+      setFormData({ marca: "BMW", modelo: "", vin: "", vin7: "", matricula: "", kilometraje: "", motor: "", colorBMW: "300", tapiceria: "", llantas: "", equipamiento: "", bodyType: "SUV", ubicacion: "Stock", estado: "Stock", tipoLogistico: "Stock exposición", entidadRenting: "", precio: "", responsable: "", observaciones: "" });
     } catch (e) {
       toast({ variant: "destructive", title: "Error al guardar" });
     }
