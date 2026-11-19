@@ -22,6 +22,8 @@ export default function StockManagement() {
   const vehiclesQuery = useMemo(() => query(collection(db, "vehiculos"), orderBy("createdAt", "desc")), [db]);
   const { data: rawVehicles, loading } = useCollection(vehiclesQuery);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortKey, setSortKey] = useState<'vehicle'|'motor'|'color'|'logistic'|'location'|'client'|'days'>('vehicle');
+  const [sortDirection, setSortDirection] = useState<'asc'|'desc'>('asc');
   const [cleaningDuplicates, setCleaningDuplicates] = useState(false);
   const requestedFilter = searchParams.get('filter') as FilterType | null;
   const validFilters: FilterType[] = ['all','terraza','entreplanta','entrega','exposicion','demo','destino-stockexpo','destino-demo','destino-renting','destino-clientes','entregados','cedidos','stocklocator','todos'];
@@ -177,13 +179,31 @@ const isCustomerVehicle = (vehicle: any) => {
     else if (activeFilter === 'demo' || activeFilter === 'destino-demo') result = result.filter(isDemoVehicle);
     else if (activeFilter === 'entrega') result = result.filter(v => v.ubicacion?.toLowerCase().includes('entrega'));
     else if (activeFilter === 'exposicion') result = result.filter(isExhibitionVehicle);
-    else if (activeFilter === 'destino-stockexpo') result = result.filter(isReserveExhibitionStock);
+    else if (activeFilter === 'destino-stockexpo') result = result.filter(v => normalizeStatus(v.tipoLogistico).includes('stock expo') || normalizeStatus(v.tipoLogistico).includes('stock exposicion') || isLegacyStockExhibition(v));
     else if (activeFilter === 'destino-renting') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('renting') || !!v.entidadRenting);
     else if (activeFilter === 'destino-clientes') result = result.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('cliente') || (!!v.clienteLogistica && !v.entidadRenting));
     const q = searchTerm.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     if (q) result = result.filter(v => [v.modelo,v.vin,v.vin7,v.matricula,v.entidadRenting,v.motor,v.destinoLogistico,v.clienteLogistica,v.colorExterior].some(x => String(x || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q)));
     return result;
   }, [vehicles, allVehicles, activeFilter, searchTerm]);
+  const sortedFiltered = useMemo(() => {
+    const valueFor = (car: any) => {
+      switch (sortKey) {
+        case 'vehicle': return String(car.modelo || '');
+        case 'motor': return String(car.motor || suggestedMotor(car.modelo || '') || '');
+        case 'color': return String(getVehicleColor(car)?.name || car.colorExterior || '');
+        case 'logistic': return String(isCededVehicle(car) ? (isStockLocatorVehicle(car) ? 'Cedido · Stock Locator' : 'Cedido') : getLogisticCategory(car));
+        case 'location': return String(car.ubicacion || '');
+        case 'client': return String(car.entidadRenting || car.clienteLogistica || car.destinoLogistico || car.propietario || '');
+        case 'days': { const parsed = car.fechaEntrada ? parseISO(car.fechaEntrada) : null; return parsed && isValid(parsed) ? Math.max(0, differenceInDays(new Date(), parsed)) : -1; }
+      }
+    };
+    return [...filtered].sort((a,b) => {
+      const av = valueFor(a), bv = valueFor(b);
+      const comparison = typeof av === 'number' && typeof bv === 'number' ? av-bv : String(av ?? '').localeCompare(String(bv ?? ''), 'es', {numeric:true,sensitivity:'base'});
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [filtered, sortKey, sortDirection]);
 
   const filters = [
     {key:'exposicion' as const,label:'Exposición',value:vehicles.filter(v => String(v.ubicacion || '').trim().toUpperCase().startsWith('P') && !isCustomerVehicle(v)).length,icon:Car},
@@ -223,11 +243,11 @@ const isCustomerVehicle = (vehicle: any) => {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left">
-              <thead className="bg-slate-50/80"><tr className="text-[10px] font-semibold uppercase tracking-wider text-slate-400"><th className="px-5 py-3">Vehículo</th><th className="px-4 py-3">Motor</th><th className="px-4 py-3">Color</th><th className="px-4 py-3">Tipo logístico</th><th className="px-4 py-3">Ubicación física</th><th className="px-4 py-3">Cliente / propietario</th><th className="px-4 py-3 text-right">Días</th><th className="px-5 py-3"></th></tr></thead>
+              <thead className="bg-slate-50/80"><tr className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">{([['vehicle','Vehículo'],['motor','Motor'],['color','Color'],['logistic','Tipo logístico'],['location','Ubicación física'],['client','Cliente / propietario'],['days','Días']] as const).map(([key,label])=><th key={key} className={key==='days'?'px-4 py-3 text-right':'px-4 py-3'}><button className="inline-flex items-center gap-1 hover:text-[#0066b3]" onClick={()=>{if(sortKey===key)setSortDirection(d=>d==='asc'?'desc':'asc');else{setSortKey(key);setSortDirection('asc')}}}>{label}<span className="text-[11px]">{sortKey===key?(sortDirection==='asc'?'↑':'↓'):'↕'}</span></button></th>)}<th className="px-5 py-3"></th></tr></thead>
               <tbody className="divide-y divide-slate-100">
                 {loading ? <tr><td colSpan={8} className="px-5 py-14 text-center text-sm text-slate-400"><Loader2 className="mr-2 inline h-4 w-4 animate-spin"/> Cargando vehículos…</td></tr> :
                 filtered.length===0 ? <tr><td colSpan={7} className="px-5 py-14 text-center text-sm text-slate-400">No hay vehículos que coincidan con la búsqueda.</td></tr> :
-                filtered.map(car=>{
+                sortedFiltered.map(car=>{
                   const color=getVehicleColor(car);
                   const parsed=car.fechaEntrada?parseISO(car.fechaEntrada):null;
                   const days=parsed&&isValid(parsed)?Math.max(0,differenceInDays(new Date(),parsed)):null;
