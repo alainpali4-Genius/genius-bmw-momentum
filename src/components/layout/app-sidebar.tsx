@@ -27,7 +27,8 @@ const operations = [
 ]
 const management = [
   { title: "Incidencias", url: "/incidents", icon: ShieldAlert },
-  { title: "Historial", url: "/history", icon: History },\n  { title: "Auditoría vehículos", url: "/audit", icon: ClipboardCheck },
+  { title: "Historial", url: "/history", icon: History },
+  { title: "Auditoría vehículos", url: "/audit", icon: ClipboardCheck },
   { title: "Configuración", url: "/settings", icon: Settings },
 ]
 
