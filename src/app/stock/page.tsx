@@ -105,8 +105,6 @@ const isCustomerVehicle = (vehicle: any) => {
   const isPhysicalExhibitionLocation = (location: unknown) => /^P(?:[1-9]|1[0-5])$/i.test(String(location || "").trim());
   const isStockExhibitionType = (vehicle: any) => ["tipoLogistico","categoriaComercial","categoria","categoriaStock"].some(field => ["stock expo","stock exposicion"].includes(normalizeStatus(vehicle?.[field]))) || isLegacyStockExhibition(vehicle);
   const isExhibitionVehicle = (vehicle: any) => isStockExhibitionType(vehicle) && isPhysicalExhibitionLocation(vehicle.ubicacion);
-  // Unidades etiquetadas como Stock Expo, fuera de las plazas físicas de exposición.
-  const isStockExhibitionType = (vehicle: any) => normalizeStatus(vehicle.tipoLogistico).includes("stock expo") || normalizeStatus(vehicle.tipoLogistico).includes("stock exposicion") || isLegacyStockExhibition(vehicle);
   const isReserveExhibitionStock = (vehicle: any) => isStockExhibitionType(vehicle) && !isPhysicalExhibitionLocation(vehicle.ubicacion);
   const vehicles = allVehicles.filter(vehicle => {
     const state = String(vehicle.estado || "").toLowerCase();
