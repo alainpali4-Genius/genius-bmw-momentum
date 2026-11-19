@@ -123,11 +123,11 @@ export default function ImportLogisticsPage(){
     const colorCode=detectedColor?.code || "";
     const clienteOriginal=String(r.cliente||"").trim();
      const normalizedCliente=clienteOriginal.normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim().toUpperCase();
-     const isStockExpo=/^STOCK\s+EXPOSICION$/.test(normalizedCliente);
+     const isStockExpo=/^STOCK\s+EXPOSICION$/.test(normalizedCliente) || /\bSTOCK\s+EXPOSICION\b/.test(normalizedCliente);
      const isDemo=/^DEMO$/.test(normalizedCliente);
      const isExternalDelivery=/^ENTREGA\s+EXTERNA/.test(normalizedCliente);
-     const rentingMatch=/\b(ALPHABET|BBVA|SANTANDER|CAIXA|ARVAL|AYVENS|LEASEPLAN|ATHLON)\b/i.exec(clienteOriginal);
-     const logisticType=isStockExpo?"Stock exposición":isDemo?"Demo":isExternalDelivery?"Entrega Cliente":rentingMatch?"Cliente renting":clienteOriginal?"Cliente":"Sin clasificar";
+     const rentingMatch=/\b(ALPHABET|BBVA|SANTANDER|CAIXA|ARVAL|AYVENS|LEASEPLAN|ATHLON|BANKINTER|NORTHGATE|WIBLE|FLEXICAR)\b/i.exec(clienteOriginal);
+     const logisticType=isStockExpo?"Stock exposición":isDemo?"Demo":rentingMatch?"Cliente renting":isExternalDelivery?"Entrega Cliente":clienteOriginal?"Cliente":"Sin clasificar";
      const inferredState=isStockExpo?"Stock":isDemo?"Demo":clienteOriginal?"Cliente":"Disponible";
      const fechaEntrada=String(match?.fechaEntrada || now.slice(0,10));
      const fields:any={vin7:suffix7(r.vin),marca,modelo:r.modelo,...(motor?{motor}:{}),matricula:r.matricula||"",colorExterior:r.color||"",colorCorreo:r.color||"",colorCodigo:colorCode||null,colorBMW:colorCode||null,tipoLogistico:logisticType,categoriaComercial:logisticType,transporte:r.transporte||"",fechaRecepcionCorreo:r.fecha||"",fechaEntrada,llegada:r.llegada||"",comision:r.comision||"",vendedorLogistica:r.vendedor||"",responsable:r.vendedor||"",origenImportacion:"Correo logística BMW",updatedAt:now};
@@ -142,12 +142,32 @@ export default function ImportLogisticsPage(){
      if(match){
       const patch:any={...fields};
       if(!match.vin || normalizeVin(match.vin).length===7)patch.vin=r.vin;
-      if(isStockExpo || isDemo || clienteOriginal){
+      if(isStockExpo){
+       patch.estado="Stock";
+       patch.tipoLogistico="Stock exposición";
+       patch.categoriaComercial="Stock exposición";
+       patch.clienteLogistica="";
+       patch.destinoLogistico="";
+       patch.entidadRenting="";
+       patch.propietario="";
+       patch.ubicacion=stockLocation;
+      }else if(isDemo){
+       patch.estado="Demo";
+       patch.tipoLogistico="Demo";
+       patch.categoriaComercial="Demo";
+       patch.clienteLogistica="";
+       patch.destinoLogistico="";
+       patch.entidadRenting="";
+       patch.propietario="";
+       patch.ubicacion=match.ubicacion || "No disponible";
+      }else if(clienteOriginal){
        patch.estado=inferredState;
-       if(isStockExpo || isDemo){patch.clienteLogistica="";patch.destinoLogistico="";patch.entidadRenting="";patch.propietario="";}
-       if(isStockExpo)patch.ubicacion=stockLocation;
-       else if(isDemo)patch.ubicacion=match.ubicacion || "No disponible";
-       else if(!match.ubicacion)patch.ubicacion="No disponible";
+       patch.tipoLogistico=logisticType;
+       patch.categoriaComercial=logisticType;
+       patch.clienteLogistica=clienteOriginal;
+       patch.destinoLogistico=clienteOriginal;
+       patch.entidadRenting=rentingMatch?.[1] || "";
+       if(!match.ubicacion)patch.ubicacion="No disponible";
       }else{
        if(!match.estado)patch.estado=inferredState;
        if(!match.ubicacion)patch.ubicacion=inferredState==="Cliente"?"No disponible":"Pendiente de ubicación";
