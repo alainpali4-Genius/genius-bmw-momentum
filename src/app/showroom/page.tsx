@@ -67,13 +67,13 @@ const isCustomerVehicle = (vehicle: any) => {
   return normalize(vehicle?.estado) === "cliente";
 };
 const getVehicleLogisticType = (vehicle: any) => {
-  const normalize = (value: any) => String(value || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").trim().toLowerCase();
-  const legacyStock = [vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting, vehicle?.propietario].some(value => ["stock expo", "stock exposicion"].includes(normalize(value)));
+  const normalize = (value: any) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase().replace(/\s+/g, " ");
+  const stockExpoValues = [vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting, vehicle?.propietario, vehicle?.tipoLogistico, vehicle?.categoriaComercial, vehicle?.categoria, vehicle?.categoriaStock];
+  const legacyStock = stockExpoValues.some(value => /^(stock expo|stock exposicion)$/.test(normalize(value)));
   if (legacyStock) return "Stock exposición";
   if (String(vehicle?.tipoLogistico || "").toLowerCase().includes("demo") || String(vehicle?.estado || "").toLowerCase().includes("demo")) return "Demo";
   const currentType = String(vehicle?.tipoLogistico || "").trim();
   if (isCustomerVehicle(vehicle)) return normalize(currentType) === "cliente renting" ? "Cliente renting" : "Cliente";
-  if (["stock expo", "stock exposicion"].includes(normalize(currentType))) return "Stock exposición";
   return currentType || "Stock exposición";
 };
 const PLAZAS_LIST = ["P1", "P2", "P3", "P4", "P5", "P6", "P7", "P8", "P9", "P10", "P11", "P12", "P13", "P14", "P15"];
