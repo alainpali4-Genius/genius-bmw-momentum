@@ -3,7 +3,7 @@
 import * as React from "react"
 import {
   LayoutDashboard, Grid3X3, Car, CalendarDays, ScanLine, ClipboardPaste,
-  History, Settings, ShieldAlert, LogOut, X
+  History, Settings, ShieldAlert, LogOut, X, ClipboardCheck
 } from "lucide-react"
 import {
   Sidebar, SidebarContent, SidebarFooter, SidebarHeader,
@@ -27,7 +27,7 @@ const operations = [
 ]
 const management = [
   { title: "Incidencias", url: "/incidents", icon: ShieldAlert },
-  { title: "Historial", url: "/history", icon: History },
+  { title: "Historial", url: "/history", icon: History },\n  { title: "Auditoría vehículos", url: "/audit", icon: ClipboardCheck },
   { title: "Configuración", url: "/settings", icon: Settings },
 ]
 
