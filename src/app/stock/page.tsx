@@ -186,18 +186,11 @@ const isCustomerVehicle = (vehicle: any) => {
   }, [vehicles, allVehicles, activeFilter, searchTerm]);
 
   const filters = [
-    {key:'exposicion' as const,label:'Exposición',value:stats.exposicion,icon:Car},
-    {key:'terraza' as const,label:'Terraza',value:stats.terraza,icon:MapPin},
-    {key:'entreplanta' as const,label:'Entreplanta',value:stats.entreplanta,icon:LayoutGrid},
-    {key:'entrega' as const,label:'Zona de entrega',value:stats.entrega,icon:ArrowUpRight},
-    {key:'destino-stockexpo' as const,label:'Stock exposición',value:vehicles.filter(isReserveExhibitionStock).length,icon:Car},
-    {key:'destino-renting' as const,label:'Renting',value:vehicles.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('renting') || !!v.entidadRenting).length,icon:Building2},
-    {key:'destino-clientes' as const,label:'Clientes',value:vehicles.filter(v => String(v.tipoLogistico || '').toLowerCase().includes('cliente') || (!!v.clienteLogistica && !v.entidadRenting)).length,icon:User},
-  ];
-  const subgroupFilters = [
-    {key:'demo' as const,label:'Demos',value:allVehicles.filter(v => !isCededVehicle(v) && isDemoVehicle(v) && normalizeStatus(v.estado) !== 'entregado').length,icon:Car},
-    {key:'cedidos' as const,label:'Cedidos',value:allVehicles.filter(isCededVehicle).length,icon:Building2},
-    {key:'stocklocator' as const,label:'Stock Locator',value:allVehicles.filter(isStockLocatorVehicle).length,icon:Building2},
+    {key:'exposicion' as const,label:'Exposición',value:vehicles.filter(v => String(v.ubicacion || '').trim().toUpperCase().startsWith('P') && !isCustomerVehicle(v)).length,icon:Car},
+    {key:'entreplanta' as const,label:'Entreplanta',value:vehicles.filter(v => normalizeStatus(v.ubicacion) === 'entreplanta').length,icon:LayoutGrid},
+    {key:'terraza' as const,label:'Terraza',value:vehicles.filter(v => normalizeStatus(v.ubicacion) === 'terraza').length,icon:MapPin},
+    {key:'entrega' as const,label:'Zona de entrega',value:vehicles.filter(v => normalizeStatus(v.ubicacion).includes('entrega')).length,icon:ArrowUpRight},
+    {key:'destino-stockexpo' as const,label:'Stock exposición',value:vehicles.filter(v => normalizeStatus(v.tipoLogistico).includes('stock expo') || normalizeStatus(v.tipoLogistico).includes('stock exposicion') || isLegacyStockExhibition(v)).length,icon:Car},
   ];
 
   return (
@@ -221,20 +214,12 @@ const isCustomerVehicle = (vehicle: any) => {
             </button>)}
           </div>
         </section>
-        <section className="space-y-3">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500">Subgrupos · gestión independiente</h2>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            {subgroupFilters.map(f => <button key={f.key} onClick={() => setActiveFilter(activeFilter === f.key ? 'all' : f.key)} className="rounded-xl border border-slate-200/80 bg-white p-4 text-left shadow-sm hover:border-blue-300">
-              <div className="flex items-center justify-between"><span className="text-xs font-medium text-slate-500">{f.label}</span><f.icon className="h-4 w-4 text-slate-400"/></div>
-              <div className="mt-2 text-2xl font-semibold text-slate-900">{f.value}</div>
-            </button>)}
-          </div>
-        </section>
+
 
         <Card className="overflow-hidden rounded-xl border-slate-200/80 bg-white shadow-sm">
           <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div><h2 className="font-semibold text-slate-900">Vehículos en stock</h2><p className="mt-1 text-xs text-slate-500">Mostrando {filtered.length} de {vehicles.length} unidades</p></div>
-            <div className="relative w-full sm:max-w-[360px]"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"/><Input value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} placeholder="Buscar modelo, bastidor, matrícula…" className="h-10 rounded-lg border-slate-200 pl-9 text-sm"/></div>
+            <div className="relative w-full sm:max-w-[520px]"><Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#0066b3]"/><Input value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} placeholder="Buscar vehículo, VIN, VIN7, matrícula, cliente o color…" className="h-14 rounded-xl border-2 border-blue-200 bg-blue-50/40 pl-12 text-base shadow-sm focus-visible:border-[#0066b3]"/></div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] text-left">
