@@ -78,23 +78,25 @@ export default function StockManagement() {
   const logisticCategoryLabel = (value: unknown) => { const normalized = normalizeStatus(value); if (normalized.includes("stock expo") || normalized.includes("stock exposicion")) return "Stock exposición"; return String(value || "Stock Expo").trim(); };
   const isLegacyStockExhibition = (vehicle: any) => [vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting, vehicle?.propietario].some(value => ["stock expo","stock exposicion"].includes(normalizeStatus(value)));
   const getLogisticCategory = (vehicle: any) => isLegacyStockExhibition(vehicle) ? "Stock exposición" : isDemoVehicle(vehicle) ? "Demo" : isCustomerVehicle(vehicle) ? "Cliente" : logisticCategoryLabel(vehicle.tipoLogistico);
-  const isCededVehicle = (vehicle: any) => [vehicle.estado, vehicle.ubicacion, vehicle.categoria, vehicle.categoriaStock, vehicle.categoriaComercial, vehicle.cedidoTipo, vehicle.tipoLogistico, vehicle.destinoLogistico].some(value => normalizeStatus(value).includes("cedido")) || vehicle.stockLocator === true && normalizeStatus(vehicle.cedidoTipo) === "stock locator";
-  const isDemoVehicle = (vehicle: any) => String(vehicle.tipoLogistico || "").toLowerCase().includes("demo") || String(vehicle.ubicacion || "").toLowerCase() === "demo en uso" || String(vehicle.estado || "").toLowerCase().includes("demo");
+  const isDeliveredVehicle = (vehicle: any) => normalizeStatus(vehicle.estado) === "entregado" || normalizeStatus(vehicle.ubicacion) === "entregado";
   const isStockLocatorVehicle = (vehicle: any) => vehicle.stockLocator === true || normalizeStatus(vehicle.cedidoTipo).includes("stock locator") || [vehicle.tipoLogistico, vehicle.categoria, vehicle.categoriaStock, vehicle.categoriaComercial].some(value => normalizeStatus(value).includes("stock locator"));
-  const rentingKeywords = ["arval","alphabet","ayvens","caixabank","camp caixa","camp al","bbva","santander","bankinter","leaseplan","bnp paribas","mobility","renting","flotas","fleet"];
+  const isCededVehicle = (vehicle: any) => !isStockLocatorVehicle(vehicle) && !isDeliveredVehicle(vehicle) && !isStockExhibitionType(vehicle) && [vehicle.estado, vehicle.ubicacion, vehicle.categoria, vehicle.categoriaStock, vehicle.categoriaComercial, vehicle.cedidoTipo, vehicle.tipoLogistico, vehicle.destinoLogistico].some(value => normalizeStatus(value).includes("cedido"));
+  const isDemoVehicle = (vehicle: any) => !isStockExhibitionType(vehicle) && !isStockLocatorVehicle(vehicle) && !isCededVehicle(vehicle) && !isDeliveredVehicle(vehicle) && (String(vehicle.tipoLogistico || "").toLowerCase().includes("demo") || String(vehicle.ubicacion || "").toLowerCase() === "demo en uso" || String(vehicle.estado || "").toLowerCase().includes("demo"));
+  const rentingKeywords = ["arval","alphabet","ayvens","caixabank","caixa","camp caixa","camp al","bbva","santander","bankinter","leaseplan","ald automotive","bnp paribas","mobility","renting","flotas","fleet"];
   const isRentingVehicle = (vehicle: any) => {
-    if (isStockExhibitionType(vehicle) || isDemoVehicle(vehicle) || isCededVehicle(vehicle) || isStockLocatorVehicle(vehicle) || normalizeStatus(vehicle.estado) === "entregado" || normalizeStatus(vehicle.ubicacion) === "entregado") return false;
-    const values = [vehicle.tipoLogistico,vehicle.entidadRenting,vehicle.clienteLogistica,vehicle.destinoLogistico,vehicle.propietario].map(normalizeStatus);
+    if (isStockExhibitionType(vehicle) || isDemoVehicle(vehicle) || isCededVehicle(vehicle) || isStockLocatorVehicle(vehicle) || isDeliveredVehicle(vehicle)) return false;
+    const values = [vehicle.tipoLogistico,vehicle.entidadRenting,vehicle.clienteLogistica,vehicle.destinoLogistico,vehicle.propietario,vehicle.responsable].map(normalizeStatus);
     return values.some(value => rentingKeywords.some(keyword => value.includes(normalizeStatus(keyword))));
   };
   const isCustomerVehicle = (vehicle: any) => {
-    if (isStockExhibitionType(vehicle) || isDemoVehicle(vehicle) || isCededVehicle(vehicle) || isStockLocatorVehicle(vehicle) || isRentingVehicle(vehicle) || normalizeStatus(vehicle.estado) === "entregado" || normalizeStatus(vehicle.ubicacion) === "entregado") return false;
-    const values = [vehicle.clienteLogistica,vehicle.destinoLogistico,vehicle.propietario,vehicle.tipoLogistico].map(value => String(value || "").trim());
+    if (isStockExhibitionType(vehicle) || isDemoVehicle(vehicle) || isCededVehicle(vehicle) || isStockLocatorVehicle(vehicle) || isRentingVehicle(vehicle) || isDeliveredVehicle(vehicle)) return false;
+    const values = [vehicle.clienteLogistica,vehicle.destinoLogistico,vehicle.propietario].map(value => String(value || "").trim());
     const humanName = (value: string) => {
       const normalized = normalizeStatus(value);
       if (!value || /^(cliente|renting|entrega cliente|asignacion cliente|asignacion cliente renting|sin clasificar|stock expo|stock exposicion|demo|demo en uso|cedido|stock locator)$/i.test(normalized)) return false;
       if (rentingKeywords.some(keyword => normalized.includes(normalizeStatus(keyword)))) return false;
-      const words = value.split(/\\s+/).filter(Boolean);
+      if (/\b(sl|s l|sa|s a|sau|empresa|automotive|leasing|renting|bank|banco|group|grupo|fleet|flota|bmw|mini)\b/i.test(normalized)) return false;
+      const words = value.split(/\s+/).filter(Boolean);
       return words.length >= 2 && words.length <= 5 && words.every(word => /^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ'-]+$/.test(word));
     };
     return values.some(humanName);
@@ -161,7 +163,7 @@ export default function StockManagement() {
     stockexpo: allVehicles.filter(isStockExhibitionType).length,
     renting: allVehicles.filter(isRentingVehicle).length,
     clientes: allVehicles.filter(isCustomerVehicle).length,
-    entregados: allVehicles.filter(v => normalizeStatus(v.estado) === 'entregado' || normalizeStatus(v.ubicacion) === 'entregado').length,
+    entregados: allVehicles.filter(isDeliveredVehicle).length,
     cedidos: allVehicles.filter(isCededVehicle).length,
     stocklocator: allVehicles.filter(isStockLocatorVehicle).length,
   }), [vehicles, allVehicles]);
@@ -169,7 +171,7 @@ export default function StockManagement() {
   const filtered = useMemo(() => {
     let result = activeFilter === 'todos' ? allVehicles
       : activeFilter === 'cedidos' ? allVehicles.filter(isCededVehicle)
-      : activeFilter === 'entregados' ? allVehicles.filter(v => normalizeStatus(v.estado) === 'entregado' || normalizeStatus(v.ubicacion) === 'entregado')
+      : activeFilter === 'entregados' ? allVehicles.filter(isDeliveredVehicle)
       : activeFilter === 'stocklocator' ? allVehicles.filter(isStockLocatorVehicle)
       : vehicles;
     if (activeFilter === 'terraza') result = result.filter(v => normalizeStatus(v.ubicacion) === 'terraza' && !isStockExhibitionType(v));
@@ -180,8 +182,8 @@ export default function StockManagement() {
     else if (activeFilter === 'destino-stockexpo') result = allVehicles.filter(isStockExhibitionType);
     else if (activeFilter === 'destino-renting') result = allVehicles.filter(isRentingVehicle);
     else if (activeFilter === 'destino-clientes') result = allVehicles.filter(isCustomerVehicle);
-    const q = searchTerm.trim().toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
-    if (q) result = result.filter(v => [v.modelo,v.vin,v.vin7,v.matricula,v.entidadRenting,v.motor,v.destinoLogistico,v.clienteLogistica,v.colorExterior].some(x => String(x || '').toLowerCase().normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").includes(q)));
+    const q = searchTerm.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    if (q) result = result.filter(v => [v.modelo,v.vin,v.vin7,v.matricula,v.entidadRenting,v.motor,v.destinoLogistico,v.clienteLogistica,v.colorExterior].some(x => String(x || '').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q)));
     return result;
   }, [vehicles, allVehicles, activeFilter, searchTerm]);
   const sortedFiltered = useMemo(() => {
@@ -256,7 +258,7 @@ export default function StockManagement() {
 
         <Card className="overflow-hidden rounded-xl border-slate-200/80 bg-white shadow-sm">
           <div className="flex flex-col gap-3 border-b border-slate-100 p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div><h2 className="font-semibold text-slate-900">Vehículos en stock</h2><p className="mt-1 text-xs text-slate-500">Mostrando {filtered.length} de {vehicles.length} unidades</p></div>
+            <div><h2 className="font-semibold text-slate-900">{activeFilter === 'todos' ? 'Todos los vehículos registrados' : 'Vehículos en stock'}</h2><p className="mt-1 text-xs text-slate-500">Mostrando {filtered.length} de {activeFilter === 'todos' ? allVehicles.length : vehicles.length} unidades</p></div>
             <div className="relative w-full sm:max-w-[520px]"><Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#0066b3]"/><Input value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} placeholder="Buscar vehículo, VIN, VIN7, matrícula, cliente o color…" className="h-14 rounded-xl border-2 border-blue-200 bg-blue-50/40 pl-12 text-base shadow-sm focus-visible:border-[#0066b3]"/></div>
           </div>
           <div className="overflow-x-auto">
