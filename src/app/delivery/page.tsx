@@ -119,6 +119,7 @@ export default function DeliveryManagement() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("all");
   const [isAdding, setIsAdding] = useState(false);
+  const [savingNewDelivery, setSavingNewDelivery] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [vehicleSearch, setVehicleSearch] = useState("");
   const [vehicleSelectOpen, setVehicleSelectOpen] = useState(false);
@@ -480,7 +481,8 @@ export default function DeliveryManagement() {
   };
 
   const handleAddDelivery = async () => {
-    if (!formData.vehiculoId || !formData.cliente) {
+    if (savingNewDelivery) return;
+    if (!formData.vehiculoId || !formData.cliente.trim()) {
       toast({ variant: "destructive", title: "Faltan datos", description: "Selecciona un vehículo e indica el cliente." });
       return;
     }
@@ -488,26 +490,41 @@ export default function DeliveryManagement() {
     const vehicle = vehiculos.find(v => v.id === formData.vehiculoId);
     const payload = {
       ...formData,
+      cliente: formData.cliente.trim(),
       vehiculoInfo: vehicle ? `${vehicle.modelo} (${vehicle.vin7 || vehicle.vin?.slice(-7)})` : "Vehículo desconocido",
       estado: formData.fecha ? "Fecha confirmada" : "Pendiente de fecha",
       progress: formData.fecha ? 25 : 0,
       createdAt: new Date().toISOString()
     };
 
+    setSavingNewDelivery(true);
     try {
+      // Guardar primero el registro principal. Una sincronización secundaria
+      // con stock no debe dejar el diálogo bloqueado ni aparentar que falló.
       await addDoc(collection(db, "entregas"), payload);
-      if (vehicle) {
-        await updateDoc(doc(db, "vehiculos", vehicle.id), { estado: "Preparacion Entrega" });
-      }
 
       setIsAdding(false);
+      setVehicleSearch("");
+      setVehicleSelectOpen(false);
       setFormData({
         vehiculoId: "", cliente: "", fecha: "", hora: "10:00", matricula: "", fechaPreentrega: "", fechaMatriculacion: "", zonaEntrega: "",
         asesor: "", actaEnviada: false, recogidaRenting: false, recogidaRentingInfo: ""
       });
-      toast({ title: "Entrega Programada", description: "Se ha registrado correctamente." });
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "No se pudo guardar la entrega." });
+      toast({ title: "Entrega programada", description: "Se ha registrado correctamente." });
+
+      if (vehicle) {
+        try {
+          await updateDoc(doc(db, "vehiculos", vehicle.id), { estado: "Preparacion Entrega" });
+        } catch (vehicleError) {
+          console.warn("Entrega guardada, pero no se pudo actualizar el estado del vehículo:", vehicleError);
+          toast({ title: "Entrega guardada", description: "El registro está creado, pero no se pudo actualizar el estado del vehículo en stock." });
+        }
+      }
+    } catch (e: any) {
+      console.error("Error registrando entrega:", e);
+      toast({ variant: "destructive", title: "Error", description: e?.message || "No se pudo guardar la entrega." });
+    } finally {
+      setSavingNewDelivery(false);
     }
   };
 
@@ -740,8 +757,8 @@ export default function DeliveryManagement() {
                 {formData.recogidaRenting && (
                   <Input value={formData.recogidaRentingInfo} onChange={e => setFormData({...formData, recogidaRentingInfo: e.target.value})} className="h-12 bg-slate-50 border-none rounded-xl font-bold uppercase text-xs" placeholder="INFO DEL COCHE A RECOGER..." />
                 )}
-                <Button onClick={handleAddDelivery} className="w-full h-14 bg-secondary text-white rounded-xl font-black uppercase text-[11px] shadow-xl mt-4">
-                  CONFIRMAR PROGRAMACIÓN
+                <Button onClick={handleAddDelivery} disabled={savingNewDelivery} className="w-full h-14 bg-secondary text-white rounded-xl font-black uppercase text-[11px] shadow-xl mt-4">
+                  {savingNewDelivery ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/>GUARDANDO…</> : "CONFIRMAR PROGRAMACIÓN"}
                 </Button>
               </div>
             </DialogContent>
