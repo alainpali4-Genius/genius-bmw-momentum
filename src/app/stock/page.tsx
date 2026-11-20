@@ -78,7 +78,8 @@ export default function StockManagement() {
   const logisticCategoryLabel = (value: unknown) => { const normalized = normalizeStatus(value); if (normalized.includes("stock expo") || normalized.includes("stock exposicion")) return "Stock exposición"; return String(value || "Stock Expo").trim(); };
   const isStockExhibitionType = (vehicle: any) => {
     const values = [vehicle?.tipoLogistico, vehicle?.categoria, vehicle?.categoriaStock, vehicle?.categoriaComercial, vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting, vehicle?.propietario];
-    return values.some(value => normalizeStatus(value).includes("stock expo") || normalizeStatus(value).includes("stock exposicion"));
+    const isPhysicalExhibitionPlaza = /^P(?:[1-9]|1[0-5])$/i.test(String(vehicle?.ubicacion || "").trim());
+    return isPhysicalExhibitionPlaza || values.some(value => normalizeStatus(value).includes("stock expo") || normalizeStatus(value).includes("stock exposicion"));
   };
   const normalizeExhibitionLocation = (value: unknown) => {
     const normalized = normalizeStatus(value);
