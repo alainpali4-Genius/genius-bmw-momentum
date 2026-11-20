@@ -76,6 +76,26 @@ export default function StockManagement() {
   };
   const normalizeStatus = (value: unknown) => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
   const logisticCategoryLabel = (value: unknown) => { const normalized = normalizeStatus(value); if (normalized.includes("stock expo") || normalized.includes("stock exposicion")) return "Stock exposición"; return String(value || "Stock Expo").trim(); };
+  const isStockExhibitionType = (vehicle: any) => {
+    const values = [vehicle?.tipoLogistico, vehicle?.categoria, vehicle?.categoriaStock, vehicle?.categoriaComercial, vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting, vehicle?.propietario];
+    return values.some(value => normalizeStatus(value).includes("stock expo") || normalizeStatus(value).includes("stock exposicion"));
+  };
+  const normalizeExhibitionLocation = (value: unknown) => {
+    const normalized = normalizeStatus(value);
+    if (!normalized || normalized.includes("sin ubicacion") || normalized.includes("no asignada") || normalized.includes("no asignado")) return "Sin ubicación";
+    const place = normalized.match(/\bp\s*(\d{1,2})\b/);
+    if (place) return "Exposición P" + place[1];
+    if (normalized.includes("exposicion")) return "Exposición";
+    if (normalized.includes("entreplanta")) return "Entreplanta";
+    if (normalized.includes("terraza")) return "Terraza";
+    if (normalized.includes("entrega")) return "Zona de entrega";
+    return String(value || "").trim() || "Sin ubicación";
+  };
+  const getStockExhibitionDisplayLocation = (vehicle: any) => {
+    const location = normalizeExhibitionLocation(vehicle?.ubicacion);
+    return location === "Sin ubicación" ? "Stock exposición · Sin ubicación" : location;
+  };
+  const isExhibitionVehicle = (vehicle: any) => isStockExhibitionType(vehicle) && /^Exposición P\d+$/i.test(normalizeExhibitionLocation(vehicle?.ubicacion));
   const isLegacyStockExhibition = (vehicle: any) => [vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting, vehicle?.propietario].some(value => ["stock expo","stock exposicion"].includes(normalizeStatus(value)));
   const getLogisticCategory = (vehicle: any) => isLegacyStockExhibition(vehicle) ? "Stock exposición" : isDemoVehicle(vehicle) ? "Demo" : isCustomerVehicle(vehicle) ? "Cliente" : logisticCategoryLabel(vehicle.tipoLogistico);
   const isDeliveredVehicle = (vehicle: any) => normalizeStatus(vehicle.estado) === "entregado" || normalizeStatus(vehicle.ubicacion) === "entregado";
