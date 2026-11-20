@@ -1,13 +1,13 @@
 'use client';
 
 import { useEffect, useMemo, useState } from "react";
-import { Search, Plus, Loader2, Car, MapPin, ArrowUpRight, Building2, User, LayoutGrid } from "lucide-react";
+import { Search, Plus, Loader2, Car, MapPin, ArrowUpRight, Building2, User, LayoutGrid, MoreHorizontal, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useFirestore, useCollection } from "@/firebase";
-import { collection, query, orderBy, writeBatch, doc } from "firebase/firestore";
+import { collection, query, orderBy, writeBatch, doc, deleteDoc } from "firebase/firestore";
 import { differenceInDays, parseISO, isValid } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getVehicleColor } from "../showroom/page";
@@ -48,6 +48,20 @@ export default function StockManagement() {
     return [...groups.entries()].filter(([, group]) => group.length > 1);
   }, [allVehicles]);
   const completenessScore = (vehicle: any) => ["vin","vin7","modelo","marca","motor","colorExterior","colorCodigo","matricula","estado","ubicacion","tipoLogistico","clienteLogistica","destinoLogistico","entidadRenting","responsable","fechaEntrada","fechaRecepcionCorreo","observaciones"].reduce((score, field) => score + (String(vehicle?.[field] ?? "").trim() ? 1 : 0), 0) + (vehicle?.stockLocator ? 2 : 0);
+  const [deletingVehicleId, setDeletingVehicleId] = useState<string | null>(null);
+  const deleteVehicleQuickly = async (vehicle: any) => {
+    const label = String(vehicle.modelo || "Vehículo") + (vehicle.vin7 ? " · " + vehicle.vin7 : vehicle.vin ? " · " + vehicle.vin : "");
+    if (!window.confirm("¿Eliminar definitivamente esta ficha de vehículo?\n\n" + label + "\n\nEsta acción no se puede deshacer.")) return;
+    setDeletingVehicleId(vehicle.id);
+    try {
+      await deleteDoc(doc(db, "vehiculos", vehicle.id));
+    } catch (error) {
+      console.error("No se pudo eliminar el vehículo", error);
+      alert("No se ha podido eliminar el vehículo. Comprueba los permisos y vuelve a intentarlo.");
+    } finally {
+      setDeletingVehicleId(null);
+    }
+  };
   const cleanDuplicateVehicles = async () => {
     if (cleaningDuplicates || !duplicateGroups.length) return;
     setCleaningDuplicates(true);
@@ -300,7 +314,7 @@ export default function StockManagement() {
                     <td className="px-4 py-4">{isStockExhibitionType(car) ? <Badge className="rounded-full border-0 bg-blue-50 px-2.5 py-1 text-[10px] font-medium text-[#00549a]">{getStockExhibitionDisplayLocation(car)}</Badge> : isCededVehicle(car) ? <Badge className="rounded-full border-0 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-700">{isStockLocatorVehicle(car) ? "Cedido · Stock Locator" : "Cedido"}</Badge> : <Badge className="rounded-full border-0 bg-slate-100 px-2.5 py-1 text-[10px] font-medium text-slate-600">{getLogisticCategory(car)} · {normalizeExhibitionLocation(car.ubicacion)}</Badge>}{(String(car.tipoLogistico||'').toLowerCase().includes('demo')||car.ubicacion==='Demo en uso'||String(car.estado||'').toLowerCase().includes('demo'))&&<div className="mt-1 space-y-0.5 text-[10px] text-slate-500"><div>Ubicación actual: {car.demoUbicacionActual||'Sin indicar'}</div><div>Lo conduce: {car.demoAsignadoA||'Sin asignar'}</div></div>}</td>
                     <td className="px-4 py-4 text-xs text-slate-600">{isDemoVehicle(car) ? (car.demoAsignadoA || '—') : isCustomerVehicle(car) && !isLegacyStockExhibition(car) ? <><div className="font-semibold text-slate-800">{car.entidadRenting || car.clienteLogistica || car.destinoLogistico || car.propietario || 'Cliente sin identificar'}</div>{car.propietario && <div className="mt-1 text-[10px] text-slate-400">Propietario: {car.propietario}</div>}</> : '—'}</td>
                     <td className="px-4 py-4 text-right text-sm tabular-nums text-slate-600">{days===null?'—':days}</td>
-                    <td className="px-5 py-4 text-right"><ArrowUpRight className="ml-auto h-4 w-4 text-slate-400"/></td>
+                    <td className="px-5 py-4"><div className="flex items-center justify-end gap-1"><button type="button" title="Eliminar vehículo" aria-label={"Eliminar " + (car.modelo || "vehículo")} disabled={deletingVehicleId===car.id} onClick={e=>{e.stopPropagation();deleteVehicleQuickly(car)}} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:opacity-50">{deletingVehicleId===car.id?<Loader2 className="h-4 w-4 animate-spin"/>:<MoreHorizontal className="h-4 w-4"/>}</button><ArrowUpRight className="h-4 w-4 text-slate-400"/></div></td>
                   </tr>
                 })}
               </tbody>
