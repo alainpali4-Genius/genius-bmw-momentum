@@ -53,13 +53,13 @@ const isCustomerVehicle = (vehicle: any) => {
   const legacyStockLabel = [vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting, vehicle?.propietario].some(value => ["stock expo","stock exposicion"].includes(normalize(value)));
  if (legacyStockLabel) return false;
  const categoryFields = [vehicle?.tipoLogistico, vehicle?.categoriaComercial, vehicle?.categoria, vehicle?.categoriaStock].map(normalize);
-  const explicitNonCustomer = categoryFields.some(value => /^(stock expo|stock exposicion|demo|demo en uso|sin clasificar|cedido|cedido stock locator|stock locator)$/.test(value));
+  const explicitNonCustomer = categoryFields.some(value => /^(stock expo|stock exposicion|demo|demo en uso|sin clasificar|cedido|cedido stock locator|stock locator|devolucion renting)$/.test(value));
   // La clasificación explícita de stock propio/demo prevalece sobre campos antiguos
   // de cliente que puedan haber quedado guardados por importaciones anteriores.
   if (explicitNonCustomer) return false;
   const identityFields = [vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting, vehicle?.propietario];
   const identities = identityFields.map(normalize).filter(Boolean);
-  const knownGeneric = /^(asignacion cliente\/?renting|entrega cliente|cliente|renting|sin clasificar|stock expo|stock exposicion|demo|demo en uso)$/;
+  const knownGeneric = /^(asignacion cliente\/?renting|entrega cliente|cliente|renting|sin clasificar|stock expo|stock exposicion|demo|demo en uso|devolucion renting)$/;
   if (identities.some(value => !knownGeneric.test(value))) return true;
   // En registros antiguos el nombre del cliente quedó guardado en tipoLogistico.
   const legacyType = normalize(vehicle?.tipoLogistico);
@@ -71,8 +71,9 @@ const getVehicleLogisticType = (vehicle: any) => {
   const stockExpoValues = [vehicle?.clienteLogistica, vehicle?.destinoLogistico, vehicle?.entidadRenting, vehicle?.propietario, vehicle?.tipoLogistico, vehicle?.categoriaComercial, vehicle?.categoria, vehicle?.categoriaStock];
   const legacyStock = stockExpoValues.some(value => /^(stock expo|stock exposicion)$/.test(normalize(value)));
   if (legacyStock) return "Stock exposición";
-  if (String(vehicle?.tipoLogistico || "").toLowerCase().includes("demo") || String(vehicle?.estado || "").toLowerCase().includes("demo")) return "Demo";
   const currentType = String(vehicle?.tipoLogistico || "").trim();
+  if (normalize(currentType) === "devolucion renting") return "Devolucion Renting";
+  if (String(vehicle?.tipoLogistico || "").toLowerCase().includes("demo") || String(vehicle?.estado || "").toLowerCase().includes("demo")) return "Demo";
   if (isCustomerVehicle(vehicle)) return normalize(currentType) === "cliente renting" ? "Cliente renting" : "Cliente";
   return currentType || "Stock exposición";
 };
